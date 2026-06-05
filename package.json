@@ -1,0 +1,9 @@
+{
+  "name": "uzum-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Uzum ПВЗ — интерактивный дашборд (статический сайт)",
+  "scripts": {
+    "start": "npx --yes serve -s . -l ${PORT:-3000}"
+  }
+}

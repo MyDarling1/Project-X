@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uzum ПВЗ — интерактивный дашборд</title>
+<meta property="og:title" content="Uzum ПВЗ — интерактивный дашборд">
+<meta property="og:description" content="Факт, прогноз и точка безубыточности по 18 ПВЗ. Параметры пересчитываются вживую.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Uzum ПВЗ — интерактивный дашборд">
+<meta name="twitter:description" content="Факт, прогноз и точка безубыточности по 18 ПВЗ.">
+<meta name="theme-color" content="#0a0c11">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap');
+:root{
+  --bg:#0a0c11; --bg2:#0e1118; --panel:#13171f; --panel2:#171c26;
+  --line:#222936; --line2:#2c3543;
+  --txt:#e8ecf2; --dim:#8893a5; --faint:#5b6675;
+  --violet:#8b6dff; --violet-d:#6f54e0;
+  --mint:#2ee6a6; --coral:#ff5c72; --amber:#ffb84d; --sky:#49c8ff;
+  --s1:#8b6dff; --s2:#49c8ff; --s3:#ffb84d;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Hanken Grotesk',system-ui,sans-serif;
+  background:var(--bg); color:var(--txt);
+  background-image:
+    radial-gradient(900px 500px at 88% -8%, rgba(139,109,255,.16), transparent 60%),
+    radial-gradient(700px 460px at -6% 8%, rgba(73,200,255,.10), transparent 55%),
+    linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+  background-size:auto,auto,42px 42px,42px 42px;
+  min-height:100vh; padding:28px clamp(14px,4vw,48px) 60px;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:'Spline Sans Mono',monospace;font-variant-numeric:tabular-nums}
+h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;letter-spacing:-.02em}
+
+/* header */
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:22px}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{width:46px;height:46px;border-radius:13px;background:conic-gradient(from 140deg,var(--violet),var(--sky),var(--amber),var(--violet));
+  display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:24px;color:#0a0c11;box-shadow:0 0 30px rgba(139,109,255,.5)}
+.head h1{font-size:clamp(22px,3.2vw,34px);font-weight:800;line-height:1}
+.head .sub{color:var(--dim);font-size:13px;margin-top:5px}
+.tag{font-size:11px;color:var(--violet);border:1px solid var(--line2);padding:3px 9px;border-radius:99px;background:rgba(139,109,255,.08);letter-spacing:.04em;text-transform:uppercase}
+
+/* kpi strip */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-bottom:22px}
+.kpi{background:linear-gradient(160deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:16px;padding:16px 18px;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;inset:0;background:radial-gradient(120px 60px at 100% 0,rgba(139,109,255,.10),transparent 70%)}
+.kpi .lab{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em}
+.kpi .val{font-family:'Bricolage Grotesque';font-weight:700;font-size:27px;margin-top:7px;line-height:1;transition:color .3s}
+.kpi .delta{font-size:11.5px;margin-top:6px;color:var(--dim)}
+.pos{color:var(--mint)} .neg{color:var(--coral)}
+
+/* layout */
+.grid{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}
+@media(max-width:920px){.grid{grid-template-columns:1fr}}
+.card{background:linear-gradient(165deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:18px;padding:18px}
+.card h3{font-size:14px;font-weight:700;margin-bottom:3px}
+.card .hint{font-size:11.5px;color:var(--faint);margin-bottom:14px}
+
+/* controls */
+.ctrl{margin-bottom:18px}
+.ctrl:last-child{margin-bottom:0}
+.ctrl .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.ctrl label{font-size:12.5px;color:var(--dim);font-weight:600}
+.ctrl .num{font-family:'Spline Sans Mono';font-size:14px;color:var(--txt);font-weight:600}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:99px;background:var(--line2);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;background:var(--violet);border:3px solid #0a0c11;box-shadow:0 0 0 1px var(--violet),0 0 14px rgba(139,109,255,.6);transition:transform .12s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--violet);border:3px solid #0a0c11;cursor:pointer}
+.boost{background:linear-gradient(135deg,rgba(139,109,255,.14),rgba(73,200,255,.06));border:1px solid var(--line2);border-radius:14px;padding:14px;margin-bottom:18px}
+.boost .big{font-family:'Bricolage Grotesque';font-weight:800;font-size:30px;color:var(--violet)}
+.bebtn{width:100%;margin-top:11px;border:0;border-radius:11px;padding:12px;font-family:'Bricolage Grotesque';font-weight:700;font-size:14px;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--violet),var(--violet-d));box-shadow:0 6px 20px rgba(139,109,255,.32);transition:transform .12s,box-shadow .2s;letter-spacing:-.01em}
+.bebtn:hover{transform:translateY(-1px);box-shadow:0 11px 28px rgba(139,109,255,.5)}
+.bebtn:active{transform:translateY(0)}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--panel2);border:1px solid var(--mint);color:var(--txt);padding:13px 22px;border-radius:13px;font-size:13.5px;font-weight:600;box-shadow:0 14px 44px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:.35s;z-index:60;max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.brow{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:9px}
+.brow .blab{font-size:12.5px;color:var(--dim);font-weight:600;line-height:1.15}
+.brow .big{flex-shrink:0}
+@media(min-width:921px){#ctrlCard{position:sticky;top:18px}}
+@media(max-width:620px){
+  body{padding:16px 11px 44px}
+  .head h1{font-size:21px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .kpi .val{font-size:22px}
+  .kpi{padding:13px 14px}
+  table{font-size:12px}
+  .drawer{padding:20px}
+}
+
+/* toggle */
+.seg-toggle{display:flex;background:var(--bg);border:1px solid var(--line2);border-radius:11px;padding:3px;gap:3px}
+.seg-toggle button{flex:1;border:0;background:transparent;color:var(--dim);font-family:inherit;font-size:12px;font-weight:600;padding:8px 6px;border-radius:8px;cursor:pointer;transition:.18s}
+.seg-toggle button.on{background:var(--violet);color:#0a0c11;box-shadow:0 4px 14px rgba(139,109,255,.35)}
+
+.pills{display:flex;gap:7px;flex-wrap:wrap}
+.pill{font-size:12px;font-weight:600;border:1px solid var(--line2);background:var(--bg);color:var(--dim);padding:6px 12px;border-radius:99px;cursor:pointer;transition:.16s;display:flex;align-items:center;gap:6px}
+.pill .dot{width:8px;height:8px;border-radius:50%}
+.pill.on{color:var(--txt);border-color:transparent;background:var(--panel2)}
+.pill.on.s1{box-shadow:inset 0 0 0 1.5px var(--s1)} .pill.on.s2{box-shadow:inset 0 0 0 1.5px var(--s2)} .pill.on.s3{box-shadow:inset 0 0 0 1.5px var(--s3)} .pill.on.all{box-shadow:inset 0 0 0 1.5px var(--violet)}
+
+/* chart */
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tab{font-size:12px;font-weight:600;border:1px solid var(--line2);background:transparent;color:var(--dim);padding:7px 13px;border-radius:9px;cursor:pointer;transition:.16s;font-family:inherit}
+.tab.on{background:var(--panel2);color:var(--txt);border-color:var(--violet)}
+.chart-wrap{width:100%;overflow:hidden}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.bar{transition:width .55s cubic-bezier(.22,1,.36,1),y .55s cubic-bezier(.22,1,.36,1),height .55s cubic-bezier(.22,1,.36,1),x .55s}
+.blabel{font-family:'Spline Sans Mono';font-size:11px;fill:var(--dim)}
+.bname{font-size:11.5px;fill:var(--txt);font-weight:500}
+.gridline{stroke:var(--line);stroke-width:1}
+.glabel{font-family:'Spline Sans Mono';font-size:10px;fill:var(--faint)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--dim)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:3px}
+
+/* table */
+.tbl-card{margin-top:18px}
+.tbl-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.search{background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:8px 12px;color:var(--txt);font-family:inherit;font-size:13px;width:180px;outline:none}
+.search:focus{border-color:var(--violet)}
+.tbl-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+th{text-align:right;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:600;cursor:pointer;white-space:nowrap;border-bottom:1px solid var(--line2);user-select:none}
+th:first-child,td:first-child{text-align:left}
+th.lft{text-align:left}
+th:hover{color:var(--dim)}
+th.sorted{color:var(--violet)}
+td{padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+tr.prow{cursor:pointer;transition:background .14s}
+tr.prow:hover{background:rgba(139,109,255,.06)}
+.chip{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;color:#0a0c11}
+.health{position:relative;width:96px;height:8px;background:var(--line2);border-radius:99px;overflow:hidden;display:inline-block;vertical-align:middle}
+.health i{position:absolute;left:0;top:0;height:100%;border-radius:99px;transition:width .5s cubic-bezier(.22,1,.36,1)}
+.mark{position:absolute;top:-2px;width:2px;height:12px;background:var(--txt);opacity:.55}
+
+/* drawer */
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(420px,92vw);background:var(--panel);border-left:1px solid var(--line2);box-shadow:-30px 0 80px rgba(0,0,0,.6);transform:translateX(105%);transition:transform .4s cubic-bezier(.22,1,.36,1);z-index:50;padding:26px;overflow-y:auto}
+.drawer.open{transform:translateX(0)}
+.dx{position:absolute;top:18px;right:20px;font-size:22px;color:var(--dim);cursor:pointer;background:none;border:0}
+.drawer h2{font-size:24px;font-weight:800}
+.drawer .code{font-family:'Spline Sans Mono';color:var(--violet);font-size:13px;margin-bottom:18px}
+.stat{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line)}
+.stat .k{color:var(--dim);font-size:13px}
+.stat .v{font-family:'Spline Sans Mono';font-weight:600;font-size:14px}
+.spark{margin:16px 0 6px}
+.foot{margin-top:26px;color:var(--faint);font-size:11.5px;line-height:1.6;text-align:center}
+.scrim{position:fixed;inset:0;background:rgba(5,7,11,.55);opacity:0;pointer-events:none;transition:.35s;z-index:40}
+.scrim.on{opacity:1;pointer-events:auto}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.kpi,.card{animation:rise .6s both}
+.kpis .kpi:nth-child(2){animation-delay:.05s}.kpis .kpi:nth-child(3){animation-delay:.1s}.kpis .kpi:nth-child(4){animation-delay:.15s}.kpis .kpi:nth-child(5){animation-delay:.2s}.kpis .kpi:nth-child(6){animation-delay:.25s}
+#gate{position:fixed;inset:0;z-index:999;background:#070910;display:grid;place-items:center;background-image:radial-gradient(700px 400px at 50% 32%,rgba(139,109,255,.18),transparent 60%)}
+.gbox{text-align:center;width:min(340px,88vw);padding:34px 28px;background:var(--panel);border:1px solid var(--line2);border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.glogo{width:54px;height:54px;border-radius:15px;margin:0 auto 16px;background:conic-gradient(from 140deg,var(--violet),var(--sky),var(--amber),var(--violet));display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:28px;color:#0a0c11}
+.gbox h2{font-family:'Bricolage Grotesque';font-size:26px;font-weight:800;margin-bottom:6px}
+.gbox p{color:var(--dim);font-size:13px;margin-bottom:18px;line-height:1.4}
+#gpw{width:100%;padding:12px 14px;border-radius:11px;border:1px solid var(--line2);background:var(--bg);color:var(--txt);font-family:inherit;font-size:15px;outline:none;text-align:center}
+#gpw:focus{border-color:var(--violet)}
+#gbtn{width:100%;margin-top:11px;padding:12px;border:0;border-radius:11px;background:var(--violet);color:#0a0c11;font-family:'Bricolage Grotesque';font-weight:700;font-size:15px;cursor:pointer;transition:transform .12s}
+#gbtn:hover{transform:translateY(-1px)}
+#gerr{color:var(--coral);font-size:12.5px;margin-top:10px;min-height:16px}
+.cur-toggle{display:flex;background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:3px;gap:3px}
+.cur-toggle button{border:0;background:transparent;color:var(--dim);font-family:inherit;font-size:12px;font-weight:700;padding:6px 13px;border-radius:7px;cursor:pointer;transition:.16s}
+.cur-toggle button.on{background:var(--violet);color:#0a0c11;box-shadow:0 3px 12px rgba(139,109,255,.3)}
+.viewnav{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.viewnav button{font-family:inherit;font-size:13.5px;font-weight:700;border:1px solid var(--line2);background:transparent;color:var(--dim);padding:10px 18px;border-radius:11px;cursor:pointer;transition:.16s}
+.viewnav button.on{background:var(--panel2);color:var(--txt);border-color:var(--violet);box-shadow:0 0 0 1px var(--violet) inset}
+.hist-net{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+@media(max-width:760px){.hist-net{grid-template-columns:1fr}}
+.wkbar{transition:y .5s cubic-bezier(.22,1,.36,1),height .5s cubic-bezier(.22,1,.36,1)}
+</style>
+</head>
+<body>
+<div id="gate">
+  <div class="gbox">
+    <div class="glogo">U</div>
+    <h2>Uzum ПВЗ</h2>
+    <p>Введите пароль для доступа к дашборду</p>
+    <input type="password" id="gpw" placeholder="Пароль" autocomplete="off">
+    <button id="gbtn">Войти</button>
+    <div id="gerr"></div>
+  </div>
+</div>
+<div class="head">
+  <div class="brand">
+    <div class="logo">U</div>
+    <div>
+      <h1>Uzum ПВЗ · живой дашборд</h1>
+      <div class="sub">18 пунктов выдачи · факт май–июнь 2026</div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+    <div class="cur-toggle" id="curTog">
+      <button data-c="usd" class="on">$ USD</button>
+      <button data-c="uzs">Сум</button>
+    </div>
+    <div class="tag" id="scenTag">Сценарий: на гарантии</div>
+  </div>
+</div>
+
+<div class="viewnav" id="viewnav">
+  <button data-v="main" class="on">Обзор</button>
+  <button data-v="history">Недельная история</button>
+  <button data-v="upload">Загрузить файл</button>
+</div>
+
+<div id="viewMain">
+<div class="kpis" id="kpis"></div>
+
+<div class="grid">
+  <!-- controls -->
+  <div class="card" id="ctrlCard">
+    <h3>Параметры модели</h3>
+    <div class="hint">Меняй допущения — пересчёт мгновенный</div>
+
+    <div class="boost">
+      <div class="brow"><span class="blab">Симулятор роста заказов</span><span class="big mono" id="boostV">×1.0</span></div>
+      <input type="range" id="boost" min="1" max="6" step="0.1" value="1">
+      <div class="hint" style="margin:8px 0 0">Масштабирует текущий поток (W3) по всем точкам.</div>
+      <button class="bebtn" id="beBtn">Показать безубыточность сети</button>
+      <button class="bebtn" id="t150Btn">150 заказов/день на 1 ПВЗ</button>
+      <button class="bebtn" id="resetBtn">Текущий результат (сброс)</button>
+    </div>
+
+    <div class="ctrl"><div class="row"><label>Курс USD/UZS</label><span class="num" id="fxV">12 000</span></div><input type="range" id="fx" min="11000" max="13500" step="50" value="12000"></div>
+    <div class="ctrl"><div class="row"><label>Средний чек, $</label><span class="num" id="chkV">$14</span></div><input type="range" id="chk" min="8" max="22" step="0.5" value="14"></div>
+    <div class="ctrl"><div class="row"><label>Затраты на УК, $/мес</label><span class="num" id="ukV">$320</span></div><input type="range" id="uk" min="0" max="800" step="20" value="320"></div>
+
+    <div class="ctrl">
+      <label style="display:block;margin-bottom:8px">Сценарий вознаграждения</label>
+      <div class="seg-toggle" id="scen">
+        <button data-s="guar" class="on">На гарантии</button>
+        <button data-s="comm">После гарантии</button>
+      </div>
+      <div class="hint" style="margin-top:8px" id="scenHint">Доход = max(гарантия; комиссия×оборот). Действует 6 мес от старта.</div>
+    </div>
+
+    <div class="ctrl">
+      <label style="display:block;margin-bottom:9px">Сегменты</label>
+      <div class="pills" id="pills">
+        <div class="pill all on" data-s="all">Все</div>
+        <div class="pill s1" data-s="1"><span class="dot" style="background:var(--s1)"></span>Сег 1 · 6%</div>
+        <div class="pill s2" data-s="2"><span class="dot" style="background:var(--s2)"></span>Сег 2 · 5%</div>
+        <div class="pill s3" data-s="3"><span class="dot" style="background:var(--s3)"></span>Сег 3 · 5%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- main -->
+  <div>
+    <div class="card">
+      <div class="tabs" id="tabs">
+        <button class="tab on" data-m="be">Факт vs Безубыток</button>
+        <button class="tab" data-m="fc">Факт vs Прогноз 1-го мес.</button>
+        <button class="tab" data-m="yx">Восстановление к Яндекс-пику</button>
+        <button class="tab" data-m="pnl">P&amp;L за месяц</button>
+      </div>
+      <h3 id="chTitle"></h3>
+      <div class="hint" id="chHint"></div>
+      <div class="chart-wrap"><svg id="chart" preserveAspectRatio="xMinYMin meet"></svg></div>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <div class="card tbl-card">
+      <div class="tbl-top">
+        <div><h3>Таблица по точкам</h3><div class="hint">Клик по строке — карточка точки. Клик по заголовку — сортировка.</div></div>
+        <input class="search" id="search" placeholder="Поиск точки…">
+      </div>
+      <div class="tbl-scroll"><table id="tbl"></table></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /viewMain -->
+
+<div id="viewHistory" style="display:none">
+  <div class="card" style="margin-bottom:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <div><h3>Недельная история</h3><div class="hint" style="margin:0">Факт по неделям. <b style="color:var(--dim)">W4* — неполная неделя</b> (01–02.06, всего 2 дня): показана как есть, не для экстраполяции. Объём — в выбранной валюте.</div></div>
+      <div class="seg-toggle" id="histTog" style="max-width:320px">
+        <button data-h="orders" class="on">Заказы/день</button>
+        <button data-h="volume">Объём/день</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="hist-net" id="histNet"></div>
+
+  <div class="card">
+    <h3 id="histTblTitle"></h3>
+    <div class="hint">Среднее за неделю на каждом ПВЗ. Отсортировано по W3.</div>
+    <div class="tbl-scroll"><table id="histTbl"></table></div>
+  </div>
+</div>
+
+<div id="viewUpload" style="display:none">
+  <div id="adminGate" class="card" style="max-width:440px;margin:0 auto">
+    <h3>Админ-доступ</h3>
+    <div class="hint">Загрузка данных доступна только администратору. Инвесторы видят только «Обзор» и «Недельную историю».</div>
+    <input type="password" id="apw" placeholder="Админ-пароль" autocomplete="off" style="width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--line2);background:var(--bg);color:var(--txt);font-family:inherit;font-size:14px;outline:none">
+    <button id="abtn" class="bebtn">Войти</button>
+    <div id="aerr" style="color:var(--coral);font-size:12.5px;margin-top:8px;min-height:16px"></div>
+  </div>
+
+  <div id="uploadUI" style="display:none">
+    <div class="card">
+      <h3>Загрузить узум.xlsx</h3>
+      <div class="hint">Файл читается прямо в браузере и пересчитывает заказы и выручку по неделям. <b style="color:var(--mint)">Эталонные данные не теряются</b> — обновление действует только в этой сессии; перезагрузка страницы вернёт исходные.</div>
+      <input type="file" id="xfile" accept=".xlsx,.xls" style="font-family:inherit;font-size:13px;color:var(--dim)">
+      <div id="ustatus" style="margin-top:14px;font-size:13.5px;line-height:1.5"></div>
+      <button id="resetData" class="bebtn" style="background:transparent;border:1px solid var(--line2);color:var(--dim);box-shadow:none">Вернуть эталонные данные</button>
+      <div class="hint" style="margin-top:16px;line-height:1.6">
+        <b style="color:var(--dim)">Ожидаемый формат:</b> листы с датами в названии (ДД.ММ.ГГГГ); колонки: «Адрес», «ПВЗ» (код вида FRТАШ-…), «Дата», «Кол-во заказов», «Общая сумма». Из файла берутся только заказы и выручка → недели, объёмы, run-rate. Сегменты, комиссии, опекс, гарантии, прогнозы и Яндекс-пик остаются как настроено (они не в дневном файле).<br>
+        Если формат не совпадёт — загрузка откажется и покажет, чего не хватает; текущие данные останутся нетронутыми.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div class="scrim" id="scrim"></div>
+<div class="drawer" id="drawer"></div>
+
+<div class="foot">
+  Данные из «Узум_факт_vs_прогноз.xlsx». Период факта 13.05–02.06.2026, run-rate = неделя W3.
+</div>
+
+<script>
+const DATA = [{"code": "FRТАШ-291", "aka": "Бабур", "city": "Ташкент", "seg": 1, "comm": 0.06, "opex_usd": 1524.59, "uk": 320.0, "w1": 33.4, "w2": 41.14, "w3": 36.43, "w4": 52.5, "runRate": 36.43, "periodAvg": 40.0, "fcMonth1": 39, "yandex": 43, "revW3": 6998954, "revPeriod": 6433841, "avgCheck": 160848, "gmvFc_usd": 546, "guarFull": 17400000, "start": "2026-05-06"}, {"code": "FRТАШ-290", "aka": "Буз-1", "city": "Ташкент", "seg": 1, "comm": 0.06, "opex_usd": 1327.87, "uk": 320.0, "w1": 30, "w2": 37.86, "w3": 39.57, "w4": 55.5, "runRate": 39.57, "periodAvg": 39.74, "fcMonth1": 61, "yandex": 32, "revW3": 6694148, "revPeriod": 6940540, "avgCheck": 174651, "gmvFc_usd": 854, "guarFull": 17400000, "start": "2026-05-06"}, {"code": "FRТАШ-292", "aka": "Спутник", "city": "Ташкент", "seg": 1, "comm": 0.06, "opex_usd": 1131.15, "uk": 320.0, "w1": 18.6, "w2": 21.57, "w3": 26.14, "w4": 30.75, "runRate": 26.14, "periodAvg": 23.91, "fcMonth1": 38, "yandex": 30, "revW3": 5292830, "revPeriod": 4354781, "avgCheck": 182119, "gmvFc_usd": 532, "guarFull": 17400000, "start": "2026-05-06"}, {"code": "FRТАШ-294", "aka": "Шастри", "city": "Ташкент", "seg": 1, "comm": 0.06, "opex_usd": 1622.95, "uk": 320.0, "w1": 18.8, "w2": 26.57, "w3": 28.29, "w4": 22.75, "runRate": 28.29, "periodAvg": 24.74, "fcMonth1": 38, "yandex": 36, "revW3": 4915264, "revPeriod": 4139815, "avgCheck": 167333, "gmvFc_usd": 532, "guarFull": 17400000, "start": "2026-05-01"}, {"code": "FRАЛМ-9", "aka": "Алмалык Амир Т", "city": "Алмалык", "seg": 2, "comm": 0.05, "opex_usd": 1032.79, "uk": 320.0, "w1": 13.4, "w2": 16.57, "w3": 20.86, "w4": 18.25, "runRate": 20.86, "periodAvg": 17.48, "fcMonth1": 38, "yandex": 40, "revW3": 4699718, "revPeriod": 3398088, "avgCheck": 194413, "gmvFc_usd": 532, "guarFull": 14000000, "start": "2026-05-07"}, {"code": "FRТАШ-289", "aka": "Афросиаб", "city": "Ташкент", "seg": 1, "comm": 0.06, "opex_usd": 1524.59, "uk": 320.0, "w1": 4.4, "w2": 17.86, "w3": 20.86, "w4": 23.25, "runRate": 20.86, "periodAvg": 16.78, "fcMonth1": 58, "yandex": 48, "revW3": 4138246, "revPeriod": 3469611, "avgCheck": 206717, "gmvFc_usd": 812, "guarFull": 17400000, "start": "2026-05-14"}, {"code": "FRСМК-52", "aka": "Рудаки", "city": "Самарканд", "seg": 2, "comm": 0.05, "opex_usd": 1278.69, "uk": 320.0, "w1": 11, "w2": 10.43, "w3": 11.14, "w4": 14.0, "runRate": 11.14, "periodAvg": 11.39, "fcMonth1": 36, "yandex": 41, "revW3": 2986412, "revPeriod": 2176399, "avgCheck": 191065, "gmvFc_usd": 504, "guarFull": 14000000, "start": "2026-05-04"}, {"code": "FRТАШ-293", "aka": "Кургантепа", "city": "Ташкент", "seg": 1, "comm": 0.06, "opex_usd": 1327.87, "uk": 320.0, "w1": 8, "w2": 13, "w3": 17.71, "w4": 23.0, "runRate": 17.71, "periodAvg": 15.09, "fcMonth1": 61, "yandex": 48, "revW3": 2911760, "revPeriod": 2590401, "avgCheck": 171713, "gmvFc_usd": 854, "guarFull": 17400000, "start": "2026-05-12"}, {"code": "FRБХР-30", "aka": "Бухара", "city": "Бухара", "seg": 2, "comm": 0.05, "opex_usd": 1131.15, "uk": 320.0, "w1": 13.8, "w2": 21.71, "w3": 15.43, "w4": 18.5, "runRate": 15.43, "periodAvg": 17.52, "fcMonth1": 31, "yandex": 25, "revW3": 2882378, "revPeriod": 2776890, "avgCheck": 158490, "gmvFc_usd": 434, "guarFull": 14000000, "start": "2026-05-01"}, {"code": "FRГАЗ-4", "aka": "Газалкент", "city": "Газалкент", "seg": 2, "comm": 0.05, "opex_usd": 934.43, "uk": 320.0, "w1": 9.6, "w2": 13.29, "w3": 14.57, "w4": 14.25, "runRate": 14.57, "periodAvg": 13.04, "fcMonth1": 60, "yandex": 31, "revW3": 2627185, "revPeriod": 2219246, "avgCheck": 170131, "gmvFc_usd": 840, "guarFull": 14000000, "start": "2026-05-01"}, {"code": "FRТАШ-319", "aka": "Баку", "city": "Ташкент", "seg": 1, "comm": 0.06, "opex_usd": 1229.51, "uk": 320.0, "w1": 14.8, "w2": 19.43, "w3": 15.71, "w4": 13.75, "runRate": 15.71, "periodAvg": 16.3, "fcMonth1": 35, "yandex": 34, "revW3": 2441774, "revPeriod": 2967210, "avgCheck": 181999, "gmvFc_usd": 490, "guarFull": 17400000, "start": "2026-05-06"}, {"code": "FRБУК-2", "aka": "Бука", "city": "Бука", "seg": 2, "comm": 0.05, "opex_usd": 934.43, "uk": 320.0, "w1": 7, "w2": 12.57, "w3": 11.29, "w4": 12.0, "runRate": 11.29, "periodAvg": 10.87, "fcMonth1": 33, "yandex": 43, "revW3": 1844483, "revPeriod": 1935301, "avgCheck": 178033, "gmvFc_usd": 462, "guarFull": 14000000, "start": "2026-05-05"}, {"code": "FRТАШ-308", "aka": "Янгиюнусабад", "city": "Ташкент", "seg": 1, "comm": 0.06, "opex_usd": 1327.87, "uk": 320.0, "w1": 10.8, "w2": 13.57, "w3": 12.57, "w4": 15.5, "runRate": 12.57, "periodAvg": 13.0, "fcMonth1": 61, "yandex": 65, "revW3": 1655575, "revPeriod": 1930253, "avgCheck": 148491, "gmvFc_usd": 854, "guarFull": 17400000, "start": "2026-05-01"}, {"code": "FRАЛМ-10", "aka": "Алмалык Мустакилик", "city": "Алмалык", "seg": 2, "comm": 0.05, "opex_usd": 934.43, "uk": 320.0, "w1": 7.2, "w2": 8.14, "w3": 9.14, "w4": 13.0, "runRate": 9.14, "periodAvg": 9.09, "fcMonth1": 36, "yandex": 23, "revW3": 1433257, "revPeriod": 1671756, "avgCheck": 184008, "gmvFc_usd": 504, "guarFull": 14000000, "start": "2026-05-06"}, {"code": "FRПСК-2", "aka": "Пскент", "city": "Пскент", "seg": 2, "comm": 0.05, "opex_usd": 1032.79, "uk": 320.0, "w1": 0, "w2": 1.86, "w3": 7, "w4": 10.0, "runRate": 7, "periodAvg": 4.44, "fcMonth1": 37, "yandex": 40, "revW3": 1390894, "revPeriod": 706482, "avgCheck": 159274, "gmvFc_usd": 518, "guarFull": 14000000, "start": "2026-05-20"}, {"code": "FRТАШ-307", "aka": "Крестик", "city": "Ташкент", "seg": 1, "comm": 0.06, "opex_usd": 1229.51, "uk": 320.0, "w1": 4.4, "w2": 5.14, "w3": 5.29, "w4": 8.5, "runRate": 5.29, "periodAvg": 5.61, "fcMonth1": 60, "yandex": 68, "revW3": 550844, "revPeriod": 781615, "avgCheck": 139347, "gmvFc_usd": 840, "guarFull": 17400000, "start": "2026-05-01"}, {"code": "FRСМК-53", "aka": "Андижанская", "city": "Самарканд", "seg": 2, "comm": 0.05, "opex_usd": 1180.33, "uk": 320.0, "w1": 0, "w2": 0.14, "w3": 2.86, "w4": 6.75, "runRate": 2.86, "periodAvg": 2.09, "fcMonth1": 24, "yandex": 29, "revW3": 496784, "revPeriod": 329436, "avgCheck": 157855, "gmvFc_usd": 336, "guarFull": 14000000, "start": "2026-05-21"}, {"code": "FRМРГ-8", "aka": "Маргилан", "city": "Маргилан", "seg": 3, "comm": 0.05, "opex_usd": 934.43, "uk": 320.0, "w1": 0, "w2": 2, "w3": 3.86, "w4": 6.0, "runRate": 3.86, "periodAvg": 2.83, "fcMonth1": 19, "yandex": 26, "revW3": 495039, "revPeriod": 360777, "avgCheck": 127620, "gmvFc_usd": 266, "guarFull": 11400000, "start": "2026-05-18"}];
+const WK = {"weeks": ["11.05–17.05", "18.05–24.05", "25.05–31.05", "01.06–07.06"], "runIdx": 2, "dayCounts": [5, 7, 7, 4], "net": {"ord": [205.2, 282.8, 298.7, 358.2], "rev": [32294908, 49272087, 54455545, 60907045]}, "pvz": {"FRТАШ-290": {"aka": "Буз-1", "city": "Ташкент", "seg": 1, "ord": [30, 37.86, 39.57, 55.5], "rev": [5314462, 7773641, 6694148, 7946395]}, "FRТАШ-291": {"aka": "Бабур", "city": "Ташкент", "seg": 1, "ord": [33.4, 41.14, 36.43, 52.5], "rev": [5189086, 5351316, 6998954, 8895256]}, "FRТАШ-292": {"aka": "Спутник", "city": "Ташкент", "seg": 1, "ord": [18.6, 21.57, 26.14, 30.75], "rev": [2804800, 3374794, 5292830, 6365652]}, "FRТАШ-289": {"aka": "Афросиаб", "city": "Ташкент", "seg": 1, "ord": [4.4, 17.86, 20.86, 23.25], "rev": [715974, 3716644, 4138246, 5309236]}, "FRТАШ-293": {"aka": "Кургантепа", "city": "Ташкент", "seg": 1, "ord": [8, 13, 17.71, 23.0], "rev": [1812730, 2776540, 2911760, 2674371]}, "FRТАШ-294": {"aka": "Шастри", "city": "Ташкент", "seg": 1, "ord": [18.8, 26.57, 28.29, 22.75], "rev": [2357412, 4784233, 4915264, 3883050]}, "FRБХР-30": {"aka": "Бухара", "city": "Бухара", "seg": 2, "ord": [13.8, 21.71, 15.43, 18.5], "rev": [2092408, 3463258, 2882378, 2246742]}, "FRАЛМ-9": {"aka": "Алмалык Амир Т", "city": "Алмалык", "seg": 2, "ord": [13.4, 16.57, 20.86, 18.25], "rev": [2684362, 2756586, 4699718, 3135019]}, "FRТАШ-308": {"aka": "Янгиюнусабад", "city": "Ташкент", "seg": 1, "ord": [10.8, 13.57, 12.57, 15.5], "rev": [1486923, 1648830, 1655575, 3457592]}, "FRГАЗ-4": {"aka": "Газалкент", "city": "Газалкент", "seg": 2, "ord": [9.6, 13.29, 14.57, 14.25], "rev": [1227817, 2106333, 2627185, 2942237]}, "FRСМК-52": {"aka": "Рудаки", "city": "Самарканд", "seg": 2, "ord": [11, 10.43, 11.14, 14.0], "rev": [1292019, 2129724, 2986412, 1946032]}, "FRТАШ-319": {"aka": "Баку", "city": "Ташкент", "seg": 1, "ord": [14.8, 19.43, 15.71, 13.75], "rev": [2247551, 4186185, 2441774, 2653089]}, "FRАЛМ-10": {"aka": "Алмалык Мустакилик", "city": "Алмалык", "seg": 2, "ord": [7.2, 8.14, 9.14, 13.0], "rev": [1202263, 1459084, 1433257, 3048172]}, "FRБУК-2": {"aka": "Бука", "city": "Бука", "seg": 2, "ord": [7, 12.57, 11.29, 12.0], "rev": [1291719, 2331664, 1844483, 2205074]}, "FRПСК-2": {"aka": "Пскент", "city": "Пскент", "seg": 2, "ord": [0, 1.86, 7, 10.0], "rev": [0, 193930, 1390894, 1288831]}, "FRТАШ-307": {"aka": "Крестик", "city": "Ташкент", "seg": 1, "ord": [4.4, 5.14, 5.29, 8.5], "rev": [575382, 970483, 550844, 1112735]}, "FRСМК-53": {"aka": "Андижанская", "city": "Самарканд", "seg": 2, "ord": [0, 0.14, 2.86, 6.75], "rev": [0, 51986, 496784, 933910]}, "FRМРГ-8": {"aka": "Маргилан", "city": "Маргилан", "seg": 3, "ord": [0, 2, 3.86, 6.0], "rev": [0, 196856, 495039, 863652]}}};
+const S={fx:12000,chk:14,uk:320,boost:1,flat:null,scen:'guar',seg:'all',metric:'be',cur:'usd',view:'main',histMetric:'orders',sortKey:'revW3',sortDir:-1,q:''};
+/* эталон: run-rate = последняя полная неделя; недели/дни задаются данными или дефолтом */
+DATA.forEach(d=>{if(d.runRate==null)d.runRate=d.w3;});
+if(WK.runIdx==null)WK.runIdx=2;
+if(!WK.dayCounts)WK.dayCounts=[5,7,7,2];
+if(!WK.weeks)WK.weeks=['11.05–17.05','18.05–24.05','25.05–31.05','01.06–07.06'];
+const segColor={1:'var(--s1)',2:'var(--s2)',3:'var(--s3)'};
+const segHex={1:'#8b6dff',2:'#49c8ff',3:'#ffb84d'};
+const fmt=n=>Math.round(n).toLocaleString('ru-RU');
+const fmt1=n=>n.toLocaleString('ru-RU',{minimumFractionDigits:1,maximumFractionDigits:1});
+const mln=n=>(n/1e6).toLocaleString('ru-RU',{minimumFractionDigits:1,maximumFractionDigits:1})+' млн';
+const money=v=>{ // v всегда в сумах; показывает в выбранной валюте
+  if(S.cur==='usd'){const d=v/S.fx,a=Math.abs(d);return (d<0?'-$':'$')+(a<100?a.toFixed(1):fmt(a));}
+  const a=Math.abs(v);return (a>=1e6?mln(v):fmt(v))+' сум';
+};
+
+function compute(d){
+  const orders = (S.flat!=null) ? S.flat : d.runRate * S.boost;   // заказы/день (×рост или фикс. цель)
+  const margin = S.chk * d.comm;                    // маржа с заказа, $
+  const be = (d.opex_usd + S.uk) / margin / 30;     // точка безубытка, зак/день
+  const rev = orders * S.chk * S.fx;                // выручка/день, сум (единый чек $14)
+  const commRev = orders * margin * 30 * S.fx;      // комиссия/мес, сум (= заказы×маржа$×30×курс)
+  const cost = (d.opex_usd + S.uk) * S.fx;          // затраты/мес, сум
+  const reward = S.scen==='guar' ? Math.max(d.guarFull, commRev) : commRev;
+  const pnl = reward - cost;
+  return {orders,margin,be,rev,commRev,cost,reward,pnl,health:orders/be,gap:orders-be};
+}
+function rows(){
+  let r=DATA.filter(d=>S.seg==='all'||d.seg==S.seg);
+  if(S.q){const q=S.q.toLowerCase();r=r.filter(d=>(d.aka+d.code+d.city).toLowerCase().includes(q));}
+  return r;
+}
+
+/* ---------- KPIs ---------- */
+function renderKPIs(){
+  const r=rows(); let ord=0,rev=0,pnl=0,above=0,beSum=0;
+  r.forEach(d=>{const c=compute(d);ord+=c.orders;rev+=c.rev;pnl+=c.pnl;beSum+=c.be;if(c.gap>=0)above++;});
+  const avgPnl=r.length?pnl/r.length:0;
+  const beRatio = ord>0 ? beSum/ord : 0;
+  const k=[
+    {l:'Заказов/день на 1 ПВЗ',v:fmt(ord/r.length),d:(S.flat!=null?`цель · ${S.flat}/ПВЗ`:(S.boost===1?'текущий результат · W3':`рост · ×${S.boost.toFixed(1)}`))},
+    {l:'Выручка/день',v:money(rev),d:(S.cur==='usd'?`≈ ${mln(rev)} сум`:`≈ $${fmt(rev/S.fx)}`)},
+    {l:'Точек выше безубытка',v:above+' / '+r.length,d:above==0?'все в минусе':'',cls:above>0?'pos':'neg'},
+    {l:'Безубыток/день на 1 ПВЗ',v:fmt(beSum/r.length),d:'в среднем на точку'},
+    {l:'До безубытка',v:(beRatio<=1.001?'достигнут':'×'+beRatio.toFixed(1)),cls:beRatio<=1.001?'pos':'',d:beRatio<=1.001?'P&L ≥ 0':'рост к текущему'},
+    {l:S.scen==='guar'?'P&L/точка (на гарантии)':'P&L/точка (комиссия)',v:money(avgPnl),cls:avgPnl>=0?'pos':'neg',d:'в среднем'},
+    {l:'P&L по сети',v:money(pnl),cls:pnl>=0?'pos':'neg',d:'за месяц'},
+  ];
+  document.getElementById('kpis').innerHTML=k.map(x=>`<div class="kpi"><div class="lab">${x.l}</div><div class="val ${x.cls||''}">${x.v}</div><div class="delta">${x.d||''}</div></div>`).join('');
+}
+
+/* ---------- main chart ---------- */
+const chartMeta={
+  be:{t:'Факт vs точка безубытка',h:'Серая планка — безубыток (зак/день). Цветная — текущий факт ×рост.'},
+  fc:{t:'Факт vs прогноз Узум на 1-й месяц',h:'Бар — факт (зак/день). Чёрточка — план 1-го мес. Цвет = сегмент.'},
+  yx:{t:'Восстановление к пиковому Яндекс-уровню',h:'Сколько % от пика под Яндексом сделано (факт W3 ÷ Яндекс-пик).'},
+  pnl:{t:'P&L за месяц по точкам',h:'Зелёная — прибыль, красная — убыток (при текущих допущениях и сценарии).'}
+};
+function renderChart(){
+  const m=S.metric, meta=chartMeta[m];
+  document.getElementById('chTitle').textContent=meta.t;
+  document.getElementById('chHint').textContent=meta.h;
+  let r=rows().map(d=>({d,c:compute(d)}));
+  const svg=document.getElementById('chart');
+  const W=860, rowH=30, padT=22, padL=126, padR=64, padB=10;
+  const H=padT+r.length*rowH+padB;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  let el='';
+  const plotW=W-padL-padR;
+
+  if(m==='pnl'){
+    r.sort((a,b)=>a.c.pnl-b.c.pnl);
+    const max=Math.max(...r.map(x=>Math.abs(x.c.pnl)),1);
+    const zero=padL+plotW/2;
+    for(let i=0;i<=2;i++){const gx=padL+plotW/2*i; }
+    el+=`<line class="gridline" x1="${zero}" y1="${padT-8}" x2="${zero}" y2="${H-padB}"/>`;
+    r.forEach((x,i)=>{
+      const y=padT+i*rowH, w=Math.abs(x.c.pnl)/max*(plotW/2-6);
+      const pos=x.c.pnl>=0, col=pos?'var(--mint)':'var(--coral)';
+      const bx=pos?zero:zero-w;
+      el+=`<text class="bname" x="${padL-10}" y="${y+rowH/2+4}" text-anchor="end">${x.d.aka}</text>`;
+      el+=`<rect class="bar" x="${bx}" y="${y+4}" width="${w}" height="${rowH-12}" rx="4" fill="${col}" opacity=".9"/>`;
+      el+=`<text class="blabel" x="${pos?bx+w+7:bx-7}" y="${y+rowH/2+4}" text-anchor="${pos?'start':'end'}" fill="${col}">${money(x.c.pnl)}</text>`;
+    });
+  } else if(m==='yx'){
+    r.sort((a,b)=>(b.c.orders/b.d.yandex)-(a.c.orders/a.d.yandex));
+    const max=Math.max(...r.map(x=>x.c.orders/x.d.yandex),1.05);
+    [0,.25,.5,.75,1].forEach(t=>{const gx=padL+t/max*plotW;el+=`<line class="gridline" x1="${gx}" y1="${padT-8}" x2="${gx}" y2="${H-padB}" opacity="${t==0?.6:.3}"/><text class="glabel" x="${gx}" y="${padT-12}" text-anchor="middle">${Math.round(t*100)}%</text>`;});
+    r.forEach((x,i)=>{
+      const y=padT+i*rowH, pct=x.c.orders/x.d.yandex, w=pct/max*plotW;
+      const col=pct>=1?'var(--mint)':segColor[x.d.seg];
+      el+=`<text class="bname" x="${padL-10}" y="${y+rowH/2+4}" text-anchor="end">${x.d.aka}</text>`;
+      el+=`<rect class="bar" x="${padL}" y="${y+4}" width="${w}" height="${rowH-12}" rx="4" fill="${col}" opacity=".92"/>`;
+      el+=`<text class="blabel" x="${padL+w+7}" y="${y+rowH/2+4}">${Math.round(pct*100)}%</text>`;
+    });
+  } else {
+    // be or fc : bar = factual orders; reference = be or forecast
+    r.sort((a,b)=>b.c.orders-a.c.orders);
+    const ref=x=> m==='be'? x.c.be : x.d.fcMonth1;
+    const max=Math.max(...r.map(x=>Math.max(x.c.orders,ref(x))),1)*1.08;
+    [0,.25,.5,.75,1].forEach(t=>{const gx=padL+t*plotW;el+=`<line class="gridline" x1="${gx}" y1="${padT-8}" x2="${gx}" y2="${H-padB}" opacity="${t==0?.6:.28}"/><text class="glabel" x="${gx}" y="${padT-12}" text-anchor="middle">${Math.round(t*max)}</text>`;});
+    r.forEach((x,i)=>{
+      const y=padT+i*rowH, w=x.c.orders/max*plotW, rx=ref(x)/max*plotW;
+      const meets = m==='be' ? x.c.orders>=x.c.be : x.c.orders>=x.d.fcMonth1;
+      const col=meets?'var(--mint)':segColor[x.d.seg];
+      el+=`<text class="bname" x="${padL-10}" y="${y+rowH/2+4}" text-anchor="end">${x.d.aka}</text>`;
+      el+=`<rect class="bar" x="${padL}" y="${y+5}" width="${w}" height="${rowH-14}" rx="4" fill="${col}" opacity=".92"/>`;
+      // reference marker
+      el+=`<line x1="${padL+rx}" y1="${y+2}" x2="${padL+rx}" y2="${y+rowH-2}" stroke="${m==='be'?'#cdd5e1':'#ff5c72'}" stroke-width="2.4" stroke-dasharray="${m==='be'?'0':'3 2'}"/>`;
+      el+=`<text class="blabel" x="${padL+w+7}" y="${y+rowH/2+4}">${fmt1(x.c.orders)}</text>`;
+    });
+  }
+  svg.innerHTML=el;
+  const L={
+    be:[['var(--mint)','выше безубытка'],['#cdd5e1','точка безубытка']],
+    fc:[['var(--mint)','план выполнен'],['#ff5c72','план 1-го мес.']],
+    yx:[['var(--mint)','≥ Яндекс-пик'],['var(--s1)','Сег 1'],['var(--s2)','Сег 2'],['var(--s3)','Сег 3']],
+    pnl:[['var(--mint)','прибыль'],['var(--coral)','убыток']]
+  }[m];
+  document.getElementById('legend').innerHTML=L.map(x=>`<span><span class="sw" style="background:${x[0]}"></span>${x[1]}</span>`).join('');
+}
+
+/* ---------- table ---------- */
+const cols=[
+  {k:'aka',t:'Точка',lft:1,f:d=>`<b>${d.aka}</b><div style="color:var(--faint);font-size:11px">${d.city}</div>`},
+  {k:'seg',t:'Сег',f:d=>`<span class="chip" style="background:${segHex[d.seg]}">${d.seg}</span>`},
+  {k:'orders',t:'Факт зак/д',c:1,f:(d,c)=>`<span class="mono">${fmt1(c.orders)}</span>`},
+  {k:'be',t:'Безубыток',c:1,f:(d,c)=>`<span class="mono" style="color:var(--dim)">${fmt1(c.be)}</span>`},
+  {k:'health',t:'Здоровье',c:1,f:(d,c)=>{const p=Math.min(c.health,1.4);const col=c.health>=1?'var(--mint)':c.health>=.6?'var(--amber)':'var(--coral)';return `<span class="health"><i style="width:${p/1.4*100}%;background:${col}"></i><span class="mark" style="left:${1/1.4*100}%"></span></span> <span class="mono" style="font-size:11px;color:${col}">${Math.round(c.health*100)}%</span>`;}},
+  {k:'rev',t:'Выручка/д',c:1,f:(d,c)=>`<span class="mono">${money(c.rev)}</span>`},
+  {k:'reward',t:'Вознагр./мес',c:1,f:(d,c)=>`<span class="mono">${money(c.reward)}</span>`},
+  {k:'pnl',t:'P&L/мес',c:1,f:(d,c)=>`<span class="mono ${c.pnl>=0?'pos':'neg'}">${money(c.pnl)}</span>`},
+];
+function renderTable(){
+  let r=rows().map(d=>({d,c:compute(d)}));
+  r.sort((a,b)=>{
+    const gv=o=>['orders','be','health','rev','reward','pnl'].includes(S.sortKey)?o.c[S.sortKey]:o.d[S.sortKey];
+    let x=gv(a),y=gv(b);
+    if(typeof x==='string')return S.sortDir*x.localeCompare(y);
+    return S.sortDir*(x-y);
+  });
+  let h='<thead><tr>'+cols.map(c=>`<th class="${c.lft?'lft':''} ${S.sortKey===c.k?'sorted':''}" data-k="${c.k}">${c.t}${S.sortKey===c.k?(S.sortDir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr></thead>';
+  h+='<tbody>'+r.map(x=>`<tr class="prow" data-code="${x.d.code}">`+cols.map(c=>`<td>${c.f(x.d,x.c)}</td>`).join('')+'</tr>').join('')+'</tbody>';
+  const t=document.getElementById('tbl');t.innerHTML=h;
+  t.querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(S.sortKey===k)S.sortDir*=-1;else{S.sortKey=k;S.sortDir=-1;}renderTable();});
+  t.querySelectorAll('.prow').forEach(tr=>tr.onclick=()=>openDrawer(tr.dataset.code));
+}
+
+/* ---------- drawer ---------- */
+function openDrawer(code){
+  const d=DATA.find(x=>x.code===code), c=compute(d);
+  const wk=[d.w1,d.w2,d.w3,d.w4];
+  const mx=Math.max(...wk,d.fcMonth1,1);
+  const bw=46,gap=14,h=90;
+  let spark=`<svg viewBox="0 0 ${4*(bw+gap)} ${h+22}" style="width:100%">`;
+  ['W1','W2','W3','W4'].forEach((lab,i)=>{
+    const v=wk[i],bh=v/mx*h,x=i*(bw+gap);
+    spark+=`<rect x="${x}" y="${h-bh+2}" width="${bw}" height="${bh}" rx="5" fill="${i===2?segHex[d.seg]:'#2c3543'}"/>`;
+    spark+=`<text x="${x+bw/2}" y="${h+16}" text-anchor="middle" class="glabel">${lab}</text>`;
+    spark+=`<text x="${x+bw/2}" y="${h-bh-4}" text-anchor="middle" class="blabel" style="font-size:10px">${fmt1(v)}</text>`;
+  });
+  const fcY=h-d.fcMonth1/mx*h+2;
+  spark+=`<line x1="0" y1="${fcY}" x2="${4*(bw+gap)-gap}" y2="${fcY}" stroke="#ff5c72" stroke-width="2" stroke-dasharray="4 3"/></svg>`;
+  const guarEnd=new Date(d.start);guarEnd.setMonth(guarEnd.getMonth()+6);
+  const row=(k,v)=>`<div class="stat"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+  document.getElementById('drawer').innerHTML=`
+    <button class="dx" onclick="closeDrawer()">×</button>
+    <div class="code">${d.code} · Сегмент ${d.seg} · ${d.city}</div>
+    <h2>${d.aka}</h2>
+    <div class="spark"><div class="hint">Заказы/день по неделям (W3 в цвете, ⸺ план 1-го мес.)</div>${spark}</div>
+    ${row('Факт зак/день (×'+S.boost.toFixed(1)+')',fmt1(c.orders))}
+    ${row('Точка безубытка',fmt1(c.be)+' зак/день')}
+    ${row('Здоровье',Math.round(c.health*100)+'%')}
+    ${row('Комиссия',Math.round(d.comm*100)+'%')}
+    ${row('Маржа с заказа',S.cur==='usd'?c.margin.toFixed(2)+' $':fmt(c.margin*S.fx)+' сум')}
+    ${row('Средний чек (модель)',money(S.chk*S.fx))}
+    ${row('Выручка/день',money(c.rev))}
+    ${row('Гарантия/мес',money(d.guarFull))}
+    ${row('Вознагр./мес ('+(S.scen==='guar'?'на гарантии':'комиссия')+')',money(c.reward))}
+    ${row('Затраты/мес',money(c.cost))}
+    ${row('P&L/мес',money(c.pnl))}
+    ${row('Старт',new Date(d.start).toLocaleDateString('ru-RU'))}
+    ${row('Гарантия до',guarEnd.toLocaleDateString('ru-RU'))}
+  `;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('scrim').classList.add('on');
+}
+function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('scrim').classList.remove('on');}
+document.getElementById('scrim').onclick=closeDrawer;
+
+/* ---------- weekly history ---------- */
+function wkBars(vals, fmtFn, base, hid, labels, partial){
+  const n=vals.length, slot=88, padL=14, padR=14, H=190, padT=28, padB=36, gap=18;
+  const W=padL+padR+n*slot, bw=slot-gap, max=Math.max(...vals,1);
+  let el=`<defs><pattern id="${hid}" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><rect width="7" height="7" fill="${base}" opacity="0.22"/><line x1="0" y1="0" x2="0" y2="7" stroke="${base}" stroke-width="3.5"/></pattern></defs>`;
+  vals.forEach((v,i)=>{
+    const x=padL+i*slot+gap/2, bh=(v/max)*(H-padT-padB), y=H-padB-bh, pt=!!(partial&&partial[i]), cx=x+bw/2;
+    el+=`<rect class="wkbar" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="6" fill="${pt?`url(#${hid})`:base}"${pt?` stroke="${base}" stroke-width="1.5" stroke-dasharray="4 3"`:''}/>`;
+    el+=`<text x="${cx}" y="${y-7}" text-anchor="middle" class="blabel" style="font-size:11px;fill:${pt?'var(--dim)':'var(--txt)'}">${fmtFn(v)}</text>`;
+    el+=`<text x="${cx}" y="${H-18}" text-anchor="middle" class="glabel" style="font-weight:600${pt?';fill:var(--faint)':''}">W${i+1}${pt?'*':''}</text>`;
+    el+=`<text x="${cx}" y="${H-6}" text-anchor="middle" class="glabel" style="font-size:8px;fill:var(--faint)">${(labels[i]||'').replace(/^W\d+ · /,'')}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;display:inline-block">${el}</svg>`;
+}
+function sparkline(vals,base,partial){
+  const n=vals.length, W=Math.max(60,n*7), H=26, gap=2, bw=(W-gap*(n-1))/n, max=Math.max(...vals,1);
+  let el='';
+  vals.forEach((v,i)=>{const bh=Math.max((v/max)*H,1.5),x=i*(bw+gap),y=H-bh;el+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="1" fill="${base}" opacity="${(partial&&partial[i])?0.35:1}"/>`;});
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;vertical-align:middle">${el}</svg>`;
+}
+function renderHistory(){
+  const partial=(WK.dayCounts||[]).map(c=>c<7);
+  document.getElementById('histNet').innerHTML=
+    `<div class="card"><h3 style="margin-bottom:2px">Сеть · заказы/день</h3><div class="hint">сумма по сети, по неделям</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${wkBars(WK.net.ord,fmt1,'var(--violet)','hist-ho',WK.weeks,partial)}</div></div>`+
+    `<div class="card"><h3 style="margin-bottom:2px">Сеть · объём/день</h3><div class="hint">сумма по сети, по неделям</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${wkBars(WK.net.rev,money,'var(--mint)','hist-hv',WK.weeks,partial)}</div></div>`;
+  const isVol=S.histMetric==='volume';
+  document.getElementById('histTblTitle').textContent='По точкам — '+(isVol?'объём/день':'заказы/день');
+  const val=c=> isVol?WK.pvz[c].rev:WK.pvz[c].ord;
+  const fmtV=v=> isVol?money(v):fmt1(v);
+  const base=isVol?'var(--mint)':'var(--violet)';
+  const ri=WK.runIdx??2;
+  const codes=Object.keys(WK.pvz).sort((a,b)=>val(b)[ri]-val(a)[ri]);
+  let h='<thead><tr><th class="lft">Точка</th><th>Сег</th>'+WK.weeks.map((w,i)=>`<th>${w}${partial[i]?'*':''}</th>`).join('')+'<th>тренд</th></tr></thead><tbody>';
+  codes.forEach(c=>{
+    const p=WK.pvz[c], a=val(c);
+    h+=`<tr><td><b>${p.aka}</b><div style="color:var(--faint);font-size:11px">${p.city}</div></td>`+
+       `<td style="text-align:right"><span class="chip" style="background:${segHex[p.seg]}">${p.seg}</span></td>`+
+       a.map((v,i)=>`<td style="text-align:right"><span class="mono" style="color:${partial[i]?'var(--faint)':'var(--txt)'}">${fmtV(v)}</span></td>`).join('')+
+       `<td style="text-align:right">${sparkline(a,base,partial)}</td></tr>`;
+  });
+  document.getElementById('histTbl').innerHTML=h+'</tbody>';
+}
+
+/* ---------- render all ---------- */
+function renderAll(){renderKPIs();renderChart();renderTable();renderHistory();}
+
+/* ---------- bindings ---------- */
+const bind=(id,key,disp)=>{const e=document.getElementById(id);e.oninput=()=>{S[key]=parseFloat(e.value);if(key==='boost')S.flat=null;document.getElementById(disp).textContent=
+  key==='boost'?'×'+S.boost.toFixed(1):key==='fx'?fmt(S.fx):key==='chk'?'$'+S.chk:'$'+S.uk;renderAll();};};
+bind('boost','boost','boostV');bind('fx','fx','fxV');bind('chk','chk','chkV');bind('uk','uk','ukV');
+document.querySelectorAll('#scen button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#scen button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  S.scen=b.dataset.s;
+  document.getElementById('scenTag').textContent='Сценарий: '+(S.scen==='guar'?'на гарантии':'после гарантии');
+  document.getElementById('scenHint').textContent=S.scen==='guar'?'Доход = max(гарантия; комиссия×оборот). Действует 6 мес от старта.':'Гарантия закончилась — доход только комиссия×оборот.';
+  renderAll();});
+document.querySelectorAll('#pills .pill').forEach(p=>p.onclick=()=>{
+  document.querySelectorAll('#pills .pill').forEach(x=>x.classList.remove('on'));p.classList.add('on');
+  S.seg=p.dataset.s;renderAll();});
+document.querySelectorAll('#tabs .tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');
+  S.metric=t.dataset.m;renderChart();});
+document.getElementById('search').oninput=e=>{S.q=e.target.value;renderTable();};
+document.querySelectorAll('#curTog button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#curTog button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  S.cur=b.dataset.c;renderAll();});
+document.querySelectorAll('#viewnav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#viewnav button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  S.view=b.dataset.v;
+  document.getElementById('viewMain').style.display=S.view==='main'?'':'none';
+  document.getElementById('viewHistory').style.display=S.view==='history'?'':'none';
+  document.getElementById('viewUpload').style.display=S.view==='upload'?'':'none';
+  renderHistory();});
+document.querySelectorAll('#histTog button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#histTog button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  S.histMetric=b.dataset.h;renderHistory();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
+
+/* ---------- break-even button ---------- */
+function networkBreakevenBoost(){
+  // рост, при котором ср. заказов/ПВЗ = ср. безубыток/ПВЗ (P&L сети ≈ 0)
+  let sumBe=0, sumW3=0;
+  DATA.forEach(d=>{ const margin=S.chk*d.comm; sumBe += (d.opex_usd+S.uk)/margin/30; sumW3 += d.runRate; });
+  return sumW3>0 ? sumBe/sumW3 : 1;
+}
+let toastT;
+function toast(msg){const e=document.getElementById('toast');e.innerHTML=msg;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('on'),4600);}
+document.getElementById('beBtn').onclick=()=>{
+  // показать всю сеть
+  S.seg='all';
+  document.querySelectorAll('#pills .pill').forEach(x=>x.classList.toggle('on',x.dataset.s==='all'));
+  // сценарий «после гарантии» — реальный тест безубытка на комиссии
+  S.scen='comm';
+  document.querySelectorAll('#scen button').forEach(x=>x.classList.toggle('on',x.dataset.s==='comm'));
+  document.getElementById('scenTag').textContent='Сценарий: после гарантии';
+  document.getElementById('scenHint').textContent='Гарантия закончилась — доход только комиссия×оборот.';
+  // вычислить рост, при котором сеть в ноль
+  let B=networkBreakevenBoost();
+  const slider=document.getElementById('boost');
+  if(B>parseFloat(slider.max)) slider.max=(Math.ceil(B*10)/10).toString();
+  B=Math.max(1,B);
+  S.flat=null; S.boost=B; slider.value=B; document.getElementById('boostV').textContent='×'+B.toFixed(1);
+  // показать график «Факт vs Безубыток»
+  S.metric='be';
+  document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x.dataset.m==='be'));
+  renderAll();
+  const mult=B.toFixed(1);
+  let avgBe=0;DATA.forEach(d=>avgBe+=(d.opex_usd+S.uk)/(S.chk*d.comm)/30);avgBe=Math.round(avgBe/DATA.length);
+  toast(B<=1.001
+    ? 'Сеть уже безубыточна при текущем потоке (×1)'
+    : `Безубыток: <b style="color:var(--mint)">≈${avgBe} заказов/день</b> на каждом ПВЗ — рост ×${mult} (после гарантии, P&L≈0)`);
+};
+
+renderAll();
+
+/* ---------- кнопка «150 заказов/день на 1 ПВЗ» ---------- */
+document.getElementById('t150Btn').onclick=()=>{
+  S.seg='all';
+  document.querySelectorAll('#pills .pill').forEach(x=>x.classList.toggle('on',x.dataset.s==='all'));
+  S.scen='comm';
+  document.querySelectorAll('#scen button').forEach(x=>x.classList.toggle('on',x.dataset.s==='comm'));
+  document.getElementById('scenTag').textContent='Сценарий: после гарантии';
+  document.getElementById('scenHint').textContent='Гарантия закончилась — доход только комиссия×оборот.';
+  S.flat=150;
+  document.getElementById('boostV').textContent='150/ПВЗ';
+  S.metric='be';
+  document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x.dataset.m==='be'));
+  renderAll();
+  toast('Сценарий: <b style="color:var(--violet)">150 заказов/день</b> на каждом ПВЗ (после гарантии). P&L сети при выходе на зрелость.');
+};
+
+/* ---------- сброс к текущему результату (W3, на гарантии) ---------- */
+document.getElementById('resetBtn').onclick=()=>{
+  S.fx=12000;S.chk=14;S.uk=320;S.boost=1;S.flat=null;S.scen='guar';S.seg='all';S.metric='be';
+  const sl=document.getElementById('boost');sl.max='6';sl.value=1;document.getElementById('boostV').textContent='×1.0';
+  document.getElementById('fx').value=12000;document.getElementById('fxV').textContent=fmt(12000);
+  document.getElementById('chk').value=14;document.getElementById('chkV').textContent='$14';
+  document.getElementById('uk').value=320;document.getElementById('ukV').textContent='$320';
+  document.querySelectorAll('#scen button').forEach(x=>x.classList.toggle('on',x.dataset.s==='guar'));
+  document.getElementById('scenTag').textContent='Сценарий: на гарантии';
+  document.getElementById('scenHint').textContent='Доход = max(гарантия; комиссия×оборот). Действует 6 мес от старта.';
+  document.querySelectorAll('#pills .pill').forEach(x=>x.classList.toggle('on',x.dataset.s==='all'));
+  document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on',x.dataset.m==='be'));
+  renderAll();
+  toast('Сброшено к текущему результату — неделя 3, на гарантии');
+};
+
+/* ---------- загрузка файла (админ) ---------- */
+function aggregate(wb){
+  const REQUIRED=['Адрес','ПВЗ','Дата','Кол-во заказов','Общая сумма'];
+  const norm=s=>String(s==null?'':s).trim();
+  const num=v=>{ if(v===null||v==='')return null; const x=Number(String(v).replace(/\s/g,'').replace(',','.')); return isNaN(x)?null:x; };
+  const pDate=s=>{const m=String(s).trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);return m?new Date(+m[3],+m[2]-1,+m[1]).getTime():null;};
+  const wLabel=ms=>{const d=new Date(ms),e=new Date(ms+6*864e5),f=x=>('0'+x.getDate()).slice(-2)+'.'+('0'+(x.getMonth()+1)).slice(-2);return f(d)+'–'+f(e);};
+  const wKey=ms=>{const x=new Date(ms);const day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);x.setHours(0,0,0,0);return x.getTime();};
+  let rows=[], km=null;
+  for(const name of wb.SheetNames){
+    const dt=pDate(name); if(dt===null) continue;
+    const js=XLSX.utils.sheet_to_json(wb.Sheets[name],{defval:null});
+    if(!js.length) continue;
+    if(!km){ km={}; for(const k of Object.keys(js[0])) km[norm(k)]=k;
+      for(const r of REQUIRED) if(!(r in km)) throw new Error(`нет колонки «${r}» (найдены: ${Object.keys(km).join(', ')})`); }
+    for(const row of js){ const code=norm(row[km['ПВЗ']]); if(!code) continue;
+      const ord=num(row[km['Кол-во заказов']]), sum=num(row[km['Общая сумма']]);
+      rows.push({code,date:dt,ord,sum,hasData:ord!==null}); }
+  }
+  if(!rows.length) throw new Error('нет листов с датой в названии (ожидаю ДД.ММ.ГГГГ)');
+  const weeks=[...new Set(rows.map(r=>wKey(r.date)))].sort((a,b)=>a-b);   // ВСЕ недели (полная история)
+  if(!weeks.length) throw new Error('нет недель с данными');
+  const n=weeks.length, wi=new Map(weeks.map((w,i)=>[w,i])), pvz={};
+  for(const r of rows){ const i=wi.get(wKey(r.date)); if(i===undefined) continue;
+    pvz[r.code] ??= {os:Array(n).fill(0),rs:Array(n).fill(0),dd:Array.from({length:n},()=>new Set()),to:0,tr:0,td:new Set()};
+    const p=pvz[r.code];
+    if(r.hasData){ p.os[i]+=r.ord; p.dd[i].add(r.date); p.to+=r.ord; p.td.add(r.date); if(r.sum!=null){p.rs[i]+=r.sum;p.tr+=r.sum;} } }
+  const out={pvz:{},weeks:weeks.map(wLabel)};
+  for(const c in pvz){ const p=pvz[c];
+    out.pvz[c]={ord:p.os.map((s,i)=>p.dd[i].size?+(s/p.dd[i].size).toFixed(2):0),
+                rev:p.rs.map((s,i)=>p.dd[i].size?Math.round(s/p.dd[i].size):0),
+                totOrd:p.to,totRev:p.tr,totDays:p.td.size}; }
+  const dayCounts=weeks.map(w=>{let s=new Set();rows.forEach(r=>{if(wKey(r.date)===w&&r.hasData)s.add(r.date);});return s.size;});
+  let ri=weeks.length-1; for(let i=weeks.length-1;i>=0;i--){ if(dayCounts[i]>=7){ri=i;break;} }
+  out.runIdx=ri; out.dayCounts=dayCounts;
+  out.net={ord:weeks.map((_,i)=>+Object.values(out.pvz).reduce((a,p)=>a+(p.ord[i]||0),0).toFixed(1)),
+           rev:weeks.map((_,i)=>Object.values(out.pvz).reduce((a,p)=>a+(p.rev[i]||0),0))};
+  return out;
+}
+function applyAgg(agg){
+  DATA.forEach(d=>{ const a=agg.pvz[d.code]; if(!a)return; const o=a.ord,rv=a.rev,L=o.length;
+    d.w1=o[L-4]??0; d.w2=o[L-3]??0; d.w3=o[L-2]??0; d.w4=o[L-1]??0;   // последние 4 — для карточки точки
+    d.runRate=o[agg.runIdx]??0;
+    d.periodAvg=+(a.totOrd/a.totDays).toFixed(2);
+    d.revW3=rv[agg.runIdx]??0; d.revPeriod=a.totDays?Math.round(a.totRev/a.totDays):0;
+    d.avgCheck=a.totOrd?Math.round(a.totRev/a.totOrd):0; });
+  WK.weeks=agg.weeks; WK.runIdx=agg.runIdx; WK.dayCounts=agg.dayCounts; WK.net=agg.net;
+  Object.keys(WK.pvz).forEach(c=>{ if(agg.pvz[c]){WK.pvz[c].ord=agg.pvz[c].ord;WK.pvz[c].rev=agg.pvz[c].rev;} });
+  renderAll();
+}
+const BACKUP=JSON.stringify({DATA:DATA,WK:WK});
+function restoreBackup(){ const b=JSON.parse(BACKUP);
+  b.DATA.forEach((bd,i)=>Object.assign(DATA[i],bd));
+  WK.weeks=b.WK.weeks;WK.runIdx=b.WK.runIdx;WK.dayCounts=b.WK.dayCounts;WK.net=b.WK.net;
+  Object.keys(WK.pvz).forEach(c=>{ if(b.WK.pvz[c]){WK.pvz[c].ord=b.WK.pvz[c].ord;WK.pvz[c].rev=b.WK.pvz[c].rev;} });
+  renderAll(); }
+const ADMIN_PW='admin-uzum-2026';
+document.getElementById('abtn').onclick=()=>{
+  if(document.getElementById('apw').value===ADMIN_PW){document.getElementById('adminGate').style.display='none';document.getElementById('uploadUI').style.display='';}
+  else{document.getElementById('aerr').textContent='Неверный пароль';document.getElementById('apw').value='';}
+};
+document.getElementById('apw').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('abtn').click();});
+document.getElementById('xfile').onchange=e=>{
+  const f=e.target.files[0]; if(!f)return; const st=document.getElementById('ustatus');
+  st.innerHTML='<span style="color:var(--dim)">Читаю файл…</span>';
+  const rd=new FileReader();
+  rd.onload=ev=>{
+    try{
+      if(typeof XLSX==='undefined') throw new Error('библиотека чтения не загрузилась (проверь интернет, обнови страницу)');
+      const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+      const agg=aggregate(wb); applyAgg(agg);
+      const tot=agg.dayCounts.reduce((a,b)=>a+b,0);
+      st.innerHTML=`<span class="pos">✓ Данные обновлены.</span> Точек: ${Object.keys(agg.pvz).length}, недель: ${agg.weeks.length}, дней с данными: ${tot}. Недели: ${agg.weeks.join(' · ')}. <span class="hint">Эталон сохранён — перезагрузка вернёт исходные.</span>`;
+    }catch(err){
+      st.innerHTML=`<span class="neg">✗ Не применено: ${err.message}.</span> <span class="hint">Текущие данные оставлены без изменений.</span>`;
+    }
+    e.target.value='';
+  };
+  rd.onerror=()=>{document.getElementById('ustatus').innerHTML='<span class="neg">✗ Не удалось прочитать файл.</span>';};
+  rd.readAsArrayBuffer(f);
+};
+document.getElementById('resetData').onclick=()=>{ restoreBackup(); document.getElementById('ustatus').innerHTML='<span class="pos">✓ Возвращены эталонные данные.</span>'; };
+
+/* ---------- парольный экран ---------- */
+const PW='uzum2026';
+function tryUnlock(){
+  const v=document.getElementById('gpw').value;
+  if(v===PW){document.getElementById('gate').style.display='none';}
+  else{document.getElementById('gerr').textContent='Неверный пароль';document.getElementById('gpw').value='';}
+}
+document.getElementById('gbtn').onclick=tryUnlock;
+document.getElementById('gpw').addEventListener('keydown',e=>{if(e.key==='Enter')tryUnlock();});
+window.addEventListener('load',()=>document.getElementById('gpw').focus());
+</script>
+</body>
+</html>

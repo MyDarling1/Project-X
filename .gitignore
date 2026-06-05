@@ -1,0 +1,4 @@
+узум.xlsx
+*.tmp
+.DS_Store
+node_modules/
