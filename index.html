@@ -130,7 +130,7 @@ svg{display:block;width:100%;height:auto;overflow:visible}
 table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
 th{text-align:right;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:600;cursor:pointer;white-space:nowrap;border-bottom:1px solid var(--line2);user-select:none}
 th:first-child,td:first-child{text-align:left}
-th.lft{text-align:left}
+th.lft,td.lft{text-align:left}
 th:hover{color:var(--dim)}
 th.sorted{color:var(--violet)}
 td{padding:10px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:right}
@@ -464,7 +464,7 @@ const cols=[
   {k:'seg',t:'Сег',f:d=>`<span class="chip" style="background:${segHex[d.seg]}">${d.seg}</span>`},
   {k:'orders',t:'Факт зак/д',c:1,f:(d,c)=>`<span class="mono">${fmt1(c.orders)}</span>`},
   {k:'be',t:'Безубыток',c:1,f:(d,c)=>`<span class="mono" style="color:var(--dim)">${fmt1(c.be)}</span>`},
-  {k:'health',t:'Здоровье',c:1,f:(d,c)=>{const p=Math.min(c.health,1.4);const col=c.health>=1?'var(--mint)':c.health>=.6?'var(--amber)':'var(--coral)';return `<span class="health"><i style="width:${p/1.4*100}%;background:${col}"></i><span class="mark" style="left:${1/1.4*100}%"></span></span> <span class="mono" style="font-size:11px;color:${col}">${Math.round(c.health*100)}%</span>`;}},
+  {k:'health',t:'Здоровье',c:1,lft:1,f:(d,c)=>{const p=Math.min(c.health,1.4);const col=c.health>=1?'var(--mint)':c.health>=.6?'var(--amber)':'var(--coral)';return `<span class="health"><i style="width:${p/1.4*100}%;background:${col}"></i><span class="mark" style="left:${1/1.4*100}%"></span></span> <span class="mono" style="font-size:11px;color:${col}">${Math.round(c.health*100)}%</span>`;}},
   {k:'rev',t:'Выручка/д',c:1,f:(d,c)=>`<span class="mono">${money(c.rev)}</span>`},
   {k:'reward',t:'Вознагр./мес',c:1,f:(d,c)=>`<span class="mono">${money(c.reward)}</span>`},
   {k:'pnl',t:'P&L/мес',c:1,f:(d,c)=>`<span class="mono ${c.pnl>=0?'pos':'neg'}">${money(c.pnl)}</span>`},
@@ -478,7 +478,7 @@ function renderTable(){
     return S.sortDir*(x-y);
   });
   let h='<thead><tr>'+cols.map(c=>`<th class="${c.lft?'lft':''} ${S.sortKey===c.k?'sorted':''}" data-k="${c.k}">${c.t}${S.sortKey===c.k?(S.sortDir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr></thead>';
-  h+='<tbody>'+r.map(x=>`<tr class="prow" data-code="${x.d.code}">`+cols.map(c=>`<td>${c.f(x.d,x.c)}</td>`).join('')+'</tr>').join('')+'</tbody>';
+  h+='<tbody>'+r.map(x=>`<tr class="prow" data-code="${x.d.code}">`+cols.map(c=>`<td class="${c.lft?'lft':''}">${c.f(x.d,x.c)}</td>`).join('')+'</tr>').join('')+'</tbody>';
   const t=document.getElementById('tbl');t.innerHTML=h;
   t.querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(S.sortKey===k)S.sortDir*=-1;else{S.sortKey=k;S.sortDir=-1;}renderTable();});
   t.querySelectorAll('.prow').forEach(tr=>tr.onclick=()=>openDrawer(tr.dataset.code));
