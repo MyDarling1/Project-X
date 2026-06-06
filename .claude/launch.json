@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mappreview",
+      "runtimeExecutable": "C:/Program Files/nodejs/node.exe",
+      "runtimeArgs": ["-e", "const http=require('http'),fs=require('fs');const p='C:/Users/Zephyrus/OneDrive/Project X/__mappreview/index.html';http.createServer((q,r)=>{r.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});fs.createReadStream(p).pipe(r)}).listen(5057,()=>console.log('up'))"],
+      "port": 5057
+    }
+  ]
+}
