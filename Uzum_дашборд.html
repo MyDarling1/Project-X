@@ -251,6 +251,7 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
   <button data-v="main" class="on">Обзор</button>
   <button data-v="history">Фактические результаты</button>
   <button data-v="map">Карта</button>
+  <button data-v="sim">Симулятор</button>
   <button data-v="upload">Загрузить файл</button>
 </div>
 
@@ -264,6 +265,12 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
     </div>
   </div>
   <div class="pills" id="periodChips"></div>
+  <div class="pills" id="pills" style="margin-top:8px">
+    <div class="pill all on" data-s="all">Все</div>
+    <div class="pill s1" data-s="1"><span class="dot" style="background:var(--s1)"></span>Сег 1 · 6%</div>
+    <div class="pill s2" data-s="2"><span class="dot" style="background:var(--s2)"></span>Сег 2 · 5%</div>
+    <div class="pill s3" data-s="3"><span class="dot" style="background:var(--s3)"></span>Сег 3 · 5%</div>
+  </div>
   <div class="hint" id="netDesc" style="margin-top:9px"></div>
 </div>
 <div class="kpis" id="kpis"></div>
@@ -273,7 +280,13 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
   <div class="hint" id="unitEconHint" style="margin-bottom:13px"></div>
   <div class="kpis" id="unitEcon" style="margin:0"></div>
 </div>
+</div><!-- /viewMain -->
 
+<div id="viewSim" style="display:none">
+  <div class="card" style="margin-bottom:16px;border:1px solid var(--violet);box-shadow:0 0 0 1px var(--violet) inset">
+    <h3 style="margin-bottom:2px">Симулятор · прогноз <span class="tag" style="display:inline-block;margin-left:8px">ПРОГНОЗ — НЕ ФАКТ</span></h3>
+    <div class="hint">Гипотетический расчёт: двигайте параметры — KPI, график и таблица ниже пересчитываются как <b style="color:var(--violet)">прогноз</b>, а не факт. Фактические данные — на вкладке «Обзор».</div>
+  </div>
 <div class="grid">
   <!-- controls -->
   <div class="card" id="ctrlCard">
@@ -302,15 +315,6 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
       <div class="hint" style="margin-top:8px" id="scenHint">Доход = max(гарантия; комиссия×оборот). Действует 6 мес от старта.</div>
     </div>
 
-    <div class="ctrl">
-      <label style="display:block;margin-bottom:9px">Сегменты</label>
-      <div class="pills" id="pills">
-        <div class="pill all on" data-s="all">Все</div>
-        <div class="pill s1" data-s="1"><span class="dot" style="background:var(--s1)"></span>Сег 1 · 6%</div>
-        <div class="pill s2" data-s="2"><span class="dot" style="background:var(--s2)"></span>Сег 2 · 5%</div>
-        <div class="pill s3" data-s="3"><span class="dot" style="background:var(--s3)"></span>Сег 3 · 5%</div>
-      </div>
-    </div>
   </div>
 
   <!-- main -->
@@ -338,7 +342,7 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
   </div>
 </div>
 
-</div><!-- /viewMain -->
+</div><!-- /viewSim -->
 
 <div id="viewHistory" style="display:none">
   <div class="card" style="margin-bottom:18px">
@@ -889,8 +893,10 @@ document.querySelectorAll('#viewnav button').forEach(b=>b.onclick=()=>{
   document.getElementById('viewMain').style.display=S.view==='main'?'':'none';
   document.getElementById('viewHistory').style.display=S.view==='history'?'':'none';
   document.getElementById('viewMap').style.display=S.view==='map'?'':'none';
+  document.getElementById('viewSim').style.display=S.view==='sim'?'':'none';
   document.getElementById('viewUpload').style.display=S.view==='upload'?'':'none';
   if(S.view==='map')renderNetMap();
+  if(S.view==='sim'){renderChart();renderTable();}
   renderHistory();});
 document.querySelectorAll('#histTog button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#histTog button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
