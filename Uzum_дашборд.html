@@ -251,7 +251,7 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
   <button data-v="main" class="on">Обзор</button>
   <button data-v="history">Фактические результаты</button>
   <button data-v="map">Карта</button>
-  <button data-v="sim">Симулятор</button>
+  <button data-v="sim">Моделирование</button>
   <button data-v="upload">Загрузить файл</button>
 </div>
 
@@ -284,9 +284,11 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 
 <div id="viewSim" style="display:none">
   <div class="card" style="margin-bottom:16px;border:1px solid var(--violet);box-shadow:0 0 0 1px var(--violet) inset">
-    <h3 style="margin-bottom:2px">Симулятор · прогноз <span class="tag" style="display:inline-block;margin-left:8px">ПРОГНОЗ — НЕ ФАКТ</span></h3>
-    <div class="hint">Гипотетический расчёт: двигайте параметры — KPI, график и таблица ниже пересчитываются как <b style="color:var(--violet)">прогноз</b>, а не факт. Фактические данные — на вкладке «Обзор».</div>
+    <h3 style="margin-bottom:2px">Моделирование · прогноз <span class="tag" style="display:inline-block;margin-left:8px">ПРОГНОЗ — НЕ ФАКТ</span></h3>
+    <div class="hint">Гипотетический расчёт: двигайте параметры — показатели ниже пересчитываются как <b style="color:var(--violet)">прогноз</b>, а не факт. Фактические данные — на вкладке «Обзор».</div>
   </div>
+  <h3 style="margin:0 0 9px">Сеть · прогноз при заданных параметрах</h3>
+  <div class="kpis" id="simKpis" style="margin-bottom:18px"></div>
 <div class="grid">
   <!-- controls -->
   <div class="card" id="ctrlCard">
@@ -865,7 +867,30 @@ function setLabels(){
   const sub=document.getElementById('subLab'); if(sub) sub.textContent=`${DATA.length} пунктов выдачи · данные ${span}`;
   const bh=document.getElementById('boostHint'); if(bh) bh.textContent=`Масштабирует текущий поток (${(WK.weeks&&WK.weeks[WK.runIdx])||'тек. неделя'}) по всем точкам.`;
 }
-function renderAll(){setLabels();renderKPIs();renderUnit();renderChart();renderTable();renderHistory();}
+/* ---------- KPI-блок «Моделирование» (по модели, реагирует на ползунки) ---------- */
+function renderSimKPIs(){
+  const el=document.getElementById('simKpis'); if(!el)return;
+  const r=rows(), n=r.length||1; let ord=0,be=0,above=0,pnl=0,gmv=0;
+  r.forEach(d=>{const c=compute(d); ord+=c.orders; be+=c.be; if(c.gap>=0)above++; pnl+=c.pnl; gmv+=c.rev*30;});
+  const ordPV=ord/n, bePV=be/n, pnlPV=pnl/n;
+  const ratio=bePV>0?ordPV/bePV:0, toBE=ordPV>0?bePV/ordPV:0;
+  const col=ratio>=1?'var(--mint)':ratio>=.6?'var(--amber)':'var(--coral)';
+  const mode = S.flat!=null?`цель ${S.flat}/ПВЗ`:(S.boost===1?'текущий ×1.0':`рост ×${S.boost.toFixed(1)}`);
+  const scen = S.scen==='guar'?'на гарантии':'после гарантии';
+  let html=`<div class="kpi"><div class="lab">Заказы / безубыток · зак/д на ПВЗ</div>
+    <div class="val">${fmt1(ordPV)} <span style="color:var(--faint);font-weight:400;font-size:18px">/ ${fmt(bePV)}</span></div>
+    <div class="health" style="width:100%;margin-top:9px"><i style="width:${Math.min(ratio,1.4)/1.4*100}%;background:${col}"></i><span class="mark" style="left:${1/1.4*100}%"></span></div>
+    <div class="delta">${ratio>=1?'<span class="pos">безубыток достигнут</span>':'×'+toBE.toFixed(1)+' до безубытка'} · ${mode}</div></div>`;
+  const cards=[
+    {l:'Точек выше безубытка',v:above+' / '+n,cls:above>0?'pos':'neg',d:above==0?'все в минусе':'прогноз'},
+    {l:'P&L по сети',v:money(pnl),cls:pnl>=0?'pos':'neg',d:'прогноз · '+scen},
+    {l:'Оборот (GMV)/мес',v:money(gmv),d:'при чеке $'+S.chk},
+    {l:'P&L на 1 ПВЗ',v:money(pnlPV),cls:pnlPV>=0?'pos':'neg',d:'прогноз'},
+  ];
+  html+=cards.map(x=>`<div class="kpi"><div class="lab">${x.l}</div><div class="val ${x.cls||''}">${x.v}</div><div class="delta">${x.d||''}</div></div>`).join('');
+  el.innerHTML=html;
+}
+function renderAll(){setLabels();renderKPIs();renderUnit();renderSimKPIs();renderChart();renderTable();renderHistory();}
 
 /* ---------- bindings ---------- */
 const bind=(id,key,disp)=>{const e=document.getElementById(id);e.oninput=()=>{S[key]=parseFloat(e.value);if(key==='boost')S.flat=null;document.getElementById(disp).textContent=
@@ -896,7 +921,7 @@ document.querySelectorAll('#viewnav button').forEach(b=>b.onclick=()=>{
   document.getElementById('viewSim').style.display=S.view==='sim'?'':'none';
   document.getElementById('viewUpload').style.display=S.view==='upload'?'':'none';
   if(S.view==='map')renderNetMap();
-  if(S.view==='sim'){renderChart();renderTable();}
+  if(S.view==='sim'){renderSimKPIs();renderChart();renderTable();}
   renderHistory();});
 document.querySelectorAll('#histTog button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#histTog button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
