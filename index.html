@@ -206,7 +206,10 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 #netmap .mk:hover{opacity:.85}
 #netmap .lead{stroke:var(--line2);stroke-width:1;opacity:.6}
 #netmap .hub{fill:var(--faint);opacity:.6}
-#netmap .clab{fill:var(--faint);font-size:11px;font-family:'Spline Sans Mono',monospace}
+#netmap .clab{fill:var(--txt);font-size:12px;font-weight:600;font-family:'Spline Sans Mono',monospace;paint-order:stroke;stroke:#0a0c11;stroke-width:3.5px;stroke-linejoin:round}
+#netmap .clab .cnt{fill:var(--dim)}
+#netmap .rlab{fill:var(--violet);font-size:13px;font-weight:700;font-family:'Spline Sans Mono',monospace;paint-order:stroke;stroke:#0a0c11;stroke-width:4px;stroke-linejoin:round}
+#netmap .tlab{fill:var(--dim);font-size:12px;font-family:'Spline Sans Mono',monospace}
 #viewMap .tip{position:absolute;pointer-events:none;z-index:5;background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:9px 11px;font-size:12px;color:var(--txt);box-shadow:0 10px 30px rgba(0,0,0,.5);opacity:0;transition:opacity .12s;min-width:150px}
 #viewMap .tip h4{font-family:'Bricolage Grotesque';font-size:13px;margin-bottom:3px}
 #viewMap .tip .r{display:flex;justify-content:space-between;gap:14px;color:var(--dim)}
@@ -717,29 +720,39 @@ function renderCosts(){
 /* ---------- карта сети ---------- */
 const MAPGEO={width:900,height:622.7,path:"M545.6 563.0L546.9 524.5L484.1 497.6L434.8 466.8L404.0 437.2L350.1 393.8L326.9 329.0L311.1 317.6L260.0 320.5L242.0 307.6L237.0 257.5L173.4 224.2L133.6 260.8L93.3 282.4L101.1 314.1L47.9 314.9L46.0 83.1L167.4 46.0L176.3 51.5L249.4 96.5L288.0 120.2L333.1 176.9L388.4 167.7L469.3 162.8L525.8 208.8L522.2 271.8L545.2 272.3L554.8 323.7L614.8 325.8L627.8 355.6L645.3 355.2L666.0 310.2L728.2 266.4L755.3 254.7L769.3 260.9L729.7 301.6L764.5 325.3L798.1 309.6L854.0 342.8L793.6 388.0L757.7 381.8L738.2 383.5L731.5 366.0L741.3 336.8L678.2 351.4L663.2 391.8L640.8 426.5L601.4 423.6L589.2 451.3L623.8 466.2L634.0 513.1L607.5 576.7L571.9 563.4L545.6 563.0Z",
   cities:{"Ташкент":{x:674.0,y:315.5},"Алмалык":{x:690.9,y:343.9},"Самарканд":{x:567.1,y:418.9},"Бухара":{x:446.6,y:411.8},"Газалкент":{x:699.4,y:299.4},"Бука":{x:672.2,y:346.1},"Пскент":{x:679.2,y:340.6},"Маргилан":{x:791.2,y:367.6}}};
-const MAPINS={"Ташкент":{x:179.4,y:429.9},"Алмалык":{x:240.5,y:532.0},"Бука":{x:172.9,y:539.9},"Пскент":{x:198.2,y:520.3},"Газалкент":{x:271.1,y:372.1}};
 const MAPEAST=["Ташкент","Алмалык","Бука","Пскент","Газалкент"];
 function renderNetMap(){
   const nm=document.getElementById('netmap'); if(!nm)return;
   const tip=document.getElementById('maptip'), wrap=nm.parentElement;
   const G={}; DATA.forEach(d=>{(G[d.city]=G[d.city]||[]).push({aka:d.aka,city:d.city,seg:d.seg,ord:d.runRate,rev:d.revW3});});
   const at=p=>`data-name="${p.aka}" data-city="${p.city}" data-seg="${p.seg}" data-ord="${p.ord}" data-rev="${p.rev}"`;
-  const fan=(city,b,arr,Rfn,rfn)=>{let s='';const n=arr.length,R=Rfn(n);
+  const lab=(x,y,t,anchor,cls)=>`<text x="${x}" y="${y}" text-anchor="${anchor||'middle'}" class="${cls||'clab'}">${t}</text>`;
+  const fan=(b,arr,R,rfn)=>{let s='';const n=arr.length;
     if(n>1)s+=`<circle class="hub" cx="${b.x}" cy="${b.y}" r="2"/>`;
     arr.forEach((p,i)=>{let x=b.x,y=b.y; if(n>1){const a=-Math.PI/2+i*2*Math.PI/n;x=b.x+R*Math.cos(a);y=b.y+R*Math.sin(a);s+=`<line class="lead" x1="${b.x}" y1="${b.y}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`;}
       s+=`<circle class="mk" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${rfn(p.ord).toFixed(1)}" fill="${segHex[p.seg]}" fill-opacity=".92" stroke="#0a0c11" stroke-width="1.1" filter="url(#nmglow)" ${at(p)}/>`;});
-    const ly=b.y+(n>1?R+12:13); s+=`<text x="${b.x}" y="${ly}" text-anchor="middle" class="clab">${city}${n>1?' · '+n:''}</text>`; return s;};
+    return s;};
   let s=`<defs><radialGradient id="nmcfill" cx="40%" cy="30%"><stop offset="0%" stop-color="#171c26"/><stop offset="100%" stop-color="#0d1016"/></radialGradient><filter id="nmglow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
   s+=`<path class="country" d="${MAPGEO.path}"/>`;
-  Object.keys(G).forEach(city=>{ if(MAPEAST.includes(city))return; s+=fan(city,MAPGEO.cities[city],G[city],n=>n===1?0:n===2?18:n<=4?26:34,o=>4+o*0.26); });
+  // основная карта: Бухара, Самарканд(2), Маргилан (подписи с разводкой)
+  const mainLab={"Бухара":[446,439],"Самарканд":[567,458],"Маргилан":[791,390]};
+  Object.keys(G).forEach(city=>{ if(MAPEAST.includes(city))return; const b=MAPGEO.cities[city]; const n=G[city].length;
+    s+=fan(b,G[city], n===2?18:0, o=>4+o*0.26);
+    const L=mainLab[city]||[b.x,b.y+18]; s+=lab(L[0],L[1],city+(n>1?' · '+n:''),'middle','clab');});
+  // восточный регион + рамка + коннекторы (в верхней полосе, мимо Самарканда/Бухары)
   MAPEAST.forEach(city=>{const b=MAPGEO.cities[city]; if(G[city]) s+=`<circle cx="${b.x}" cy="${b.y}" r="3.4" fill="${segHex[G[city][0].seg]}" fill-opacity=".9"/>`;});
-  s+=`<rect x="656" y="287" width="60" height="73" rx="14" fill="none" stroke="var(--violet)" stroke-opacity=".55" stroke-width="1.3" stroke-dasharray="5 4"/>`;
-  s+=`<text x="686" y="280" text-anchor="middle" class="clab" style="fill:var(--violet)">Ташкентский регион · 14</text>`;
-  s+=`<line x1="656" y1="300" x2="378" y2="332" stroke="var(--violet)" stroke-opacity=".2" stroke-dasharray="4 4"/>`;
-  s+=`<line x1="660" y1="360" x2="378" y2="455" stroke="var(--violet)" stroke-opacity=".2" stroke-dasharray="4 4"/>`;
+  s+=`<rect x="656" y="287" width="60" height="73" rx="14" fill="none" stroke="var(--violet)" stroke-opacity=".6" stroke-width="1.4" stroke-dasharray="5 4"/>`;
+  s+=lab(714,279,'Ташкентский регион · 14','start','rlab');
+  s+=`<line x1="656" y1="306" x2="378" y2="342" stroke="var(--violet)" stroke-opacity=".22" stroke-dasharray="4 4"/>`;
+  s+=`<line x1="656" y1="344" x2="378" y2="362" stroke="var(--violet)" stroke-opacity=".22" stroke-dasharray="4 4"/>`;
+  // врезка-панель + ручная раскладка городов
   s+=`<rect x="70" y="330" width="308" height="246" rx="14" fill="var(--panel2)" stroke="var(--line2)"/>`;
-  s+=`<text x="86" y="351" class="clab" style="fill:var(--dim);font-size:12px">Зум · Ташкентский регион · 14 ПВЗ</text>`;
-  MAPEAST.forEach(city=>{ if(G[city]) s+=fan(city,MAPINS[city],G[city],n=>n>=7?40:n===2?18:0,o=>3+o*0.22); });
+  s+=lab(86,351,'Зум · Ташкентский регион · 14 ПВЗ','start','tlab');
+  const INSP={"Ташкент":{c:[172,448],R:42,L:[172,398]},"Газалкент":{c:[300,432],R:0,L:[300,416]},
+    "Бука":{c:[150,522],R:0,L:[150,541]},"Пскент":{c:[230,510],R:0,L:[230,494]},"Алмалык":{c:[312,520],R:18,L:[312,549]}};
+  MAPEAST.forEach(city=>{ if(!G[city])return; const cfg=INSP[city], b={x:cfg.c[0],y:cfg.c[1]}, n=G[city].length;
+    s+=fan(b,G[city],cfg.R,o=>3+o*0.22);
+    s+=lab(cfg.L[0],cfg.L[1],city+(n>1?' · '+n:''),'middle','clab');});
   nm.setAttribute('viewBox',`0 0 ${MAPGEO.width} ${MAPGEO.height}`); nm.innerHTML=s;
   const hint=document.getElementById('nmHint'); if(hint) hint.textContent=`Среднее по последней полной неделе (${WK.weeks[WK.runIdx]}). Цвет — сегмент, размер — заказы/день. Наведи на точку — детали.`;
   const pos=e=>{const r=wrap.getBoundingClientRect();let x=e.clientX-r.left+14,y=e.clientY-r.top+14;x=Math.min(x,r.width-tip.offsetWidth-6);return[x,y];};
