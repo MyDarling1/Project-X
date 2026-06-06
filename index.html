@@ -833,14 +833,20 @@ document.getElementById('resetData').onclick=()=>{ restoreBackup(); document.get
 
 /* ---------- парольный экран ---------- */
 const PW='uzum2026';
+const GATE_KEY='uzum_gate';
+function openApp(){document.getElementById('gate').style.display='none';}
 function tryUnlock(){
   const v=document.getElementById('gpw').value;
-  if(v===PW){document.getElementById('gate').style.display='none';}
+  if(v===PW){try{localStorage.setItem(GATE_KEY,PW);}catch(e){} openApp();}
   else{document.getElementById('gerr').textContent='Неверный пароль';document.getElementById('gpw').value='';}
 }
 document.getElementById('gbtn').onclick=tryUnlock;
 document.getElementById('gpw').addEventListener('keydown',e=>{if(e.key==='Enter')tryUnlock();});
-window.addEventListener('load',()=>document.getElementById('gpw').focus());
+/* запомненное устройство — пропускаем экран входа (отметка привязана к текущему паролю) */
+let gateRemembered=false;
+try{gateRemembered=localStorage.getItem(GATE_KEY)===PW;}catch(e){}
+if(gateRemembered){openApp();}
+else{window.addEventListener('load',()=>document.getElementById('gpw').focus());}
 </script>
 </body>
 </html>
