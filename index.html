@@ -722,8 +722,7 @@ function wkBars(vals, fmtFn, base, hid, labels, partial){
     const x=padL+i*slot+gap/2, bh=(v/max)*(H-padT-padB), y=H-padB-bh, pt=!!(partial&&partial[i]), cx=x+bw/2;
     el+=`<rect class="wkbar" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="6" fill="${pt?`url(#${hid})`:base}"${pt?` stroke="${base}" stroke-width="1.5" stroke-dasharray="4 3"`:''}/>`;
     el+=`<text x="${cx}" y="${y-7}" text-anchor="middle" class="blabel" style="font-size:11px;fill:${pt?'var(--dim)':'var(--txt)'}">${fmtFn(v)}</text>`;
-    el+=`<text x="${cx}" y="${H-18}" text-anchor="middle" class="glabel" style="font-weight:600${pt?';fill:var(--faint)':''}">W${i+1}${pt?'*':''}</text>`;
-    el+=`<text x="${cx}" y="${H-6}" text-anchor="middle" class="glabel" style="font-size:8px;fill:var(--faint)">${(labels[i]||'').replace(/^W\d+ · /,'')}</text>`;
+    el+=`<text x="${cx}" y="${H-9}" text-anchor="middle" class="glabel" style="font-weight:600;font-size:9px${pt?';fill:var(--faint)':''}">${labels[i]||''}${pt?'*':''}</text>`;
   });
   return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;display:inline-block">${el}</svg>`;
 }
@@ -743,43 +742,41 @@ function wkBarsPnl(vals, labels, partial){
     const col=pos?'var(--mint)':'var(--coral)', pt=!!(partial&&partial[i]);
     el+=`<rect class="wkbar" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="5" fill="${col}" opacity="${pt?0.5:0.92}"/>`;
     el+=`<text x="${cx}" y="${pos?y-6:y+bh+15}" text-anchor="middle" class="blabel" style="font-size:10.5px;fill:${col}">${money(v)}</text>`;
-    el+=`<text x="${cx}" y="${H-18}" text-anchor="middle" class="glabel" style="font-weight:600${pt?';fill:var(--faint)':''}">W${i+1}${pt?'*':''}</text>`;
-    el+=`<text x="${cx}" y="${H-6}" text-anchor="middle" class="glabel" style="font-size:8px;fill:var(--faint)">${(labels[i]||'').replace(/^W\d+ · /,'')}</text>`;
+    el+=`<text x="${cx}" y="${H-9}" text-anchor="middle" class="glabel" style="font-weight:600;font-size:9px${pt?';fill:var(--faint)':''}">${labels[i]||''}${pt?'*':''}</text>`;
   });
   return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;display:inline-block">${el}</svg>`;
 }
 function renderHistory(){
   const partial=(WK.dayCounts||[]).map(c=>c<7);
   const D=Object.fromEntries(DATA.map(d=>[d.code,d]));
-  const fw=i=>(WK.dayCounts[i]||0)/30;
-  const pnlW=(code,i)=>{const d=D[code]; if(!d)return 0;
-    const turn=(WK.pvz[code].rev[i]||0)*(WK.dayCounts[i]||0);          // оборот недели, сум
-    const reward=Math.max(d.guarFull*fw(i), d.comm*turn);              // max(гарантия×дни/30; комиссия×оборот)
-    const cost=(d.rentSum+d.salarySum+(d.miscSum||0)+S.uk*S.fx)*fw(i); // (аренда+ЗП+УК+разное)×дни/30
-    return reward-cost;};
+  // P&L недели — тот же расчёт, что в верхнем блоке (periodFin): доля факта Uzum по дням для закрытого месяца, иначе модель
+  const pnlW=(code,i)=>{const d=D[code]; if(!d)return 0; const wm=weekMonth(i), fa=!!(wm&&wm.hasFact);
+    return periodFin(d,[i], fa?'fact-alloc':'model', monthDaysOf(wm), fa?wm.key:null).pnl;};
   const netPnl=WK.weeks.map((_,i)=>Object.keys(WK.pvz).reduce((a,c)=>a+pnlW(c,i),0));
   const m=S.histMetric;
+  const HMAX=13, allI=WK.weeks.map((_,i)=>i), show=allI.slice(-HMAX), moreN=allI.length-show.length;
+  const sl=show.map(i=>WK.weeks[i]), sp=show.map(i=>partial[i]);
   if(m==='pnl'){
-    document.getElementById('histNet').innerHTML=`<div class="card" style="grid-column:1/-1"><h3 style="margin-bottom:2px">Сеть · P&L по неделям</h3><div class="hint">факт: max(гарантия; комиссия×оборот) − (аренда+ЗП+УК+разное), прораторовано по дням недели</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${wkBarsPnl(netPnl,WK.weeks,partial)}</div></div>`;
+    document.getElementById('histNet').innerHTML=`<div class="card" style="grid-column:1/-1"><h3 style="margin-bottom:2px">Сеть · P&L по неделям</h3><div class="hint">P&L по неделям: доля месячного факта Uzum по дням (для закрытых месяцев) или модель (для текущих). Согласовано с блоком «Обзор».</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${wkBarsPnl(show.map(i=>netPnl[i]),sl,sp)}</div></div>`;
   } else {
     document.getElementById('histNet').innerHTML=
-      `<div class="card"><h3 style="margin-bottom:2px">Сеть · заказы/день</h3><div class="hint">сумма по сети, по неделям</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${wkBars(WK.net.ord,fmt1,'var(--violet)','hist-ho',WK.weeks,partial)}</div></div>`+
-      `<div class="card"><h3 style="margin-bottom:2px">Сеть · объём/день</h3><div class="hint">сумма по сети, по неделям</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${wkBars(WK.net.rev,money,'var(--mint)','hist-hv',WK.weeks,partial)}</div></div>`;
+      `<div class="card"><h3 style="margin-bottom:2px">Сеть · заказы/день</h3><div class="hint">сумма по сети, по неделям</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${wkBars(show.map(i=>WK.net.ord[i]),fmt1,'var(--violet)','hist-ho',sl,sp)}</div></div>`+
+      `<div class="card"><h3 style="margin-bottom:2px">Сеть · объём/день</h3><div class="hint">сумма по сети, по неделям</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${wkBars(show.map(i=>WK.net.rev[i]),money,'var(--mint)','hist-hv',sl,sp)}</div></div>`;
   }
   const isVol=m==='volume', isPnl=m==='pnl';
-  document.getElementById('histTblTitle').textContent='По точкам — '+(isPnl?'P&L по неделям':(isVol?'объём/день':'заказы/день'));
+  document.getElementById('histTblTitle').textContent='По точкам — '+(isPnl?'P&L по неделям':(isVol?'объём/день':'заказы/день'))+(moreN>0?` · последние ${HMAX} нед. из ${allI.length}`:'');
   const val=c=> isPnl?WK.weeks.map((_,i)=>pnlW(c,i)):(isVol?WK.pvz[c].rev:WK.pvz[c].ord);
   const fmtV=v=> (isPnl||isVol)?money(v):fmt1(v);
   const base=isVol?'var(--mint)':'var(--violet)';
   const ri=WK.runIdx??2;
   const codes=Object.keys(WK.pvz).sort((a,b)=>val(b)[ri]-val(a)[ri]);
-  let h='<thead><tr><th class="lft">Точка</th><th>Сег</th>'+WK.weeks.map((w,i)=>`<th>${w}${partial[i]?'*':''}</th>`).join('')+(isPnl?'':'<th>тренд</th>')+'</tr></thead><tbody>';
+  let h='<thead><tr><th class="lft">Точка</th><th>Сег</th>'+show.map(i=>`<th>${WK.weeks[i]}${partial[i]?'*':''}</th>`).join('')+(isPnl?'':'<th>тренд</th>')+'</tr></thead><tbody>';
   codes.forEach(c=>{
-    const p=WK.pvz[c], a=val(c);
+    const p=WK.pvz[c], a=val(c), av=show.map(i=>a[i]);
     h+=`<tr><td><b>${p.aka}</b><div style="color:var(--faint);font-size:11px">${p.city}</div></td>`+
        `<td style="text-align:right"><span class="chip" style="background:${segHex[p.seg]}">${p.seg}</span></td>`+
-       a.map((v,i)=>`<td style="text-align:right"><span class="mono" style="color:${isPnl?(v>=0?'var(--mint)':'var(--coral)'):(partial[i]?'var(--faint)':'var(--txt)')}">${fmtV(v)}</span></td>`).join('')+
-       (isPnl?'':`<td style="text-align:right">${sparkline(a,base,partial)}</td>`)+`</tr>`;
+       av.map((v,k)=>`<td style="text-align:right"><span class="mono" style="color:${isPnl?(v>=0?'var(--mint)':'var(--coral)'):(sp[k]?'var(--faint)':'var(--txt)')}">${fmtV(v)}</span></td>`).join('')+
+       (isPnl?'':`<td style="text-align:right">${sparkline(av,base,sp)}</td>`)+`</tr>`;
   });
   document.getElementById('histTbl').innerHTML=h+'</tbody>';
   renderCosts();
