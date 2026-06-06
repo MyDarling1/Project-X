@@ -538,10 +538,10 @@ function updateNetCtl(){
   const chips=document.getElementById('periodChips'); if(!chips) return;
   if(S.gran==='month'){
     chips.innerHTML=monthList.map(m=>`<div class="pill" data-k="${m.key}">${m.label}${m.hasFact?'':' *'}</div>`).join('');
-    chips.querySelectorAll('.pill').forEach(p=>{p.classList.toggle('on',p.dataset.k===S.monthKey); p.onclick=()=>{S.monthKey=p.dataset.k;renderKPIs();};});
+    chips.querySelectorAll('.pill').forEach(p=>{p.classList.toggle('on',p.dataset.k===S.monthKey); p.onclick=()=>{S.monthKey=p.dataset.k;renderAll();};});
   } else {
     chips.innerHTML=WK.weeks.map((w,i)=>`<div class="pill" data-i="${i}">${w}${wdays(i)<7?' *':''}</div>`).join('');
-    chips.querySelectorAll('.pill').forEach(p=>{p.classList.toggle('on',+p.dataset.i===S.weekIdx); p.onclick=()=>{S.weekIdx=+p.dataset.i;renderKPIs();};});
+    chips.querySelectorAll('.pill').forEach(p=>{p.classList.toggle('on',+p.dataset.i===S.weekIdx); p.onclick=()=>{S.weekIdx=+p.dataset.i;renderAll();};});
   }
 }
 
@@ -888,7 +888,7 @@ document.querySelectorAll('#viewnav button').forEach(b=>b.onclick=()=>{
 document.querySelectorAll('#histTog button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#histTog button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
   S.histMetric=b.dataset.h;renderHistory();});
-document.querySelectorAll('#granTog button').forEach(b=>b.onclick=()=>{S.gran=b.dataset.g;renderKPIs();});
+document.querySelectorAll('#granTog button').forEach(b=>b.onclick=()=>{S.gran=b.dataset.g;renderAll();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
 
 /* ---------- break-even button ---------- */
