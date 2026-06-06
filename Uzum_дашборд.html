@@ -237,6 +237,12 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 <div id="viewMain">
 <div class="kpis" id="kpis"></div>
 
+<div class="card" id="unitEconCard" style="margin-bottom:18px">
+  <h3>Юнит-экономика · среднее на 1 ПВЗ</h3>
+  <div class="hint" id="unitEconHint"></div>
+  <div class="kpis" id="unitEcon" style="margin:14px 0 0"></div>
+</div>
+
 <div class="grid">
   <!-- controls -->
   <div class="card" id="ctrlCard">
@@ -414,6 +420,28 @@ function renderKPIs(){
     {l:'P&L по сети',v:money(pnl),cls:pnl>=0?'pos':'neg',d:'за месяц'},
   ];
   document.getElementById('kpis').innerHTML=k.map(x=>`<div class="kpi"><div class="lab">${x.l}</div><div class="val ${x.cls||''}">${x.v}</div><div class="delta">${x.d||''}</div></div>`).join('');
+}
+
+/* ---------- юнит-экономика ---------- */
+function renderUnit(){
+  const r=rows(), n=r.length||1;
+  let o=0,gmv=0,inc=0,cost=0,pnl=0,be=0;
+  r.forEach(d=>{const c=compute(d); o+=c.orders; gmv+=c.rev*30; inc+=c.reward; cost+=c.cost; pnl+=c.pnl; be+=c.be;});
+  const ao=o/n, agmv=gmv/n, ainc=inc/n, acost=cost/n, apnl=pnl/n, abe=be/n;
+  const margin = ainc>0 ? apnl/ainc*100 : 0;
+  const perOrder = ao>0 ? ainc/(ao*30) : 0;
+  const k=[
+    {l:'Заказов/день',v:fmt(ao),d:'на 1 ПВЗ'},
+    {l:'Оборот (GMV)/мес',v:money(agmv),d:`при чеке $${S.chk}`},
+    {l:'Доход ПВЗ/мес',v:money(ainc),d:S.scen==='guar'?'max(гарантия; комиссия)':'комиссия'},
+    {l:'Затраты/мес',v:money(acost),d:'аренда+ЗП+УК+разное'},
+    {l:'P&L/мес',v:money(apnl),cls:apnl>=0?'pos':'neg',d:'на 1 ПВЗ'},
+    {l:'Маржа ПВЗ',v:Math.round(margin)+'%',cls:margin>=0?'pos':'neg',d:'P&L ÷ доход'},
+    {l:'Доход на заказ',v:money(perOrder),d:'выручка ПВЗ / заказ'},
+    {l:'Безубыток',v:fmt(abe)+' зак/д',d:'порог P&L = 0'},
+  ];
+  document.getElementById('unitEcon').innerHTML=k.map(x=>`<div class="kpi"><div class="lab">${x.l}</div><div class="val ${x.cls||''}">${x.v}</div><div class="delta">${x.d||''}</div></div>`).join('');
+  document.getElementById('unitEconHint').textContent=`Среднее по ${r.length} точк${r.length%10===1&&r.length%100!==11?'е':'ам'}${S.seg!=='all'?' · Сег '+S.seg:''}. Сценарий: ${S.scen==='guar'?'на гарантии':'после гарантии'}, чек $${S.chk}, курс ${fmt(S.fx)}.`;
 }
 
 /* ---------- main chart ---------- */
@@ -656,7 +684,7 @@ function renderCosts(){
 }
 
 /* ---------- render all ---------- */
-function renderAll(){renderKPIs();renderChart();renderTable();renderHistory();}
+function renderAll(){renderKPIs();renderUnit();renderChart();renderTable();renderHistory();}
 
 /* ---------- bindings ---------- */
 const bind=(id,key,disp)=>{const e=document.getElementById(id);e.oninput=()=>{S[key]=parseFloat(e.value);if(key==='boost')S.flat=null;document.getElementById(disp).textContent=
