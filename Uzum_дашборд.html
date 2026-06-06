@@ -255,6 +255,23 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 </div>
 
 <div id="viewMain">
+<div id="netCtl" style="margin-bottom:14px">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:9px">
+    <h3 style="margin:0">Сеть · фактические показатели</h3>
+    <div class="seg-toggle" id="netSrc">
+      <button data-s="month" class="on">Сатори · месяц</button>
+      <button data-s="week">Узум · неделя</button>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+    <div class="seg-toggle" id="monthView">
+      <button data-v="full" class="on">Полный месяц</button>
+      <button data-v="weekly">По неделям</button>
+    </div>
+    <div class="pills" id="monthWeeks"></div>
+  </div>
+  <div class="hint" id="netDesc" style="margin-top:9px"></div>
+</div>
 <div class="kpis" id="kpis"></div>
 
 <div id="unitEconCard" style="margin-bottom:22px">
@@ -406,7 +423,7 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 const DATA = [{"code": "FRТАШ-291", "aka": "Бабур", "city": "Ташкент", "seg": 1, "comm": 0.06, "rentSum": 9000000, "salarySum": 9920000, "miscSum": 0, "uk": 320.0, "opex_usd": 1576.67, "w1": 33.4, "w2": 41.14, "w3": 36.43, "w4": 34.0, "runRate": 36.43, "periodAvg": 37.05, "fcMonth1": 39, "yandex": 43, "revW3": 6998954, "revPeriod": 5694745, "avgCheck": 153716, "gmvFc_usd": 546, "guarFull": 17400000, "start": "2026-05-06"}, {"code": "FRТАШ-290", "aka": "Буз-1", "city": "Ташкент", "seg": 1, "comm": 0.06, "rentSum": 6500000, "salarySum": 9920000, "miscSum": 0, "uk": 320.0, "opex_usd": 1368.33, "w1": 30, "w2": 37.86, "w3": 39.57, "w4": 54.5, "runRate": 39.57, "periodAvg": 38.14, "fcMonth1": 61, "yandex": 32, "revW3": 6694148, "revPeriod": 7139795, "avgCheck": 187183, "gmvFc_usd": 854, "guarFull": 17400000, "start": "2026-05-06"}, {"code": "FRТАШ-292", "aka": "Спутник", "city": "Ташкент", "seg": 1, "comm": 0.06, "rentSum": 3647160, "salarySum": 9920000, "miscSum": 0, "uk": 320.0, "opex_usd": 1130.6, "w1": 18.6, "w2": 21.57, "w3": 26.14, "w4": 32.5, "runRate": 26.14, "periodAvg": 23.43, "fcMonth1": 38, "yandex": 30, "revW3": 5292830, "revPeriod": 4287648, "avgCheck": 183021, "gmvFc_usd": 532, "guarFull": 17400000, "start": "2026-05-06"}, {"code": "FRТАШ-294", "aka": "Шастри", "city": "Ташкент", "seg": 1, "comm": 0.06, "rentSum": 11909091, "salarySum": 9920000, "miscSum": 0, "uk": 320.0, "opex_usd": 1819.09, "w1": 18.8, "w2": 26.57, "w3": 28.29, "w4": 25.0, "runRate": 28.29, "periodAvg": 25.14, "fcMonth1": 38, "yandex": 36, "revW3": 4915264, "revPeriod": 4014194, "avgCheck": 159649, "gmvFc_usd": 532, "guarFull": 17400000, "start": "2026-05-01"}, {"code": "FRАЛМ-9", "aka": "Алмалык Амир Т", "city": "Алмалык", "seg": 2, "comm": 0.05, "rentSum": 4431000, "salarySum": 8680000, "miscSum": 0, "uk": 320.0, "opex_usd": 1092.58, "w1": 13.4, "w2": 16.57, "w3": 20.86, "w4": 16.0, "runRate": 20.86, "periodAvg": 17.19, "fcMonth1": 38, "yandex": 40, "revW3": 4699718, "revPeriod": 3417804, "avgCheck": 198814, "gmvFc_usd": 532, "guarFull": 14000000, "start": "2026-05-07"}, {"code": "FRТАШ-289", "aka": "Афросиаб", "city": "Ташкент", "seg": 1, "comm": 0.06, "rentSum": 10420455, "salarySum": 9920000, "miscSum": 0, "uk": 320.0, "opex_usd": 1695.04, "w1": 4.4, "w2": 17.86, "w3": 20.86, "w4": 20.5, "runRate": 20.86, "periodAvg": 15.91, "fcMonth1": 58, "yandex": 48, "revW3": 4138246, "revPeriod": 3170562, "avgCheck": 199323, "gmvFc_usd": 812, "guarFull": 17400000, "start": "2026-05-14"}, {"code": "FRСМК-52", "aka": "Рудаки", "city": "Самарканд", "seg": 2, "comm": 0.05, "rentSum": 7329545, "salarySum": 8680000, "miscSum": 0, "uk": 320.0, "opex_usd": 1334.13, "w1": 11, "w2": 10.43, "w3": 11.14, "w4": 9.0, "runRate": 11.14, "periodAvg": 10.67, "fcMonth1": 36, "yandex": 41, "revW3": 2986412, "revPeriod": 2179695, "avgCheck": 204355, "gmvFc_usd": 504, "guarFull": 14000000, "start": "2026-05-04"}, {"code": "FRТАШ-293", "aka": "Кургантепа", "city": "Ташкент", "seg": 1, "comm": 0.06, "rentSum": 7112000, "salarySum": 9920000, "miscSum": 0, "uk": 320.0, "opex_usd": 1419.33, "w1": 8, "w2": 13, "w3": 17.71, "w4": 19.5, "runRate": 17.71, "periodAvg": 14.0, "fcMonth1": 61, "yandex": 48, "revW3": 2911760, "revPeriod": 2515899, "avgCheck": 179725, "gmvFc_usd": 854, "guarFull": 17400000, "start": "2026-05-12"}, {"code": "FRБХР-30", "aka": "Бухара", "city": "Бухара", "seg": 2, "comm": 0.05, "rentSum": 5818182, "salarySum": 8680000, "miscSum": 0, "uk": 320.0, "opex_usd": 1208.18, "w1": 13.8, "w2": 21.71, "w3": 15.43, "w4": 15.0, "runRate": 15.43, "periodAvg": 17.09, "fcMonth1": 31, "yandex": 25, "revW3": 2882378, "revPeriod": 2786908, "avgCheck": 163032, "gmvFc_usd": 434, "guarFull": 14000000, "start": "2026-05-01"}, {"code": "FRГАЗ-4", "aka": "Газалкент", "city": "Газалкент", "seg": 2, "comm": 0.05, "rentSum": 2954545, "salarySum": 7440000, "miscSum": 0, "uk": 320.0, "opex_usd": 866.21, "w1": 9.6, "w2": 13.29, "w3": 14.57, "w4": 13.0, "runRate": 14.57, "periodAvg": 12.81, "fcMonth1": 60, "yandex": 31, "revW3": 2627185, "revPeriod": 2183972, "avgCheck": 170483, "gmvFc_usd": 840, "guarFull": 14000000, "start": "2026-05-01"}, {"code": "FRТАШ-319", "aka": "Баку", "city": "Ташкент", "seg": 1, "comm": 0.06, "rentSum": 5800000, "salarySum": 9920000, "miscSum": 0, "uk": 320.0, "opex_usd": 1310.0, "w1": 14.8, "w2": 19.43, "w3": 15.71, "w4": 18.5, "runRate": 15.71, "periodAvg": 17.0, "fcMonth1": 35, "yandex": 34, "revW3": 2441774, "revPeriod": 3101992, "avgCheck": 182480, "gmvFc_usd": 490, "guarFull": 17400000, "start": "2026-05-06"}, {"code": "FRБУК-2", "aka": "Бука", "city": "Бука", "seg": 2, "comm": 0.05, "rentSum": 2954545, "salarySum": 7440000, "miscSum": 0, "uk": 320.0, "opex_usd": 866.21, "w1": 7, "w2": 12.57, "w3": 11.29, "w4": 9.0, "runRate": 11.29, "periodAvg": 10.48, "fcMonth1": 33, "yandex": 43, "revW3": 1844483, "revPeriod": 1833973, "avgCheck": 175045, "gmvFc_usd": 462, "guarFull": 14000000, "start": "2026-05-05"}, {"code": "FRТАШ-308", "aka": "Янгиюнусабад", "city": "Ташкент", "seg": 1, "comm": 0.06, "rentSum": 7386364, "salarySum": 9920000, "miscSum": 0, "uk": 320.0, "opex_usd": 1442.2, "w1": 10.8, "w2": 13.57, "w3": 12.57, "w4": 12.0, "runRate": 12.57, "periodAvg": 12.43, "fcMonth1": 61, "yandex": 65, "revW3": 1655575, "revPeriod": 1633474, "avgCheck": 131439, "gmvFc_usd": 854, "guarFull": 17400000, "start": "2026-05-01"}, {"code": "FRАЛМ-10", "aka": "Алмалык Мустакилик", "city": "Алмалык", "seg": 2, "comm": 0.05, "rentSum": 3409091, "salarySum": 8680000, "miscSum": 0, "uk": 320.0, "opex_usd": 1007.42, "w1": 7.2, "w2": 8.14, "w3": 9.14, "w4": 12.5, "runRate": 9.14, "periodAvg": 8.66, "fcMonth1": 36, "yandex": 23, "revW3": 1433257, "revPeriod": 1493154, "avgCheck": 172325, "gmvFc_usd": 504, "guarFull": 14000000, "start": "2026-05-06"}, {"code": "FRПСК-2", "aka": "Пскент", "city": "Пскент", "seg": 2, "comm": 0.05, "rentSum": 4435000, "salarySum": 7440000, "miscSum": 0, "uk": 320.0, "opex_usd": 989.58, "w1": 0, "w2": 1.86, "w3": 7, "w4": 8.5, "runRate": 7, "periodAvg": 3.76, "fcMonth1": 37, "yandex": 40, "revW3": 1390894, "revPeriod": 629761, "avgCheck": 167363, "gmvFc_usd": 518, "guarFull": 14000000, "start": "2026-05-20"}, {"code": "FRТАШ-307", "aka": "Крестик", "city": "Ташкент", "seg": 1, "comm": 0.06, "rentSum": 7216000, "salarySum": 9920000, "miscSum": 0, "uk": 320.0, "opex_usd": 1428.0, "w1": 4.4, "w2": 5.14, "w3": 5.29, "w4": 10.0, "runRate": 5.29, "periodAvg": 5.48, "fcMonth1": 60, "yandex": 68, "revW3": 550844, "revPeriod": 763186, "avgCheck": 139352, "gmvFc_usd": 840, "guarFull": 17400000, "start": "2026-05-01"}, {"code": "FRСМК-53", "aka": "Андижанская", "city": "Самарканд", "seg": 2, "comm": 0.05, "rentSum": 5864000, "salarySum": 8680000, "miscSum": 0, "uk": 320.0, "opex_usd": 1212.0, "w1": 0, "w2": 0.14, "w3": 2.86, "w4": 5.5, "runRate": 2.86, "periodAvg": 1.52, "fcMonth1": 24, "yandex": 29, "revW3": 496784, "revPeriod": 292136, "avgCheck": 191714, "gmvFc_usd": 336, "guarFull": 14000000, "start": "2026-05-21"}, {"code": "FRМРГ-8", "aka": "Маргилан", "city": "Маргилан", "seg": 3, "comm": 0.05, "rentSum": 2912000, "salarySum": 8680000, "miscSum": 0, "uk": 320.0, "opex_usd": 966.0, "w1": 0, "w2": 2, "w3": 3.86, "w4": 8.5, "runRate": 3.86, "periodAvg": 2.76, "fcMonth1": 19, "yandex": 26, "revW3": 495039, "revPeriod": 375074, "avgCheck": 135756, "gmvFc_usd": 266, "guarFull": 11400000, "start": "2026-05-18"}];
 const WK = {"weeks": ["11.05–17.05", "18.05–24.05", "25.05–31.05", "01.06–07.06"], "runIdx": 2, "dayCounts": [5, 7, 7, 2], "net": {"ord": [205.2, 282.9, 298.7, 323.5], "rev": [32294908, 49272087, 54455545, 55112722]}, "pvz": {"FRТАШ-290": {"aka": "Буз-1", "city": "Ташкент", "seg": 1, "ord": [30, 37.86, 39.57, 54.5], "rev": [5314462, 7773641, 6694148, 11044428]}, "FRТАШ-291": {"aka": "Бабур", "city": "Ташкент", "seg": 1, "ord": [33.4, 41.14, 36.43, 34.0], "rev": [5189086, 5351316, 6998954, 3596160]}, "FRТАШ-292": {"aka": "Спутник", "city": "Ташкент", "seg": 1, "ord": [18.6, 21.57, 26.14, 32.5], "rev": [2804800, 3374794, 5292830, 7671618]}, "FRТАШ-294": {"aka": "Шастри", "city": "Ташкент", "seg": 1, "ord": [18.8, 26.57, 28.29, 25.0], "rev": [2357412, 4784233, 4915264, 2307272]}, "FRТАШ-289": {"aka": "Афросиаб", "city": "Ташкент", "seg": 1, "ord": [4.4, 17.86, 20.86, 20.5], "rev": [715974, 3716644, 4138246, 4008851]}, "FRТАШ-293": {"aka": "Кургантепа", "city": "Ташкент", "seg": 1, "ord": [8, 13, 17.71, 19.5], "rev": [1812730, 2776540, 2911760, 1976062]}, "FRТАШ-319": {"aka": "Баку", "city": "Ташкент", "seg": 1, "ord": [14.8, 19.43, 15.71, 18.5], "rev": [2247551, 4186185, 2441774, 3754183]}, "FRАЛМ-9": {"aka": "Алмалык Амир Т", "city": "Алмалык", "seg": 2, "ord": [13.4, 16.57, 20.86, 16.0], "rev": [2684362, 2756586, 4699718, 3078978]}, "FRБХР-30": {"aka": "Бухара", "city": "Бухара", "seg": 2, "ord": [13.8, 21.71, 15.43, 15.0], "rev": [2092408, 3463258, 2882378, 1821785]}, "FRГАЗ-4": {"aka": "Газалкент", "city": "Газалкент", "seg": 2, "ord": [9.6, 13.29, 14.57, 13.0], "rev": [1227817, 2106333, 2627185, 3294854]}, "FRАЛМ-10": {"aka": "Алмалык Мустакилик", "city": "Алмалык", "seg": 2, "ord": [7.2, 8.14, 9.14, 12.5], "rev": [1202263, 1459084, 1433257, 2549262]}, "FRТАШ-308": {"aka": "Янгиюнусабад", "city": "Ташкент", "seg": 1, "ord": [10.8, 13.57, 12.57, 12.0], "rev": [1486923, 1648830, 1655575, 1868749]}, "FRТАШ-307": {"aka": "Крестик", "city": "Ташкент", "seg": 1, "ord": [4.4, 5.14, 5.29, 10.0], "rev": [575382, 970483, 550844, 1250360]}, "FRБУК-2": {"aka": "Бука", "city": "Бука", "seg": 2, "ord": [7, 12.57, 11.29, 9.0], "rev": [1291719, 2331664, 1844483, 1410900]}, "FRСМК-52": {"aka": "Рудаки", "city": "Самарканд", "seg": 2, "ord": [11, 10.43, 11.14, 9.0], "rev": [1292019, 2129724, 2986412, 1750268]}, "FRПСК-2": {"aka": "Пскент", "city": "Пскент", "seg": 2, "ord": [0, 1.86, 7, 8.5], "rev": [0, 193930, 1390894, 1065612]}, "FRМРГ-8": {"aka": "Маргилан", "city": "Маргилан", "seg": 3, "ord": [0, 2, 3.86, 8.5], "rev": [0, 196856, 495039, 1516645]}, "FRСМК-53": {"aka": "Андижанская", "city": "Самарканд", "seg": 2, "ord": [0, 0.14, 2.86, 5.5], "rev": [0, 51986, 496784, 1146735]}}};
 const FACT = {"month": "2026-05", "label": "май 2026", "days": 31, "income": {"FRТАШ-307": 23501200.0, "FRТАШ-294": 23504800.0, "FRТАШ-308": 17401200.0, "FRГАЗ-4": 14001200.0, "FRБХР-30": 14003600.0, "FRСМК-52": 12645161.29, "FRБУК-2": 12193548.39, "FRТАШ-292": 14593548.0, "FRАЛМ-10": 11744335.48, "FRТАШ-319": 14598348.39, "FRТАШ-291": 14598348.0, "FRТАШ-290": 14619948.0, "FRАЛМ-9": 11291523.0, "FRТАШ-293": 11234206.45, "FRТАШ-289": 10117626.0, "FRМРГ-8": 5148387.0, "FRСМК-53": 4967741.94, "FRПСК-2": 5422954.84}, "activeDays": {"FRТАШ-307": 31, "FRТАШ-294": 31, "FRТАШ-308": 31, "FRГАЗ-4": 31, "FRБХР-30": 31, "FRСМК-52": 28, "FRБУК-2": 27, "FRТАШ-292": 26, "FRАЛМ-10": 26, "FRТАШ-319": 26, "FRТАШ-291": 26, "FRТАШ-290": 26, "FRАЛМ-9": 25, "FRТАШ-293": 20, "FRТАШ-289": 18, "FRМРГ-8": 14, "FRСМК-53": 11, "FRПСК-2": 12}};
-const S={fx:12000,chk:14,uk:320,boost:1,flat:null,scen:'guar',seg:'all',metric:'be',cur:'usd',view:'main',histMetric:'orders',sortKey:'revW3',sortDir:-1,q:'',costSortKey:null,costSortDir:-1};
+const S={fx:12000,chk:14,uk:320,boost:1,flat:null,scen:'guar',seg:'all',metric:'be',cur:'usd',view:'main',histMetric:'orders',sortKey:'revW3',sortDir:-1,q:'',costSortKey:null,costSortDir:-1,netSrc:'month',monthView:'full',monthWeekIdx:null};
 /* эталон: run-rate = последняя полная неделя; недели/дни задаются данными или дефолтом */
 DATA.forEach(d=>{if(d.runRate==null)d.runRate=d.w3;});
 if(WK.runIdx==null)WK.runIdx=2;
@@ -446,23 +463,80 @@ function rows(){
   return r;
 }
 
-/* ---------- KPIs ---------- */
+/* ---------- сеть: периоды (факт Сатори месяц / Узум неделя) ---------- */
+const FACT_M = hasFact ? +FACT.month.split('-')[1] : null;
+const wkStartMonth = i => +String(WK.weeks[i]).split('–')[0].split('.')[1];
+const monthWeekIdx = hasFact ? WK.weeks.map((_,i)=>i).filter(i=>wkStartMonth(i)===FACT_M) : [];
+if(S.monthWeekIdx==null) S.monthWeekIdx = monthWeekIdx.length ? monthWeekIdx[monthWeekIdx.length-1] : (WK.runIdx??0);
+const wdays = i => (WK.dayCounts&&WK.dayCounts[i])||0;
+const beOf = d => (d.rentSum+d.salarySum+(d.miscSum||0)+S.uk*S.fx)/S.fx/(S.chk*d.comm)/30;   // безубыток зак/день (модель)
+const monthOrders = code => monthWeekIdx.reduce((a,i)=>a+(WK.pvz[code]?WK.pvz[code].ord[i]*wdays(i):0),0);
+function netStats(idxs, kind){
+  const r=rows(), n=r.length||1, tot=idxs.reduce((a,i)=>a+wdays(i),0)||1;
+  const netOrdDay = idxs.reduce((a,i)=>a+(WK.net.ord[i]*wdays(i)),0)/tot;   // заказы/день по сети
+  const ordPV = netOrdDay/n;
+  const gmv = idxs.reduce((a,i)=>a+(WK.net.rev[i]*wdays(i)),0);             // оборот за период (сумма)
+  const bePV = r.reduce((a,d)=>a+beOf(d),0)/n;
+  const ordOf = d => idxs.reduce((a,i)=>a+((WK.pvz[d.code]?WK.pvz[d.code].ord[i]:0)*wdays(i)),0)/tot;
+  const above = r.filter(d=>ordOf(d)>=beOf(d)).length;
+  let pnl=0;
+  r.forEach(d=>{ if(!hasFact||FACT.income[d.code]==null) return;
+    const cm=(d.rentSum+d.salarySum+(d.miscSum||0)+S.uk*S.fx);
+    if(kind==='month'){ const act=(FACT.activeDays[d.code]||FACT.days); pnl += FACT.income[d.code] - cm*act/FACT.days; }
+    else { const i=idxs[0], wsum=monthWeekIdx.reduce((a,j)=>a+wdays(j),0)||1;
+           const act=(FACT.activeDays[d.code]||FACT.days);
+           pnl += (FACT.income[d.code] - cm*act/FACT.days)*(wdays(i)/wsum); }  // доля месячного факт-P&L по дням недели
+  });
+  return {ordPV,bePV,above,n,pnl,gmv,netOrdDay};
+}
+function prevIdxOf(idx){ const list=(S.netSrc==='month')?monthWeekIdx:WK.weeks.map((_,i)=>i);
+  const p=list.indexOf(idx); return p>0 ? list[p-1] : null; }
+function deltaStr(cur,prev){ if(prev==null||!isFinite(prev)||prev===0) return '';
+  const dp=(cur-prev)/Math.abs(prev)*100; if(Math.abs(dp)<0.5) return '';
+  const up=dp>=0; return ` · <span class="${up?'pos':'neg'}">${up?'▲':'▼'} ${Math.abs(dp).toFixed(0)}%</span>`; }
+
+/* ---------- KPIs (верхний блок «Сеть · факт») ---------- */
 function renderKPIs(){
-  const r=rows(); const uf=useFact(); let ord=0,rev=0,pnl=0,above=0,beSum=0;
-  r.forEach(d=>{const c=compute(d);ord+=c.orders;rev+=c.rev;beSum+=c.be;if(c.gap>=0)above++;
-    const f=uf?factOf(d):null; pnl+= f?f.pnl:c.pnl;});
-  const avgPnl=r.length?pnl/r.length:0;
-  const beRatio = ord>0 ? beSum/ord : 0;
-  const k=[
-    {l:'Заказов/день на 1 ПВЗ',v:fmt(ord/r.length),d:(S.flat!=null?`цель · ${S.flat}/ПВЗ`:(S.boost===1?'текущий результат · W3':`рост · ×${S.boost.toFixed(1)}`))},
-    {l:'Оборот (GMV)/день',v:money(rev),d:(S.cur==='usd'?`≈ ${mln(rev)} сум`:`≈ $${fmt(rev/S.fx)}`)},
-    {l:'Точек выше безубытка',v:above+' / '+r.length,d:above==0?'все в минусе':'',cls:above>0?'pos':'neg'},
-    {l:'Безубыток/день на 1 ПВЗ',v:fmt(beSum/r.length),d:'в среднем на точку'},
-    {l:'До безубытка',v:(beRatio<=1.001?'достигнут':'×'+beRatio.toFixed(1)),cls:beRatio<=1.001?'pos':'',d:beRatio<=1.001?'P&L ≥ 0':'рост к текущему'},
-    {l:uf?'P&L/точка · факт':(S.scen==='guar'?'P&L/точка (на гарантии)':'P&L/точка (комиссия)'),v:money(avgPnl),cls:avgPnl>=0?'pos':'neg',d:uf?('Сатори · '+FACT.label):'в среднем · модель'},
-    {l:'P&L по сети',v:money(pnl),cls:pnl>=0?'pos':'neg',d:uf?('факт · Сатори · '+FACT.label):'за месяц · модель'},
+  updateNetCtl();
+  let idxs, kind, prev=null, label, desc;
+  if(S.netSrc==='week'){ const i=WK.runIdx??(WK.weeks.length-1); idxs=[i]; kind='week'; prev=prevIdxOf(i);
+    label='Узум · '+WK.weeks[i];
+    desc=`Последняя полная неделя ${WK.weeks[i]} · заказы и оборот — фактические из ежедневного файла (узум). P&L — доля месячного факта Сатори (${hasFact?FACT.label:'—'}) по дням недели.`;
+  } else if(S.monthView==='weekly'){ const i=S.monthWeekIdx; idxs=[i]; kind='week'; prev=prevIdxOf(i);
+    label='Сатори · '+(hasFact?FACT.label:'')+' · '+WK.weeks[i];
+    desc=`Неделя ${WK.weeks[i]} месяца ${hasFact?FACT.label:''} · заказы и оборот — фактические за неделю; P&L — доля месячного факта Сатори по дням недели.`;
+  } else { idxs=monthWeekIdx.length?monthWeekIdx:[WK.runIdx??0]; kind='month';
+    label='Сатори · '+(hasFact?FACT.label:'—');
+    desc=`Полный месяц ${hasFact?FACT.label:''} · деньги (доход/P&L) по отчёту Сатори; заказы и оборот — из ежедневного файла (узум).`;
+  }
+  const s=netStats(idxs,kind), pnlPV=s.pnl/s.n, perLabel=(kind==='month'?'за месяц':'за неделю');
+  let dOrd='',dPnl='',dGmv='';
+  if(prev!=null){ const ps=netStats([prev],'week'); dOrd=deltaStr(s.netOrdDay,ps.netOrdDay); dGmv=deltaStr(s.gmv,ps.gmv); dPnl=deltaStr(s.pnl,ps.pnl); }
+  const ratio=s.bePV>0?s.ordPV/s.bePV:0, toBE=s.ordPV>0?s.bePV/s.ordPV:0;
+  const col=ratio>=1?'var(--mint)':ratio>=.6?'var(--amber)':'var(--coral)';
+  document.getElementById('netDesc').textContent=desc;
+  let html=`<div class="kpi"><div class="lab">Заказы / безубыток · зак/д на ПВЗ</div>
+    <div class="val">${fmt1(s.ordPV)} <span style="color:var(--faint);font-weight:400;font-size:18px">/ ${fmt(s.bePV)}</span></div>
+    <div class="health" style="width:100%;margin-top:9px"><i style="width:${Math.min(ratio,1.4)/1.4*100}%;background:${col}"></i><span class="mark" style="left:${1/1.4*100}%"></span></div>
+    <div class="delta">${ratio>=1?'<span class="pos">безубыток достигнут</span>':'×'+toBE.toFixed(1)+' до безубытка'}${dOrd}</div></div>`;
+  const cards=[
+    {l:'Точек выше безубытка',v:s.above+' / '+s.n,cls:s.above>0?'pos':'neg',d:s.above==0?'все в минусе':perLabel},
+    {l:'P&L по сети',v:money(s.pnl),cls:s.pnl>=0?'pos':'neg',d:(kind==='month'?'факт · Сатори · '+(hasFact?FACT.label:''):'неделя · доля Сатори')+dPnl},
+    {l:'Оборот (GMV) '+perLabel,v:money(s.gmv),d:(S.cur==='usd'?`≈ ${mln(s.gmv)} сум`:`≈ $${fmt(s.gmv/S.fx)}`)+dGmv},
+    {l:'P&L на 1 ПВЗ',v:money(pnlPV),cls:pnlPV>=0?'pos':'neg',d:perLabel},
   ];
-  document.getElementById('kpis').innerHTML=k.map(x=>`<div class="kpi"><div class="lab">${x.l}</div><div class="val ${x.cls||''}">${x.v}</div><div class="delta">${x.d||''}</div></div>`).join('');
+  html+=cards.map(x=>`<div class="kpi"><div class="lab">${x.l}</div><div class="val ${x.cls||''}">${x.v}</div><div class="delta">${x.d||''}</div></div>`).join('');
+  document.getElementById('kpis').innerHTML=html;
+}
+function updateNetCtl(){
+  const mv=document.getElementById('monthView'), wkc=document.getElementById('monthWeeks');
+  if(mv) mv.style.display = S.netSrc==='month' ? '' : 'none';
+  if(wkc) wkc.style.display = (S.netSrc==='month' && S.monthView==='weekly') ? '' : 'none';
+  document.querySelectorAll('#netSrc button').forEach(b=>b.classList.toggle('on',b.dataset.s===S.netSrc));
+  document.querySelectorAll('#monthView button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.monthView));
+  if(wkc && !wkc.dataset.built){ wkc.innerHTML=monthWeekIdx.map(i=>`<div class="pill" data-i="${i}">${WK.weeks[i]}</div>`).join(''); wkc.dataset.built='1';
+    wkc.querySelectorAll('.pill').forEach(p=>p.onclick=()=>{S.monthWeekIdx=+p.dataset.i;renderKPIs();}); }
+  if(wkc) wkc.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',+p.dataset.i===S.monthWeekIdx));
 }
 
 /* ---------- юнит-экономика ---------- */
@@ -811,6 +885,8 @@ document.querySelectorAll('#viewnav button').forEach(b=>b.onclick=()=>{
 document.querySelectorAll('#histTog button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#histTog button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
   S.histMetric=b.dataset.h;renderHistory();});
+document.querySelectorAll('#netSrc button').forEach(b=>b.onclick=()=>{S.netSrc=b.dataset.s;renderKPIs();});
+document.querySelectorAll('#monthView button').forEach(b=>b.onclick=()=>{S.monthView=b.dataset.v;renderKPIs();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
 
 /* ---------- break-even button ---------- */
