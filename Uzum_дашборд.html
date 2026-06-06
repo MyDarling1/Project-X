@@ -59,6 +59,7 @@ h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;letter-spacing:-.02e
 
 /* layout */
 .grid{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}
+.grid>*{min-width:0}
 @media(max-width:920px){.grid{grid-template-columns:1fr}}
 .card{background:linear-gradient(165deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:18px;padding:18px}
 .card h3{font-size:14px;font-weight:700;margin-bottom:3px}
@@ -147,14 +148,14 @@ svg{display:block;width:100%;height:auto;overflow:visible}
 .tbl-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .search{background:var(--bg);border:1px solid var(--line2);border-radius:10px;padding:8px 12px;color:var(--txt);font-family:inherit;font-size:13px;width:180px;outline:none}
 .search:focus{border-color:var(--violet)}
-.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
 table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
 th{text-align:right;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:600;cursor:pointer;white-space:nowrap;border-bottom:1px solid var(--line2);user-select:none}
 th:first-child,td:first-child{text-align:left}
-th.lft,td.lft{text-align:left}
+th.lft{text-align:left}
 th:hover{color:var(--dim)}
 th.sorted{color:var(--violet)}
-td{padding:10px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:right}
+td{padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
 tr.prow{cursor:pointer;transition:background .14s}
 tr.prow:hover{background:rgba(139,109,255,.06)}
 .chip{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;color:#0a0c11}
@@ -197,32 +198,6 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 .hist-net{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
 @media(max-width:760px){.hist-net{grid-template-columns:1fr}}
 .wkbar{transition:y .5s cubic-bezier(.22,1,.36,1),height .5s cubic-bezier(.22,1,.36,1)}
-/* ===== mobile fix (overrides) ===== */
-html,body{max-width:100%;overflow-x:hidden}
-.grid>*{min-width:0}
-.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
-@media(max-width:920px){.grid{grid-template-columns:1fr}}
-@media(max-width:680px){
-  body{padding:14px 10px 40px}
-  .head h1{font-size:20px}
-  .head .sub{font-size:11.5px}
-  .kpis{grid-template-columns:repeat(2,1fr);gap:10px}
-  .kpi{padding:12px 13px}
-  .kpi .val{font-size:20px}
-  .kpi .lab{font-size:10px}
-  .card{padding:14px;border-radius:14px}
-  .viewnav{flex-wrap:wrap;gap:6px}
-  .viewnav button{padding:9px 12px;font-size:12.5px}
-  .tabs{flex-wrap:wrap;gap:5px}
-  .tab{padding:6px 10px;font-size:11px}
-  table{font-size:11.5px;min-width:520px}
-  th{padding:7px;font-size:9.5px}
-  td{padding:7px}
-  .tbl-top{flex-direction:column;align-items:stretch}
-  .search{width:100%}
-  .drawer{width:94vw}
-}
-@media(max-width:400px){.kpis{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -255,7 +230,7 @@ html,body{max-width:100%;overflow-x:hidden}
 
 <div class="viewnav" id="viewnav">
   <button data-v="main" class="on">Обзор</button>
-  <button data-v="history">Недельная история</button>
+  <button data-v="history">Фактические результаты</button>
   <button data-v="upload">Загрузить файл</button>
 </div>
 
@@ -331,10 +306,11 @@ html,body{max-width:100%;overflow-x:hidden}
 <div id="viewHistory" style="display:none">
   <div class="card" style="margin-bottom:18px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-      <div><h3>Недельная история</h3><div class="hint" style="margin:0">Факт по неделям. <b style="color:var(--dim)">W4* — неполная неделя</b> (01–02.06, всего 2 дня): показана как есть, не для экстраполяции. Объём — в выбранной валюте.</div></div>
-      <div class="seg-toggle" id="histTog" style="max-width:320px">
+      <div><h3>Фактические результаты</h3><div class="hint" style="margin:0">Факт по неделям. <b style="color:var(--dim)">W4* — неполная неделя</b> (01–02.06, всего 2 дня): показана как есть, не для экстраполяции. Объём и P&L — в выбранной валюте.</div></div>
+      <div class="seg-toggle" id="histTog" style="max-width:420px">
         <button data-h="orders" class="on">Заказы/день</button>
         <button data-h="volume">Объём/день</button>
+        <button data-h="pnl">P&amp;L/нед.</button>
       </div>
     </div>
   </div>
@@ -343,8 +319,14 @@ html,body{max-width:100%;overflow-x:hidden}
 
   <div class="card">
     <h3 id="histTblTitle"></h3>
-    <div class="hint">Среднее за неделю на каждом ПВЗ. Отсортировано по W3.</div>
+    <div class="hint">По каждому ПВЗ, по неделям. Отсортировано по последней полной неделе.</div>
     <div class="tbl-scroll"><table id="histTbl"></table></div>
+  </div>
+
+  <div class="card">
+    <h3>Структура расходов (в месяц)</h3>
+    <div class="hint">OPEX = аренда + ЗП. Плюс затраты на УК и «разное». В выбранной валюте.</div>
+    <div class="tbl-scroll"><table id="costTbl"></table></div>
   </div>
 </div>
 
@@ -381,8 +363,8 @@ html,body{max-width:100%;overflow-x:hidden}
 </div>
 
 <script>
-const DATA = [{"code": "FRТАШ-291", "aka": "Бабур", "city": "Ташкент", "seg": 1, "comm": 0.06, "opex_usd": 1524.59, "uk": 320.0, "w1": 33.4, "w2": 41.14, "w3": 36.43, "w4": 52.5, "runRate": 36.43, "periodAvg": 40.0, "fcMonth1": 39, "yandex": 43, "revW3": 6998954, "revPeriod": 6433841, "avgCheck": 160848, "gmvFc_usd": 546, "guarFull": 17400000, "start": "2026-05-06"}, {"code": "FRТАШ-290", "aka": "Буз-1", "city": "Ташкент", "seg": 1, "comm": 0.06, "opex_usd": 1327.87, "uk": 320.0, "w1": 30, "w2": 37.86, "w3": 39.57, "w4": 55.5, "runRate": 39.57, "periodAvg": 39.74, "fcMonth1": 61, "yandex": 32, "revW3": 6694148, "revPeriod": 6940540, "avgCheck": 174651, "gmvFc_usd": 854, "guarFull": 17400000, "start": "2026-05-06"}, {"code": "FRТАШ-292", "aka": "Спутник", "city": "Ташкент", "seg": 1, "comm": 0.06, "opex_usd": 1131.15, "uk": 320.0, "w1": 18.6, "w2": 21.57, "w3": 26.14, "w4": 30.75, "runRate": 26.14, "periodAvg": 23.91, "fcMonth1": 38, "yandex": 30, "revW3": 5292830, "revPeriod": 4354781, "avgCheck": 182119, "gmvFc_usd": 532, "guarFull": 17400000, "start": "2026-05-06"}, {"code": "FRТАШ-294", "aka": "Шастри", "city": "Ташкент", "seg": 1, "comm": 0.06, "opex_usd": 1622.95, "uk": 320.0, "w1": 18.8, "w2": 26.57, "w3": 28.29, "w4": 22.75, "runRate": 28.29, "periodAvg": 24.74, "fcMonth1": 38, "yandex": 36, "revW3": 4915264, "revPeriod": 4139815, "avgCheck": 167333, "gmvFc_usd": 532, "guarFull": 17400000, "start": "2026-05-01"}, {"code": "FRАЛМ-9", "aka": "Алмалык Амир Т", "city": "Алмалык", "seg": 2, "comm": 0.05, "opex_usd": 1032.79, "uk": 320.0, "w1": 13.4, "w2": 16.57, "w3": 20.86, "w4": 18.25, "runRate": 20.86, "periodAvg": 17.48, "fcMonth1": 38, "yandex": 40, "revW3": 4699718, "revPeriod": 3398088, "avgCheck": 194413, "gmvFc_usd": 532, "guarFull": 14000000, "start": "2026-05-07"}, {"code": "FRТАШ-289", "aka": "Афросиаб", "city": "Ташкент", "seg": 1, "comm": 0.06, "opex_usd": 1524.59, "uk": 320.0, "w1": 4.4, "w2": 17.86, "w3": 20.86, "w4": 23.25, "runRate": 20.86, "periodAvg": 16.78, "fcMonth1": 58, "yandex": 48, "revW3": 4138246, "revPeriod": 3469611, "avgCheck": 206717, "gmvFc_usd": 812, "guarFull": 17400000, "start": "2026-05-14"}, {"code": "FRСМК-52", "aka": "Рудаки", "city": "Самарканд", "seg": 2, "comm": 0.05, "opex_usd": 1278.69, "uk": 320.0, "w1": 11, "w2": 10.43, "w3": 11.14, "w4": 14.0, "runRate": 11.14, "periodAvg": 11.39, "fcMonth1": 36, "yandex": 41, "revW3": 2986412, "revPeriod": 2176399, "avgCheck": 191065, "gmvFc_usd": 504, "guarFull": 14000000, "start": "2026-05-04"}, {"code": "FRТАШ-293", "aka": "Кургантепа", "city": "Ташкент", "seg": 1, "comm": 0.06, "opex_usd": 1327.87, "uk": 320.0, "w1": 8, "w2": 13, "w3": 17.71, "w4": 23.0, "runRate": 17.71, "periodAvg": 15.09, "fcMonth1": 61, "yandex": 48, "revW3": 2911760, "revPeriod": 2590401, "avgCheck": 171713, "gmvFc_usd": 854, "guarFull": 17400000, "start": "2026-05-12"}, {"code": "FRБХР-30", "aka": "Бухара", "city": "Бухара", "seg": 2, "comm": 0.05, "opex_usd": 1131.15, "uk": 320.0, "w1": 13.8, "w2": 21.71, "w3": 15.43, "w4": 18.5, "runRate": 15.43, "periodAvg": 17.52, "fcMonth1": 31, "yandex": 25, "revW3": 2882378, "revPeriod": 2776890, "avgCheck": 158490, "gmvFc_usd": 434, "guarFull": 14000000, "start": "2026-05-01"}, {"code": "FRГАЗ-4", "aka": "Газалкент", "city": "Газалкент", "seg": 2, "comm": 0.05, "opex_usd": 934.43, "uk": 320.0, "w1": 9.6, "w2": 13.29, "w3": 14.57, "w4": 14.25, "runRate": 14.57, "periodAvg": 13.04, "fcMonth1": 60, "yandex": 31, "revW3": 2627185, "revPeriod": 2219246, "avgCheck": 170131, "gmvFc_usd": 840, "guarFull": 14000000, "start": "2026-05-01"}, {"code": "FRТАШ-319", "aka": "Баку", "city": "Ташкент", "seg": 1, "comm": 0.06, "opex_usd": 1229.51, "uk": 320.0, "w1": 14.8, "w2": 19.43, "w3": 15.71, "w4": 13.75, "runRate": 15.71, "periodAvg": 16.3, "fcMonth1": 35, "yandex": 34, "revW3": 2441774, "revPeriod": 2967210, "avgCheck": 181999, "gmvFc_usd": 490, "guarFull": 17400000, "start": "2026-05-06"}, {"code": "FRБУК-2", "aka": "Бука", "city": "Бука", "seg": 2, "comm": 0.05, "opex_usd": 934.43, "uk": 320.0, "w1": 7, "w2": 12.57, "w3": 11.29, "w4": 12.0, "runRate": 11.29, "periodAvg": 10.87, "fcMonth1": 33, "yandex": 43, "revW3": 1844483, "revPeriod": 1935301, "avgCheck": 178033, "gmvFc_usd": 462, "guarFull": 14000000, "start": "2026-05-05"}, {"code": "FRТАШ-308", "aka": "Янгиюнусабад", "city": "Ташкент", "seg": 1, "comm": 0.06, "opex_usd": 1327.87, "uk": 320.0, "w1": 10.8, "w2": 13.57, "w3": 12.57, "w4": 15.5, "runRate": 12.57, "periodAvg": 13.0, "fcMonth1": 61, "yandex": 65, "revW3": 1655575, "revPeriod": 1930253, "avgCheck": 148491, "gmvFc_usd": 854, "guarFull": 17400000, "start": "2026-05-01"}, {"code": "FRАЛМ-10", "aka": "Алмалык Мустакилик", "city": "Алмалык", "seg": 2, "comm": 0.05, "opex_usd": 934.43, "uk": 320.0, "w1": 7.2, "w2": 8.14, "w3": 9.14, "w4": 13.0, "runRate": 9.14, "periodAvg": 9.09, "fcMonth1": 36, "yandex": 23, "revW3": 1433257, "revPeriod": 1671756, "avgCheck": 184008, "gmvFc_usd": 504, "guarFull": 14000000, "start": "2026-05-06"}, {"code": "FRПСК-2", "aka": "Пскент", "city": "Пскент", "seg": 2, "comm": 0.05, "opex_usd": 1032.79, "uk": 320.0, "w1": 0, "w2": 1.86, "w3": 7, "w4": 10.0, "runRate": 7, "periodAvg": 4.44, "fcMonth1": 37, "yandex": 40, "revW3": 1390894, "revPeriod": 706482, "avgCheck": 159274, "gmvFc_usd": 518, "guarFull": 14000000, "start": "2026-05-20"}, {"code": "FRТАШ-307", "aka": "Крестик", "city": "Ташкент", "seg": 1, "comm": 0.06, "opex_usd": 1229.51, "uk": 320.0, "w1": 4.4, "w2": 5.14, "w3": 5.29, "w4": 8.5, "runRate": 5.29, "periodAvg": 5.61, "fcMonth1": 60, "yandex": 68, "revW3": 550844, "revPeriod": 781615, "avgCheck": 139347, "gmvFc_usd": 840, "guarFull": 17400000, "start": "2026-05-01"}, {"code": "FRСМК-53", "aka": "Андижанская", "city": "Самарканд", "seg": 2, "comm": 0.05, "opex_usd": 1180.33, "uk": 320.0, "w1": 0, "w2": 0.14, "w3": 2.86, "w4": 6.75, "runRate": 2.86, "periodAvg": 2.09, "fcMonth1": 24, "yandex": 29, "revW3": 496784, "revPeriod": 329436, "avgCheck": 157855, "gmvFc_usd": 336, "guarFull": 14000000, "start": "2026-05-21"}, {"code": "FRМРГ-8", "aka": "Маргилан", "city": "Маргилан", "seg": 3, "comm": 0.05, "opex_usd": 934.43, "uk": 320.0, "w1": 0, "w2": 2, "w3": 3.86, "w4": 6.0, "runRate": 3.86, "periodAvg": 2.83, "fcMonth1": 19, "yandex": 26, "revW3": 495039, "revPeriod": 360777, "avgCheck": 127620, "gmvFc_usd": 266, "guarFull": 11400000, "start": "2026-05-18"}];
-const WK = {"weeks": ["11.05–17.05", "18.05–24.05", "25.05–31.05", "01.06–07.06"], "runIdx": 2, "dayCounts": [5, 7, 7, 4], "net": {"ord": [205.2, 282.8, 298.7, 358.2], "rev": [32294908, 49272087, 54455545, 60907045]}, "pvz": {"FRТАШ-290": {"aka": "Буз-1", "city": "Ташкент", "seg": 1, "ord": [30, 37.86, 39.57, 55.5], "rev": [5314462, 7773641, 6694148, 7946395]}, "FRТАШ-291": {"aka": "Бабур", "city": "Ташкент", "seg": 1, "ord": [33.4, 41.14, 36.43, 52.5], "rev": [5189086, 5351316, 6998954, 8895256]}, "FRТАШ-292": {"aka": "Спутник", "city": "Ташкент", "seg": 1, "ord": [18.6, 21.57, 26.14, 30.75], "rev": [2804800, 3374794, 5292830, 6365652]}, "FRТАШ-289": {"aka": "Афросиаб", "city": "Ташкент", "seg": 1, "ord": [4.4, 17.86, 20.86, 23.25], "rev": [715974, 3716644, 4138246, 5309236]}, "FRТАШ-293": {"aka": "Кургантепа", "city": "Ташкент", "seg": 1, "ord": [8, 13, 17.71, 23.0], "rev": [1812730, 2776540, 2911760, 2674371]}, "FRТАШ-294": {"aka": "Шастри", "city": "Ташкент", "seg": 1, "ord": [18.8, 26.57, 28.29, 22.75], "rev": [2357412, 4784233, 4915264, 3883050]}, "FRБХР-30": {"aka": "Бухара", "city": "Бухара", "seg": 2, "ord": [13.8, 21.71, 15.43, 18.5], "rev": [2092408, 3463258, 2882378, 2246742]}, "FRАЛМ-9": {"aka": "Алмалык Амир Т", "city": "Алмалык", "seg": 2, "ord": [13.4, 16.57, 20.86, 18.25], "rev": [2684362, 2756586, 4699718, 3135019]}, "FRТАШ-308": {"aka": "Янгиюнусабад", "city": "Ташкент", "seg": 1, "ord": [10.8, 13.57, 12.57, 15.5], "rev": [1486923, 1648830, 1655575, 3457592]}, "FRГАЗ-4": {"aka": "Газалкент", "city": "Газалкент", "seg": 2, "ord": [9.6, 13.29, 14.57, 14.25], "rev": [1227817, 2106333, 2627185, 2942237]}, "FRСМК-52": {"aka": "Рудаки", "city": "Самарканд", "seg": 2, "ord": [11, 10.43, 11.14, 14.0], "rev": [1292019, 2129724, 2986412, 1946032]}, "FRТАШ-319": {"aka": "Баку", "city": "Ташкент", "seg": 1, "ord": [14.8, 19.43, 15.71, 13.75], "rev": [2247551, 4186185, 2441774, 2653089]}, "FRАЛМ-10": {"aka": "Алмалык Мустакилик", "city": "Алмалык", "seg": 2, "ord": [7.2, 8.14, 9.14, 13.0], "rev": [1202263, 1459084, 1433257, 3048172]}, "FRБУК-2": {"aka": "Бука", "city": "Бука", "seg": 2, "ord": [7, 12.57, 11.29, 12.0], "rev": [1291719, 2331664, 1844483, 2205074]}, "FRПСК-2": {"aka": "Пскент", "city": "Пскент", "seg": 2, "ord": [0, 1.86, 7, 10.0], "rev": [0, 193930, 1390894, 1288831]}, "FRТАШ-307": {"aka": "Крестик", "city": "Ташкент", "seg": 1, "ord": [4.4, 5.14, 5.29, 8.5], "rev": [575382, 970483, 550844, 1112735]}, "FRСМК-53": {"aka": "Андижанская", "city": "Самарканд", "seg": 2, "ord": [0, 0.14, 2.86, 6.75], "rev": [0, 51986, 496784, 933910]}, "FRМРГ-8": {"aka": "Маргилан", "city": "Маргилан", "seg": 3, "ord": [0, 2, 3.86, 6.0], "rev": [0, 196856, 495039, 863652]}}};
+const DATA = [{"code": "FRТАШ-291", "aka": "Бабур", "city": "Ташкент", "seg": 1, "comm": 0.06, "rentSum": 9000000, "salarySum": 9920000, "miscSum": 0, "uk": 320.0, "opex_usd": 1576.67, "w1": 33.4, "w2": 41.14, "w3": 36.43, "w4": 34.0, "runRate": 36.43, "periodAvg": 37.05, "fcMonth1": 39, "yandex": 43, "revW3": 6998954, "revPeriod": 5694745, "avgCheck": 153716, "gmvFc_usd": 546, "guarFull": 17400000, "start": "2026-05-06"}, {"code": "FRТАШ-290", "aka": "Буз-1", "city": "Ташкент", "seg": 1, "comm": 0.06, "rentSum": 6500000, "salarySum": 9920000, "miscSum": 0, "uk": 320.0, "opex_usd": 1368.33, "w1": 30, "w2": 37.86, "w3": 39.57, "w4": 54.5, "runRate": 39.57, "periodAvg": 38.14, "fcMonth1": 61, "yandex": 32, "revW3": 6694148, "revPeriod": 7139795, "avgCheck": 187183, "gmvFc_usd": 854, "guarFull": 17400000, "start": "2026-05-06"}, {"code": "FRТАШ-292", "aka": "Спутник", "city": "Ташкент", "seg": 1, "comm": 0.06, "rentSum": 3647160, "salarySum": 9920000, "miscSum": 0, "uk": 320.0, "opex_usd": 1130.6, "w1": 18.6, "w2": 21.57, "w3": 26.14, "w4": 32.5, "runRate": 26.14, "periodAvg": 23.43, "fcMonth1": 38, "yandex": 30, "revW3": 5292830, "revPeriod": 4287648, "avgCheck": 183021, "gmvFc_usd": 532, "guarFull": 17400000, "start": "2026-05-06"}, {"code": "FRТАШ-294", "aka": "Шастри", "city": "Ташкент", "seg": 1, "comm": 0.06, "rentSum": 11909091, "salarySum": 9920000, "miscSum": 0, "uk": 320.0, "opex_usd": 1819.09, "w1": 18.8, "w2": 26.57, "w3": 28.29, "w4": 25.0, "runRate": 28.29, "periodAvg": 25.14, "fcMonth1": 38, "yandex": 36, "revW3": 4915264, "revPeriod": 4014194, "avgCheck": 159649, "gmvFc_usd": 532, "guarFull": 17400000, "start": "2026-05-01"}, {"code": "FRАЛМ-9", "aka": "Алмалык Амир Т", "city": "Алмалык", "seg": 2, "comm": 0.05, "rentSum": 4431000, "salarySum": 8680000, "miscSum": 0, "uk": 320.0, "opex_usd": 1092.58, "w1": 13.4, "w2": 16.57, "w3": 20.86, "w4": 16.0, "runRate": 20.86, "periodAvg": 17.19, "fcMonth1": 38, "yandex": 40, "revW3": 4699718, "revPeriod": 3417804, "avgCheck": 198814, "gmvFc_usd": 532, "guarFull": 14000000, "start": "2026-05-07"}, {"code": "FRТАШ-289", "aka": "Афросиаб", "city": "Ташкент", "seg": 1, "comm": 0.06, "rentSum": 10420455, "salarySum": 9920000, "miscSum": 0, "uk": 320.0, "opex_usd": 1695.04, "w1": 4.4, "w2": 17.86, "w3": 20.86, "w4": 20.5, "runRate": 20.86, "periodAvg": 15.91, "fcMonth1": 58, "yandex": 48, "revW3": 4138246, "revPeriod": 3170562, "avgCheck": 199323, "gmvFc_usd": 812, "guarFull": 17400000, "start": "2026-05-14"}, {"code": "FRСМК-52", "aka": "Рудаки", "city": "Самарканд", "seg": 2, "comm": 0.05, "rentSum": 7329545, "salarySum": 8680000, "miscSum": 0, "uk": 320.0, "opex_usd": 1334.13, "w1": 11, "w2": 10.43, "w3": 11.14, "w4": 9.0, "runRate": 11.14, "periodAvg": 10.67, "fcMonth1": 36, "yandex": 41, "revW3": 2986412, "revPeriod": 2179695, "avgCheck": 204355, "gmvFc_usd": 504, "guarFull": 14000000, "start": "2026-05-04"}, {"code": "FRТАШ-293", "aka": "Кургантепа", "city": "Ташкент", "seg": 1, "comm": 0.06, "rentSum": 7112000, "salarySum": 9920000, "miscSum": 0, "uk": 320.0, "opex_usd": 1419.33, "w1": 8, "w2": 13, "w3": 17.71, "w4": 19.5, "runRate": 17.71, "periodAvg": 14.0, "fcMonth1": 61, "yandex": 48, "revW3": 2911760, "revPeriod": 2515899, "avgCheck": 179725, "gmvFc_usd": 854, "guarFull": 17400000, "start": "2026-05-12"}, {"code": "FRБХР-30", "aka": "Бухара", "city": "Бухара", "seg": 2, "comm": 0.05, "rentSum": 5818182, "salarySum": 8680000, "miscSum": 0, "uk": 320.0, "opex_usd": 1208.18, "w1": 13.8, "w2": 21.71, "w3": 15.43, "w4": 15.0, "runRate": 15.43, "periodAvg": 17.09, "fcMonth1": 31, "yandex": 25, "revW3": 2882378, "revPeriod": 2786908, "avgCheck": 163032, "gmvFc_usd": 434, "guarFull": 14000000, "start": "2026-05-01"}, {"code": "FRГАЗ-4", "aka": "Газалкент", "city": "Газалкент", "seg": 2, "comm": 0.05, "rentSum": 2954545, "salarySum": 7440000, "miscSum": 0, "uk": 320.0, "opex_usd": 866.21, "w1": 9.6, "w2": 13.29, "w3": 14.57, "w4": 13.0, "runRate": 14.57, "periodAvg": 12.81, "fcMonth1": 60, "yandex": 31, "revW3": 2627185, "revPeriod": 2183972, "avgCheck": 170483, "gmvFc_usd": 840, "guarFull": 14000000, "start": "2026-05-01"}, {"code": "FRТАШ-319", "aka": "Баку", "city": "Ташкент", "seg": 1, "comm": 0.06, "rentSum": 5800000, "salarySum": 9920000, "miscSum": 0, "uk": 320.0, "opex_usd": 1310.0, "w1": 14.8, "w2": 19.43, "w3": 15.71, "w4": 18.5, "runRate": 15.71, "periodAvg": 17.0, "fcMonth1": 35, "yandex": 34, "revW3": 2441774, "revPeriod": 3101992, "avgCheck": 182480, "gmvFc_usd": 490, "guarFull": 17400000, "start": "2026-05-06"}, {"code": "FRБУК-2", "aka": "Бука", "city": "Бука", "seg": 2, "comm": 0.05, "rentSum": 2954545, "salarySum": 7440000, "miscSum": 0, "uk": 320.0, "opex_usd": 866.21, "w1": 7, "w2": 12.57, "w3": 11.29, "w4": 9.0, "runRate": 11.29, "periodAvg": 10.48, "fcMonth1": 33, "yandex": 43, "revW3": 1844483, "revPeriod": 1833973, "avgCheck": 175045, "gmvFc_usd": 462, "guarFull": 14000000, "start": "2026-05-05"}, {"code": "FRТАШ-308", "aka": "Янгиюнусабад", "city": "Ташкент", "seg": 1, "comm": 0.06, "rentSum": 7386364, "salarySum": 9920000, "miscSum": 0, "uk": 320.0, "opex_usd": 1442.2, "w1": 10.8, "w2": 13.57, "w3": 12.57, "w4": 12.0, "runRate": 12.57, "periodAvg": 12.43, "fcMonth1": 61, "yandex": 65, "revW3": 1655575, "revPeriod": 1633474, "avgCheck": 131439, "gmvFc_usd": 854, "guarFull": 17400000, "start": "2026-05-01"}, {"code": "FRАЛМ-10", "aka": "Алмалык Мустакилик", "city": "Алмалык", "seg": 2, "comm": 0.05, "rentSum": 3409091, "salarySum": 8680000, "miscSum": 0, "uk": 320.0, "opex_usd": 1007.42, "w1": 7.2, "w2": 8.14, "w3": 9.14, "w4": 12.5, "runRate": 9.14, "periodAvg": 8.66, "fcMonth1": 36, "yandex": 23, "revW3": 1433257, "revPeriod": 1493154, "avgCheck": 172325, "gmvFc_usd": 504, "guarFull": 14000000, "start": "2026-05-06"}, {"code": "FRПСК-2", "aka": "Пскент", "city": "Пскент", "seg": 2, "comm": 0.05, "rentSum": 4435000, "salarySum": 7440000, "miscSum": 0, "uk": 320.0, "opex_usd": 989.58, "w1": 0, "w2": 1.86, "w3": 7, "w4": 8.5, "runRate": 7, "periodAvg": 3.76, "fcMonth1": 37, "yandex": 40, "revW3": 1390894, "revPeriod": 629761, "avgCheck": 167363, "gmvFc_usd": 518, "guarFull": 14000000, "start": "2026-05-20"}, {"code": "FRТАШ-307", "aka": "Крестик", "city": "Ташкент", "seg": 1, "comm": 0.06, "rentSum": 7216000, "salarySum": 9920000, "miscSum": 0, "uk": 320.0, "opex_usd": 1428.0, "w1": 4.4, "w2": 5.14, "w3": 5.29, "w4": 10.0, "runRate": 5.29, "periodAvg": 5.48, "fcMonth1": 60, "yandex": 68, "revW3": 550844, "revPeriod": 763186, "avgCheck": 139352, "gmvFc_usd": 840, "guarFull": 17400000, "start": "2026-05-01"}, {"code": "FRСМК-53", "aka": "Андижанская", "city": "Самарканд", "seg": 2, "comm": 0.05, "rentSum": 5864000, "salarySum": 8680000, "miscSum": 0, "uk": 320.0, "opex_usd": 1212.0, "w1": 0, "w2": 0.14, "w3": 2.86, "w4": 5.5, "runRate": 2.86, "periodAvg": 1.52, "fcMonth1": 24, "yandex": 29, "revW3": 496784, "revPeriod": 292136, "avgCheck": 191714, "gmvFc_usd": 336, "guarFull": 14000000, "start": "2026-05-21"}, {"code": "FRМРГ-8", "aka": "Маргилан", "city": "Маргилан", "seg": 3, "comm": 0.05, "rentSum": 2912000, "salarySum": 8680000, "miscSum": 0, "uk": 320.0, "opex_usd": 966.0, "w1": 0, "w2": 2, "w3": 3.86, "w4": 8.5, "runRate": 3.86, "periodAvg": 2.76, "fcMonth1": 19, "yandex": 26, "revW3": 495039, "revPeriod": 375074, "avgCheck": 135756, "gmvFc_usd": 266, "guarFull": 11400000, "start": "2026-05-18"}];
+const WK = {"weeks": ["11.05–17.05", "18.05–24.05", "25.05–31.05", "01.06–07.06"], "runIdx": 2, "dayCounts": [5, 7, 7, 2], "net": {"ord": [205.2, 282.9, 298.7, 323.5], "rev": [32294908, 49272087, 54455545, 55112722]}, "pvz": {"FRТАШ-290": {"aka": "Буз-1", "city": "Ташкент", "seg": 1, "ord": [30, 37.86, 39.57, 54.5], "rev": [5314462, 7773641, 6694148, 11044428]}, "FRТАШ-291": {"aka": "Бабур", "city": "Ташкент", "seg": 1, "ord": [33.4, 41.14, 36.43, 34.0], "rev": [5189086, 5351316, 6998954, 3596160]}, "FRТАШ-292": {"aka": "Спутник", "city": "Ташкент", "seg": 1, "ord": [18.6, 21.57, 26.14, 32.5], "rev": [2804800, 3374794, 5292830, 7671618]}, "FRТАШ-294": {"aka": "Шастри", "city": "Ташкент", "seg": 1, "ord": [18.8, 26.57, 28.29, 25.0], "rev": [2357412, 4784233, 4915264, 2307272]}, "FRТАШ-289": {"aka": "Афросиаб", "city": "Ташкент", "seg": 1, "ord": [4.4, 17.86, 20.86, 20.5], "rev": [715974, 3716644, 4138246, 4008851]}, "FRТАШ-293": {"aka": "Кургантепа", "city": "Ташкент", "seg": 1, "ord": [8, 13, 17.71, 19.5], "rev": [1812730, 2776540, 2911760, 1976062]}, "FRТАШ-319": {"aka": "Баку", "city": "Ташкент", "seg": 1, "ord": [14.8, 19.43, 15.71, 18.5], "rev": [2247551, 4186185, 2441774, 3754183]}, "FRАЛМ-9": {"aka": "Алмалык Амир Т", "city": "Алмалык", "seg": 2, "ord": [13.4, 16.57, 20.86, 16.0], "rev": [2684362, 2756586, 4699718, 3078978]}, "FRБХР-30": {"aka": "Бухара", "city": "Бухара", "seg": 2, "ord": [13.8, 21.71, 15.43, 15.0], "rev": [2092408, 3463258, 2882378, 1821785]}, "FRГАЗ-4": {"aka": "Газалкент", "city": "Газалкент", "seg": 2, "ord": [9.6, 13.29, 14.57, 13.0], "rev": [1227817, 2106333, 2627185, 3294854]}, "FRАЛМ-10": {"aka": "Алмалык Мустакилик", "city": "Алмалык", "seg": 2, "ord": [7.2, 8.14, 9.14, 12.5], "rev": [1202263, 1459084, 1433257, 2549262]}, "FRТАШ-308": {"aka": "Янгиюнусабад", "city": "Ташкент", "seg": 1, "ord": [10.8, 13.57, 12.57, 12.0], "rev": [1486923, 1648830, 1655575, 1868749]}, "FRТАШ-307": {"aka": "Крестик", "city": "Ташкент", "seg": 1, "ord": [4.4, 5.14, 5.29, 10.0], "rev": [575382, 970483, 550844, 1250360]}, "FRБУК-2": {"aka": "Бука", "city": "Бука", "seg": 2, "ord": [7, 12.57, 11.29, 9.0], "rev": [1291719, 2331664, 1844483, 1410900]}, "FRСМК-52": {"aka": "Рудаки", "city": "Самарканд", "seg": 2, "ord": [11, 10.43, 11.14, 9.0], "rev": [1292019, 2129724, 2986412, 1750268]}, "FRПСК-2": {"aka": "Пскент", "city": "Пскент", "seg": 2, "ord": [0, 1.86, 7, 8.5], "rev": [0, 193930, 1390894, 1065612]}, "FRМРГ-8": {"aka": "Маргилан", "city": "Маргилан", "seg": 3, "ord": [0, 2, 3.86, 8.5], "rev": [0, 196856, 495039, 1516645]}, "FRСМК-53": {"aka": "Андижанская", "city": "Самарканд", "seg": 2, "ord": [0, 0.14, 2.86, 5.5], "rev": [0, 51986, 496784, 1146735]}}};
 const S={fx:12000,chk:14,uk:320,boost:1,flat:null,scen:'guar',seg:'all',metric:'be',cur:'usd',view:'main',histMetric:'orders',sortKey:'revW3',sortDir:-1,q:''};
 /* эталон: run-rate = последняя полная неделя; недели/дни задаются данными или дефолтом */
 DATA.forEach(d=>{if(d.runRate==null)d.runRate=d.w3;});
@@ -402,10 +384,10 @@ const money=v=>{ // v всегда в сумах; показывает в выб
 function compute(d){
   const orders = (S.flat!=null) ? S.flat : d.runRate * S.boost;   // заказы/день (×рост или фикс. цель)
   const margin = S.chk * d.comm;                    // маржа с заказа, $
-  const be = (d.opex_usd + S.uk) / margin / 30;     // точка безубытка, зак/день
+  const cost = d.rentSum + d.salarySum + (d.miscSum||0) + S.uk*S.fx;  // затраты/мес, сум (аренда+ЗП+разное фикс.; УК в $)
+  const be = (cost/S.fx) / margin / 30;             // точка безубытка, зак/день
   const rev = orders * S.chk * S.fx;                // выручка/день, сум (единый чек $14)
   const commRev = orders * margin * 30 * S.fx;      // комиссия/мес, сум (= заказы×маржа$×30×курс)
-  const cost = (d.opex_usd + S.uk) * S.fx;          // затраты/мес, сум
   const reward = S.scen==='guar' ? Math.max(d.guarFull, commRev) : commRev;
   const pnl = reward - cost;
   return {orders,margin,be,rev,commRev,cost,reward,pnl,health:orders/be,gap:orders-be};
@@ -511,7 +493,7 @@ const cols=[
   {k:'seg',t:'Сег',f:d=>`<span class="chip" style="background:${segHex[d.seg]}">${d.seg}</span>`},
   {k:'orders',t:'Факт зак/д',c:1,f:(d,c)=>`<span class="mono">${fmt1(c.orders)}</span>`},
   {k:'be',t:'Безубыток',c:1,f:(d,c)=>`<span class="mono" style="color:var(--dim)">${fmt1(c.be)}</span>`},
-  {k:'health',t:'Здоровье',c:1,lft:1,f:(d,c)=>{const p=Math.min(c.health,1.4);const col=c.health>=1?'var(--mint)':c.health>=.6?'var(--amber)':'var(--coral)';return `<span class="health"><i style="width:${p/1.4*100}%;background:${col}"></i><span class="mark" style="left:${1/1.4*100}%"></span></span> <span class="mono" style="font-size:11px;color:${col}">${Math.round(c.health*100)}%</span>`;}},
+  {k:'health',t:'Здоровье',c:1,f:(d,c)=>{const p=Math.min(c.health,1.4);const col=c.health>=1?'var(--mint)':c.health>=.6?'var(--amber)':'var(--coral)';return `<span class="health"><i style="width:${p/1.4*100}%;background:${col}"></i><span class="mark" style="left:${1/1.4*100}%"></span></span> <span class="mono" style="font-size:11px;color:${col}">${Math.round(c.health*100)}%</span>`;}},
   {k:'rev',t:'Выручка/д',c:1,f:(d,c)=>`<span class="mono">${money(c.rev)}</span>`},
   {k:'reward',t:'Вознагр./мес',c:1,f:(d,c)=>`<span class="mono">${money(c.reward)}</span>`},
   {k:'pnl',t:'P&L/мес',c:1,f:(d,c)=>`<span class="mono ${c.pnl>=0?'pos':'neg'}">${money(c.pnl)}</span>`},
@@ -525,7 +507,7 @@ function renderTable(){
     return S.sortDir*(x-y);
   });
   let h='<thead><tr>'+cols.map(c=>`<th class="${c.lft?'lft':''} ${S.sortKey===c.k?'sorted':''}" data-k="${c.k}">${c.t}${S.sortKey===c.k?(S.sortDir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr></thead>';
-  h+='<tbody>'+r.map(x=>`<tr class="prow" data-code="${x.d.code}">`+cols.map(c=>`<td class="${c.lft?'lft':''}">${c.f(x.d,x.c)}</td>`).join('')+'</tr>').join('')+'</tbody>';
+  h+='<tbody>'+r.map(x=>`<tr class="prow" data-code="${x.d.code}">`+cols.map(c=>`<td>${c.f(x.d,x.c)}</td>`).join('')+'</tr>').join('')+'</tbody>';
   const t=document.getElementById('tbl');t.innerHTML=h;
   t.querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(S.sortKey===k)S.sortDir*=-1;else{S.sortKey=k;S.sortDir=-1;}renderTable();});
   t.querySelectorAll('.prow').forEach(tr=>tr.onclick=()=>openDrawer(tr.dataset.code));
@@ -593,27 +575,73 @@ function sparkline(vals,base,partial){
   vals.forEach((v,i)=>{const bh=Math.max((v/max)*H,1.5),x=i*(bw+gap),y=H-bh;el+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="1" fill="${base}" opacity="${(partial&&partial[i])?0.35:1}"/>`;});
   return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;vertical-align:middle">${el}</svg>`;
 }
+function wkBarsPnl(vals, labels, partial){
+  const n=vals.length, slot=92, padL=14, padR=14, H=210, padT=24, padB=38, gap=18;
+  const W=padL+padR+n*slot, bw=slot-gap, max=Math.max(...vals.map(v=>Math.abs(v)),1);
+  const half=(H-padT-padB)/2, midY=padT+half;
+  let el=`<line x1="${padL}" y1="${midY}" x2="${W-padR}" y2="${midY}" stroke="var(--line2)" stroke-width="1"/>`;
+  vals.forEach((v,i)=>{
+    const x=padL+i*slot+gap/2, bh=Math.abs(v)/max*half, pos=v>=0, y=pos?midY-bh:midY, cx=x+bw/2;
+    const col=pos?'var(--mint)':'var(--coral)', pt=!!(partial&&partial[i]);
+    el+=`<rect class="wkbar" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="5" fill="${col}" opacity="${pt?0.5:0.92}"/>`;
+    el+=`<text x="${cx}" y="${pos?y-6:y+bh+15}" text-anchor="middle" class="blabel" style="font-size:10.5px;fill:${col}">${money(v)}</text>`;
+    el+=`<text x="${cx}" y="${H-18}" text-anchor="middle" class="glabel" style="font-weight:600${pt?';fill:var(--faint)':''}">W${i+1}${pt?'*':''}</text>`;
+    el+=`<text x="${cx}" y="${H-6}" text-anchor="middle" class="glabel" style="font-size:8px;fill:var(--faint)">${(labels[i]||'').replace(/^W\d+ · /,'')}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;display:inline-block">${el}</svg>`;
+}
 function renderHistory(){
   const partial=(WK.dayCounts||[]).map(c=>c<7);
-  document.getElementById('histNet').innerHTML=
-    `<div class="card"><h3 style="margin-bottom:2px">Сеть · заказы/день</h3><div class="hint">сумма по сети, по неделям</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${wkBars(WK.net.ord,fmt1,'var(--violet)','hist-ho',WK.weeks,partial)}</div></div>`+
-    `<div class="card"><h3 style="margin-bottom:2px">Сеть · объём/день</h3><div class="hint">сумма по сети, по неделям</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${wkBars(WK.net.rev,money,'var(--mint)','hist-hv',WK.weeks,partial)}</div></div>`;
-  const isVol=S.histMetric==='volume';
-  document.getElementById('histTblTitle').textContent='По точкам — '+(isVol?'объём/день':'заказы/день');
-  const val=c=> isVol?WK.pvz[c].rev:WK.pvz[c].ord;
-  const fmtV=v=> isVol?money(v):fmt1(v);
+  const D=Object.fromEntries(DATA.map(d=>[d.code,d]));
+  const fw=i=>(WK.dayCounts[i]||0)/30;
+  const pnlW=(code,i)=>{const d=D[code]; if(!d)return 0;
+    const turn=(WK.pvz[code].rev[i]||0)*(WK.dayCounts[i]||0);          // оборот недели, сум
+    const reward=Math.max(d.guarFull*fw(i), d.comm*turn);              // max(гарантия×дни/30; комиссия×оборот)
+    const cost=(d.rentSum+d.salarySum+(d.miscSum||0)+S.uk*S.fx)*fw(i); // (аренда+ЗП+УК+разное)×дни/30
+    return reward-cost;};
+  const netPnl=WK.weeks.map((_,i)=>Object.keys(WK.pvz).reduce((a,c)=>a+pnlW(c,i),0));
+  const m=S.histMetric;
+  if(m==='pnl'){
+    document.getElementById('histNet').innerHTML=`<div class="card" style="grid-column:1/-1"><h3 style="margin-bottom:2px">Сеть · P&L по неделям</h3><div class="hint">факт: max(гарантия; комиссия×оборот) − (аренда+ЗП+УК+разное), прораторовано по дням недели</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${wkBarsPnl(netPnl,WK.weeks,partial)}</div></div>`;
+  } else {
+    document.getElementById('histNet').innerHTML=
+      `<div class="card"><h3 style="margin-bottom:2px">Сеть · заказы/день</h3><div class="hint">сумма по сети, по неделям</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${wkBars(WK.net.ord,fmt1,'var(--violet)','hist-ho',WK.weeks,partial)}</div></div>`+
+      `<div class="card"><h3 style="margin-bottom:2px">Сеть · объём/день</h3><div class="hint">сумма по сети, по неделям</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${wkBars(WK.net.rev,money,'var(--mint)','hist-hv',WK.weeks,partial)}</div></div>`;
+  }
+  const isVol=m==='volume', isPnl=m==='pnl';
+  document.getElementById('histTblTitle').textContent='По точкам — '+(isPnl?'P&L по неделям':(isVol?'объём/день':'заказы/день'));
+  const val=c=> isPnl?WK.weeks.map((_,i)=>pnlW(c,i)):(isVol?WK.pvz[c].rev:WK.pvz[c].ord);
+  const fmtV=v=> (isPnl||isVol)?money(v):fmt1(v);
   const base=isVol?'var(--mint)':'var(--violet)';
   const ri=WK.runIdx??2;
   const codes=Object.keys(WK.pvz).sort((a,b)=>val(b)[ri]-val(a)[ri]);
-  let h='<thead><tr><th class="lft">Точка</th><th>Сег</th>'+WK.weeks.map((w,i)=>`<th>${w}${partial[i]?'*':''}</th>`).join('')+'<th>тренд</th></tr></thead><tbody>';
+  let h='<thead><tr><th class="lft">Точка</th><th>Сег</th>'+WK.weeks.map((w,i)=>`<th>${w}${partial[i]?'*':''}</th>`).join('')+(isPnl?'':'<th>тренд</th>')+'</tr></thead><tbody>';
   codes.forEach(c=>{
     const p=WK.pvz[c], a=val(c);
     h+=`<tr><td><b>${p.aka}</b><div style="color:var(--faint);font-size:11px">${p.city}</div></td>`+
        `<td style="text-align:right"><span class="chip" style="background:${segHex[p.seg]}">${p.seg}</span></td>`+
-       a.map((v,i)=>`<td style="text-align:right"><span class="mono" style="color:${partial[i]?'var(--faint)':'var(--txt)'}">${fmtV(v)}</span></td>`).join('')+
-       `<td style="text-align:right">${sparkline(a,base,partial)}</td></tr>`;
+       a.map((v,i)=>`<td style="text-align:right"><span class="mono" style="color:${isPnl?(v>=0?'var(--mint)':'var(--coral)'):(partial[i]?'var(--faint)':'var(--txt)')}">${fmtV(v)}</span></td>`).join('')+
+       (isPnl?'':`<td style="text-align:right">${sparkline(a,base,partial)}</td>`)+`</tr>`;
   });
   document.getElementById('histTbl').innerHTML=h+'</tbody>';
+  renderCosts();
+}
+function renderCosts(){
+  let h='<thead><tr><th class="lft">Точка</th><th>Аренда</th><th>ЗП</th><th>OPEX</th><th>УК</th><th>Разное</th><th>Итого/мес</th></tr></thead><tbody>';
+  let sr=0,ss=0,su=0,sm=0;
+  DATA.forEach(d=>{const opex=d.rentSum+d.salarySum, ukm=S.uk*S.fx, misc=d.miscSum||0, tot=opex+ukm+misc;
+    sr+=d.rentSum;ss+=d.salarySum;su+=ukm;sm+=misc;
+    h+=`<tr><td><b>${d.aka}</b><div style="color:var(--faint);font-size:11px">${d.city}</div></td>`+
+       `<td style="text-align:right"><span class="mono">${money(d.rentSum)}</span></td>`+
+       `<td style="text-align:right"><span class="mono">${money(d.salarySum)}</span></td>`+
+       `<td style="text-align:right"><span class="mono">${money(opex)}</span></td>`+
+       `<td style="text-align:right"><span class="mono">${money(ukm)}</span></td>`+
+       `<td style="text-align:right"><span class="mono" style="color:var(--faint)">${money(misc)}</span></td>`+
+       `<td style="text-align:right"><span class="mono pos" style="color:var(--txt)">${money(tot)}</span></td></tr>`;});
+  const n=DATA.length||1, rows=[sr,ss,sr+ss,su,sm,sr+ss+su+sm];
+  h+=`<tr><td style="color:var(--dim)">В среднем на ПВЗ</td>`+rows.map(v=>`<td style="text-align:right"><span class="mono" style="color:var(--dim)">${money(v/n)}</span></td>`).join('')+'</tr>';
+  h+=`<tr><td style="color:var(--dim);font-weight:700">Итого по сети</td>`+rows.map(v=>`<td style="text-align:right"><span class="mono"><b>${money(v)}</b></span></td>`).join('')+'</tr>';
+  document.getElementById('costTbl').innerHTML=h+'</tbody>';
 }
 
 /* ---------- render all ---------- */
@@ -655,7 +683,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
 function networkBreakevenBoost(){
   // рост, при котором ср. заказов/ПВЗ = ср. безубыток/ПВЗ (P&L сети ≈ 0)
   let sumBe=0, sumW3=0;
-  DATA.forEach(d=>{ const margin=S.chk*d.comm; sumBe += (d.opex_usd+S.uk)/margin/30; sumW3 += d.runRate; });
+  DATA.forEach(d=>{ const margin=S.chk*d.comm; const cost=d.rentSum+d.salarySum+(d.miscSum||0)+S.uk*S.fx; sumBe += (cost/S.fx)/margin/30; sumW3 += d.runRate; });
   return sumW3>0 ? sumBe/sumW3 : 1;
 }
 let toastT;

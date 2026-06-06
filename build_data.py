@@ -57,8 +57,8 @@ def aggregate(path):
 def read_ref(path):
     wb=load_workbook(path, data_only=True); sh=wb['Справочник']
     cols={str(sh.cell(4,j).value).strip():j for j in range(1,sh.max_column+1)}
-    need=['Код','AKA','Город','Сегмент','Комиссия','Опекс, $/мес','Затраты на УК, $/мес',
-          'Гарантия, сум/мес','Прогноз 1-го мес, зак/день','Яндекс-пик, зак/день','Старт']
+    need=['Код','AKA','Город','Сегмент','Комиссия','Аренда, сум/мес','ЗП, сум/мес','Затраты на УК, $/мес',
+          'Разное, сум/мес','Гарантия, сум/мес','Прогноз 1-го мес, зак/день','Яндекс-пик, зак/день','Старт']
     for n in need:
         if n not in cols: raise SystemExit(f'Справочник: нет колонки «{n}»')
     out={}
@@ -67,8 +67,10 @@ def read_ref(path):
         if not code: continue
         g=lambda k: sh.cell(rr,cols[k]).value
         st=g('Старт'); st=st.date() if hasattr(st,'date') else st
+        rent=int(round(float(g('Аренда, сум/мес')))); sal=int(round(float(g('ЗП, сум/мес'))))
+        misc=int(round(float(g('Разное, сум/мес') or 0)))
         out[str(code).strip()]=dict(aka=g('AKA'),city=g('Город'),seg=int(g('Сегмент')),
-            comm=float(g('Комиссия')),opex_usd=round(float(g('Опекс, $/мес')),2),
+            comm=float(g('Комиссия')),rentSum=rent,salarySum=sal,miscSum=misc,
             uk=round(float(g('Затраты на УК, $/мес')),2),guarFull=int(g('Гарантия, сум/мес')),
             fcMonth1=int(g('Прогноз 1-го мес, зак/день')),yandex=int(g('Яндекс-пик, зак/день')),start=str(st))
     return out
@@ -202,7 +204,9 @@ def main():
         tot_d=sum(dc[m] for m in weeks)
         r=ref[code]
         DATA.append(dict(code=code,aka=r['aka'],city=r['city'],seg=r['seg'],comm=r['comm'],
-            opex_usd=r['opex_usd'],uk=r['uk'],w1=at(ordd,0),w2=at(ordd,1),w3=at(ordd,2),w4=at(ordd,3),
+            rentSum=r['rentSum'],salarySum=r['salarySum'],miscSum=r['miscSum'],uk=r['uk'],
+            opex_usd=round((r['rentSum']+r['salarySum'])/12000,2),
+            w1=at(ordd,0),w2=at(ordd,1),w3=at(ordd,2),w4=at(ordd,3),
             runRate=runRate,periodAvg=round(tot_o/tot_d,2) if tot_d else 0,
             fcMonth1=r['fcMonth1'],yandex=r['yandex'],revW3=revRun,
             revPeriod=round(tot_r/tot_d) if tot_d else 0,avgCheck=round(tot_r/tot_o) if tot_o else 0,
