@@ -604,7 +604,7 @@ function renderChart(){
       const bx=pos?zero:zero-w;
       el+=`<text class="bname" x="${padL-10}" y="${y+rowH/2+4}" text-anchor="end">${x.d.aka}</text>`;
       el+=`<rect class="bar" x="${bx}" y="${y+4}" width="${w}" height="${rowH-12}" rx="4" fill="${col}" opacity=".9"/>`;
-      el+=`<text class="blabel" x="${pos?bx+w+7:bx-7}" y="${y+rowH/2+4}" text-anchor="${pos?'start':'end'}" fill="${col}">${money(pv)}</text>`;
+      el+=`<text class="blabel" x="${pos?zero-7:zero+7}" y="${y+rowH/2+4}" text-anchor="${pos?'end':'start'}" fill="${col}">${money(pv)}</text>`;
     });
   } else if(m==='yx'){
     r.sort((a,b)=>(b.c.orders/b.d.yandex)-(a.c.orders/a.d.yandex));
