@@ -1007,6 +1007,7 @@ function aggregate(wb){
   return out;
 }
 function applyAgg(agg){
+  if(BACKUP===null) BACKUP=JSON.stringify({DATA,WK});   // снимок эталонных данных до первой загрузки (ленивый)
   DATA.forEach(d=>{ const a=agg.pvz[d.code]; if(!a)return; const o=a.ord,rv=a.rev,L=o.length;
     d.w1=o[L-4]??0; d.w2=o[L-3]??0; d.w3=o[L-2]??0; d.w4=o[L-1]??0;   // последние 4 — для карточки точки
     d.runRate=o[agg.runIdx]??0;
@@ -1017,8 +1018,8 @@ function applyAgg(agg){
   Object.keys(WK.pvz).forEach(c=>{ if(agg.pvz[c]){WK.pvz[c].ord=agg.pvz[c].ord;WK.pvz[c].rev=agg.pvz[c].rev;} });
   renderAll();
 }
-const BACKUP=JSON.stringify({DATA:DATA,WK:WK});
-function restoreBackup(){ const b=JSON.parse(BACKUP);
+let BACKUP=null;
+function restoreBackup(){ if(!BACKUP)return; const b=JSON.parse(BACKUP);
   b.DATA.forEach((bd,i)=>Object.assign(DATA[i],bd));
   WK.weeks=b.WK.weeks;WK.runIdx=b.WK.runIdx;WK.dayCounts=b.WK.dayCounts;WK.net=b.WK.net;
   Object.keys(WK.pvz).forEach(c=>{ if(b.WK.pvz[c]){WK.pvz[c].ord=b.WK.pvz[c].ord;WK.pvz[c].rev=b.WK.pvz[c].rev;} });

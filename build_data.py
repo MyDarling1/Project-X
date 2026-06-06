@@ -16,7 +16,7 @@ build_data.py — обновляет эталонный Excel и данные д
 Запуск:  python build_data.py [узум.xlsx] [Эталон_ПВЗ.xlsx] [index.html]
 Затем:   git add -A && git commit -m "data update" && git push   (Railway пересоберёт)
 """
-import sys, json, re, datetime as dt
+import sys, os, json, re, datetime as dt
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
@@ -183,7 +183,7 @@ def main():
     codes.sort(key=lambda c:-ord_vals[last_m].get(c,0))
     write_archive(wb,'Заказы_по_неделям','Средние заказы в день по неделям (накопительно)',weeks,ord_vals,dc,codes,ref,'0.0')
     write_archive(wb,'Объём_по_неделям','Сумма выручки (объём) по неделям, сум (накопительно)',weeks,vol_vals,dc,codes,ref,'#,##0')
-    wb.save(REF)
+    tmp_ref = REF + '.tmp'; wb.save(tmp_ref); os.replace(tmp_ref, REF)   # атомарная запись (без частичной порчи)
     print(f'{REF}: накоплено недель = {len(weeks)} ({wlabel(weeks[0])} … {wlabel(weeks[-1])}); дней посл. недели = {dc[weeks[-1]]}')
 
     # ---- данные дашборда из ПОСЛЕДНИХ 4 недель ----
