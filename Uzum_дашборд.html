@@ -627,7 +627,7 @@ function renderHistory(){
   renderCosts();
 }
 function renderCosts(){
-  let h='<thead><tr><th class="lft">Точка</th><th>Аренда</th><th>ЗП</th><th>OPEX</th><th>УК</th><th>Разное</th><th>Итого/мес</th></tr></thead><tbody>';
+  let h='<thead><tr><th class="lft">Точка</th><th>Аренда</th><th>ЗП</th><th>OPEX</th><th>УК + разное</th><th>Итого/мес</th></tr></thead><tbody>';
   let sr=0,ss=0,su=0,sm=0;
   DATA.forEach(d=>{const opex=d.rentSum+d.salarySum, ukm=S.uk*S.fx, misc=d.miscSum||0, tot=opex+ukm+misc;
     sr+=d.rentSum;ss+=d.salarySum;su+=ukm;sm+=misc;
@@ -635,10 +635,9 @@ function renderCosts(){
        `<td style="text-align:right"><span class="mono">${money(d.rentSum)}</span></td>`+
        `<td style="text-align:right"><span class="mono">${money(d.salarySum)}</span></td>`+
        `<td style="text-align:right"><span class="mono">${money(opex)}</span></td>`+
-       `<td style="text-align:right"><span class="mono">${money(ukm)}</span></td>`+
-       `<td style="text-align:right"><span class="mono" style="color:var(--faint)">${money(misc)}</span></td>`+
+       `<td style="text-align:right"><span class="mono">${money(ukm+misc)}</span></td>`+
        `<td style="text-align:right"><span class="mono pos" style="color:var(--txt)">${money(tot)}</span></td></tr>`;});
-  const n=DATA.length||1, rows=[sr,ss,sr+ss,su,sm,sr+ss+su+sm];
+  const n=DATA.length||1, rows=[sr,ss,sr+ss,su+sm,sr+ss+su+sm];
   h+=`<tr><td style="color:var(--dim)">В среднем на ПВЗ</td>`+rows.map(v=>`<td style="text-align:right"><span class="mono" style="color:var(--dim)">${money(v/n)}</span></td>`).join('')+'</tr>';
   h+=`<tr><td style="color:var(--dim);font-weight:700">Итого по сети</td>`+rows.map(v=>`<td style="text-align:right"><span class="mono"><b>${money(v)}</b></span></td>`).join('')+'</tr>';
   document.getElementById('costTbl').innerHTML=h+'</tbody>';
