@@ -243,7 +243,7 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
       <button data-c="usd" class="on">$ USD</button>
       <button data-c="uzs">Сум</button>
     </div>
-    <div class="tag" id="scenTag">Сценарий: на гарантии</div>
+    <div class="tag" id="scenTag" style="display:none">Сценарий: на гарантии</div>
   </div>
 </div>
 
@@ -472,21 +472,37 @@ if(S.monthKey==null) S.monthKey = (hasFact && monthList.some(m=>m.key===FACT.mon
 if(S.weekIdx==null) S.weekIdx = WK.runIdx??(WK.weeks.length-1);
 const weekMonth = i => monthList.find(m=>m.weekIdxs.includes(i));
 const monthDaysOf = m => m? m.weekIdxs.reduce((a,j)=>a+wdays(j),0) : 0;
-function makePnlFn(idxs, mode, monthDays){   // P&L по сети для периода: факт Uzum / доля факта по дням / модель
-  return d=>{ const cm=(d.rentSum+d.salarySum+(d.miscSum||0)+S.uk*S.fx);
-    if(mode==='fact'){ if(!hasFact||FACT.income[d.code]==null) return 0; const act=FACT.activeDays[d.code]||FACT.days; return FACT.income[d.code]-cm*act/FACT.days; }
-    if(mode==='fact-alloc'){ if(!hasFact||FACT.income[d.code]==null) return 0; const act=FACT.activeDays[d.code]||FACT.days; const mp=FACT.income[d.code]-cm*act/FACT.days; return mp*(wdays(idxs[0])/(monthDays||1)); }
-    const c=compute(d), D=idxs.reduce((a,i)=>a+wdays(i),0); return c.pnl*(D/30); };  // модель, прорейчено по дням
+function currentPeriod(){   // единый выбор периода для верхнего блока И юнит-экономики
+  if(S.gran==='month'){
+    const m=monthList.find(x=>x.key===S.monthKey)||monthList[monthList.length-1];
+    const pi=monthList.indexOf(m), pm=pi>0?monthList[pi-1]:null;
+    return {idxs:m.weekIdxs, mode:m.hasFact?'fact':'model', monthDays:0, perLabel:'за месяц', label:m.label, partial:!m.hasFact,
+      prevSpec: pm?{idxs:pm.weekIdxs,mode:pm.hasFact?'fact':'model',md:0}:null,
+      desc: m.hasFact
+        ? `Полный месяц ${m.label} · деньги (доход/P&L) — из фактического отчёта Uzum; заказы и оборот — из ежедневного файла (узум).`
+        : `Текущий месяц ${m.label} — неполный · по внутреннему файлу (узум); P&L модельный (факт. отчёт Uzum выходит после закрытия месяца).` };
+  }
+  const i=S.weekIdx, wm=weekMonth(i), pwm=i>0?weekMonth(i-1):null, fa=!!(wm&&wm.hasFact);
+  return {idxs:[i], mode:fa?'fact-alloc':'model', monthDays:monthDaysOf(wm), perLabel:'за неделю', label:WK.weeks[i], partial:wdays(i)<7,
+    prevSpec: i>0?{idxs:[i-1],mode:(pwm&&pwm.hasFact)?'fact-alloc':'model',md:monthDaysOf(pwm)}:null,
+    desc:`Неделя ${WK.weeks[i]}${wdays(i)<7?' (неполная, '+wdays(i)+' дн.)':''} · заказы и оборот — из ежедневного файла (узум); `+(fa?`P&L — доля месячного факта Uzum (${wm.label}) по дням недели.`:`P&L — модельный.`) };
 }
-function netStats(idxs, pnlFn){
+function periodFin(d, idxs, mode, monthDays){   // {income,cost,pnl} ПВЗ за период
+  const cm=(d.rentSum+d.salarySum+(d.miscSum||0)+S.uk*S.fx);
+  if(mode==='fact'||mode==='fact-alloc'){ if(!hasFact||FACT.income[d.code]==null) return {income:0,cost:0,pnl:0};
+    const act=FACT.activeDays[d.code]||FACT.days, sh= mode==='fact-alloc' ? wdays(idxs[0])/(monthDays||1) : 1;
+    const income=FACT.income[d.code]*sh, cost=cm*act/FACT.days*sh; return {income,cost,pnl:income-cost}; }
+  const c=compute(d), D=idxs.reduce((a,i)=>a+wdays(i),0)/30; return {income:c.reward*D, cost:c.cost*D, pnl:c.pnl*D};  // модель, прорейчено по дням
+}
+function netStats(idxs, mode, monthDays){
   const r=rows(), n=r.length||1, tot=idxs.reduce((a,i)=>a+wdays(i),0)||1;
   const netOrdDay=idxs.reduce((a,i)=>a+(WK.net.ord[i]*wdays(i)),0)/tot, ordPV=netOrdDay/n;
   const gmv=idxs.reduce((a,i)=>a+(WK.net.rev[i]*wdays(i)),0);
   const bePV=r.reduce((a,d)=>a+beOf(d),0)/n;
   const ordOf=d=>idxs.reduce((a,i)=>a+((WK.pvz[d.code]?WK.pvz[d.code].ord[i]:0)*wdays(i)),0)/tot;
   const above=r.filter(d=>ordOf(d)>=beOf(d)).length;
-  let pnl=0; r.forEach(d=>pnl+=pnlFn(d));
-  return {ordPV,bePV,above,n,pnl,gmv,netOrdDay};
+  let income=0,cost=0,pnl=0; r.forEach(d=>{const f=periodFin(d,idxs,mode,monthDays); income+=f.income;cost+=f.cost;pnl+=f.pnl;});
+  return {ordPV,bePV,above,n,pnl,income,cost,gmv,netOrdDay};
 }
 function deltaStr(cur,prev){ if(prev==null||!isFinite(prev)||prev===0) return '';
   const dp=(cur-prev)/Math.abs(prev)*100; if(Math.abs(dp)<0.5) return '';
@@ -495,29 +511,15 @@ function deltaStr(cur,prev){ if(prev==null||!isFinite(prev)||prev===0) return ''
 /* ---------- KPIs (верхний блок «Сеть · факт») ---------- */
 function renderKPIs(){
   updateNetCtl();
-  let idxs,mode,monthDays=0,prevSpec=null,perLabel,desc,partial=false;
-  if(S.gran==='month'){
-    const m=monthList.find(x=>x.key===S.monthKey)||monthList[monthList.length-1];
-    idxs=m.weekIdxs; mode=m.hasFact?'fact':'model'; perLabel='за месяц'; partial=!m.hasFact;
-    const pi=monthList.indexOf(m); if(pi>0){const pm=monthList[pi-1]; prevSpec={idxs:pm.weekIdxs,mode:pm.hasFact?'fact':'model',md:0};}
-    desc=m.hasFact
-      ? `Полный месяц ${m.label} · деньги (доход/P&L) — из фактического отчёта Uzum; заказы и оборот — из ежедневного файла (узум).`
-      : `Текущий месяц ${m.label} — неполный · по внутреннему файлу (узум); P&L модельный (факт. отчёт Uzum выходит после закрытия месяца).`;
-  } else {
-    const i=S.weekIdx, wm=weekMonth(i); idxs=[i]; mode=(wm&&wm.hasFact)?'fact-alloc':'model'; monthDays=monthDaysOf(wm);
-    perLabel='за неделю'; partial=wdays(i)<7;
-    if(i>0){const pwm=weekMonth(i-1); prevSpec={idxs:[i-1],mode:(pwm&&pwm.hasFact)?'fact-alloc':'model',md:monthDaysOf(pwm)};}
-    desc=`Неделя ${WK.weeks[i]}${partial?' (неполная, '+wdays(i)+' дн.)':''} · заказы и оборот — из ежедневного файла (узум); `+
-      (mode==='fact-alloc'?`P&L — доля месячного факта Uzum (${wm.label}) по дням недели.`:`P&L — модельный.`);
-  }
-  const s=netStats(idxs, makePnlFn(idxs,mode,monthDays)), pnlPV=s.pnl/s.n;
+  const P=currentPeriod(), perLabel=P.perLabel;
+  const s=netStats(P.idxs,P.mode,P.monthDays), pnlPV=s.pnl/s.n;
   let dOrd='',dPnl='',dGmv='';
-  if(prevSpec && !partial){ const ps=netStats(prevSpec.idxs, makePnlFn(prevSpec.idxs,prevSpec.mode,prevSpec.md));
+  if(P.prevSpec && !P.partial){ const ps=netStats(P.prevSpec.idxs,P.prevSpec.mode,P.prevSpec.md);
     dOrd=deltaStr(s.netOrdDay,ps.netOrdDay); dGmv=deltaStr(s.gmv,ps.gmv); dPnl=deltaStr(s.pnl,ps.pnl); }
   const ratio=s.bePV>0?s.ordPV/s.bePV:0, toBE=s.ordPV>0?s.bePV/s.ordPV:0;
   const col=ratio>=1?'var(--mint)':ratio>=.6?'var(--amber)':'var(--coral)';
-  const pnlSrc = mode==='model'?'модель':'факт · Uzum';
-  document.getElementById('netDesc').textContent=desc;
+  const pnlSrc = P.mode==='model'?'модель':'факт · Uzum';
+  document.getElementById('netDesc').textContent=P.desc;
   let html=`<div class="kpi"><div class="lab">Заказы / безубыток · зак/д на ПВЗ</div>
     <div class="val">${fmt1(s.ordPV)} <span style="color:var(--faint);font-weight:400;font-size:18px">/ ${fmt(s.bePV)}</span></div>
     <div class="health" style="width:100%;margin-top:9px"><i style="width:${Math.min(ratio,1.4)/1.4*100}%;background:${col}"></i><span class="mark" style="left:${1/1.4*100}%"></span></div>
@@ -545,28 +547,25 @@ function updateNetCtl(){
 
 /* ---------- юнит-экономика ---------- */
 function renderUnit(){
-  const r=rows(), n=r.length||1, uf=useFact();
-  let o=0,gmv=0,inc=0,cost=0,pnl=0,be=0;
-  r.forEach(d=>{const c=compute(d); o+=c.orders; gmv+=c.rev*30; be+=c.be;
-    const f=uf?factOf(d):null; inc+= f?f.income:c.reward; cost+= f?f.cost:c.cost; pnl+= f?f.pnl:c.pnl;});
-  const ao=o/n, agmv=gmv/n, ainc=inc/n, acost=cost/n, apnl=pnl/n, abe=be/n;
+  const P=currentPeriod(), s=netStats(P.idxs,P.mode,P.monthDays), n=s.n;
+  const ao=s.ordPV, agmv=s.gmv/n, ainc=s.income/n, acost=s.cost/n, apnl=s.pnl/n, abe=s.bePV;
+  const pdays=P.idxs.reduce((a,i)=>a+wdays(i),0)||1;
   const margin = ainc>0 ? apnl/ainc*100 : 0;
-  const perOrder = ao>0 ? ainc/(ao*30) : 0;
+  const perOrder = ao>0 ? ainc/(ao*pdays) : 0;
+  const src = P.mode==='model'?'модель':'факт · Uzum';
   const k=[
-    {l:'Заказов/день',v:fmt(ao),d:'на 1 ПВЗ'},
-    {l:'Оборот (GMV)/мес',v:money(agmv),d:`при чеке $${S.chk}`},
-    {l:'Доход ПВЗ/мес',v:money(ainc),d:uf?'факт · Сатори':(S.scen==='guar'?'max(гарантия; комиссия)':'комиссия')},
-    {l:'Затраты/мес',v:money(acost),d:uf?'аренда+ЗП+УК · прорейч.':'аренда+ЗП+УК+разное'},
-    {l:'P&L/мес',v:money(apnl),cls:apnl>=0?'pos':'neg',d:uf?'факт':'на 1 ПВЗ'},
+    {l:'Заказов/день',v:fmt1(ao),d:'на 1 ПВЗ'},
+    {l:'Оборот (GMV) '+P.perLabel,v:money(agmv),d:'на 1 ПВЗ'},
+    {l:'Доход ПВЗ '+P.perLabel,v:money(ainc),d:src},
+    {l:'Затраты '+P.perLabel,v:money(acost),d:'аренда+ЗП+УК+разное'},
+    {l:'P&L '+P.perLabel,v:money(apnl),cls:apnl>=0?'pos':'neg',d:src},
     {l:'Маржа ПВЗ',v:Math.round(margin)+'%',cls:margin>=0?'pos':'neg',d:'P&L ÷ доход'},
     {l:'Доход на заказ',v:money(perOrder),d:'доход ПВЗ / заказ'},
     {l:'Безубыток',v:fmt(abe)+' зак/д',d:'порог P&L = 0'},
   ];
   document.getElementById('unitEcon').innerHTML=k.map(x=>`<div class="kpi"><div class="lab">${x.l}</div><div class="val ${x.cls||''}">${x.v}</div><div class="delta">${x.d||''}</div></div>`).join('');
-  const pl='точк'+(r.length%10===1&&r.length%100!==11?'е':'ам'), seg=S.seg!=='all'?' · Сег '+S.seg:'';
-  document.getElementById('unitEconHint').textContent= uf
-    ? `Факт · Сатори · ${FACT.label}: доход — из отчёта, затраты прорейчены по дням, заказы — run-rate (${WK.weeks[WK.runIdx]}). Среднее по ${r.length} ${pl}${seg}.`
-    : `Среднее по ${r.length} ${pl}${seg}. Сценарий: ${S.scen==='guar'?'на гарантии':'после гарантии'}, чек $${S.chk}, курс ${fmt(S.fx)}.`;
+  const seg=S.seg!=='all'?' · Сег '+S.seg:'';
+  document.getElementById('unitEconHint').textContent=`Среднее на 1 ПВЗ · ${P.label}${P.partial?' (неполный)':''}${seg}. Доход и P&L — ${src}; заказы и оборот — из ежедневного файла. Тот же период, что и в блоке сверху.`;
 }
 
 /* ---------- main chart ---------- */
