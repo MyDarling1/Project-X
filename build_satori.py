@@ -197,19 +197,21 @@ def main():
     print(f'{REF}: лист «Сатори_факт» обновлён. Месяцев: {len(months)} ({months[0]} … {months[-1]}).')
     print(f'  Месяц {iso}: ПВЗ={len(inc[iso])}, ИТОГО доход={total:,.2f} сум')
 
-    # ---- объект FACT в index.html (последний месяц) ----
-    last_iso = months[-1]
-    FACT = dict(month=last_iso, label=f'{MONTH_RU[int(last_iso.split("-")[1])]} {last_iso.split("-")[0]}',
-                days=days[last_iso], income=inc[last_iso],
-                activeDays={c: days_per_pvz.get(c, days[last_iso]) for c in inc[last_iso]})
+    # ---- объект FACT в index.html: ВСЕ накопленные месяцы (доход по ПВЗ).
+    #      Дни месяца и активные дни ПВЗ дашборд считает сам из даты старта Справочника. ----
+    def _mlabel(m):
+        yy, mm = m.split('-'); return f'{MONTH_RU[int(mm)]} {yy}'
+    FACT = {'latest': months[-1], 'months': {m: {'label': _mlabel(m), 'income': inc[m]} for m in months}}
     html = open(HTML, encoding='utf-8').read()
     js = 'const FACT = ' + json.dumps(FACT, ensure_ascii=False) + ';'
     if re.search(r'const FACT = \{.*?\};', html, flags=re.S):
-        html = re.sub(r'const FACT = \{.*?\};', js, html, count=1, flags=re.S)
-    else:  # вставить сразу после const WK = {...};
-        html = re.sub(r'(const WK = \{.*?\};\n)', r'\1' + js + '\n', html, count=1, flags=re.S)
+        html = re.sub(r'const FACT = \{.*?\};', lambda _: js, html, count=1, flags=re.S)
+    elif re.search(r'const WK = \{.*?\};\n', html, flags=re.S):
+        html = re.sub(r'(const WK = \{.*?\};\n)', lambda mo: mo.group(1) + js + '\n', html, count=1, flags=re.S)
+    else:
+        raise SystemExit('index.html: не найден якорь для вставки FACT (нет «const FACT» и «const WK = {…};»)')
     open(HTML, 'w', encoding='utf-8').write(html)
-    print(f'{HTML}: FACT вшит (месяц {FACT["label"]}, ПВЗ {len(FACT["income"])}).')
+    print(f'{HTML}: FACT вшит — месяцев {len(FACT["months"])} (последний {_mlabel(FACT["latest"])}).')
     print('Готово. Синхронизируй копию, node --check, затем git commit & push.')
 
 if __name__ == '__main__':
