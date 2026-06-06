@@ -576,7 +576,7 @@ function sparkline(vals,base,partial){
   return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;vertical-align:middle">${el}</svg>`;
 }
 function wkBarsPnl(vals, labels, partial){
-  const n=vals.length, slot=92, padL=14, padR=14, H=210, padT=24, padB=38, gap=18;
+  const n=vals.length, slot=92, padL=14, padR=14, H=210, padT=24, padB=52, gap=18;
   const W=padL+padR+n*slot, bw=slot-gap, max=Math.max(...vals.map(v=>Math.abs(v)),1);
   const half=(H-padT-padB)/2, midY=padT+half;
   let el=`<line x1="${padL}" y1="${midY}" x2="${W-padR}" y2="${midY}" stroke="var(--line2)" stroke-width="1"/>`;
