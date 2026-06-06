@@ -368,12 +368,12 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
   <div id="uploadUI" style="display:none">
     <div class="card">
       <h3>Загрузить узум.xlsx</h3>
-      <div class="hint">Файл читается прямо в браузере и пересчитывает заказы и выручку по неделям. <b style="color:var(--mint)">Эталонные данные не теряются</b> — обновление действует только в этой сессии; перезагрузка страницы вернёт исходные.</div>
+      <div class="hint">Файл читается прямо в браузере и пересчитывает заказы и оборот по неделям. <b style="color:var(--mint)">Эталонные данные не теряются</b> — обновление действует только в этой сессии; перезагрузка страницы вернёт исходные.</div>
       <input type="file" id="xfile" accept=".xlsx,.xls" style="font-family:inherit;font-size:13px;color:var(--dim)">
       <div id="ustatus" style="margin-top:14px;font-size:13.5px;line-height:1.5"></div>
       <button id="resetData" class="bebtn" style="background:transparent;border:1px solid var(--line2);color:var(--dim);box-shadow:none">Вернуть эталонные данные</button>
       <div class="hint" style="margin-top:16px;line-height:1.6">
-        <b style="color:var(--dim)">Ожидаемый формат:</b> листы с датами в названии (ДД.ММ.ГГГГ); колонки: «Адрес», «ПВЗ» (код вида FRТАШ-…), «Дата», «Кол-во заказов», «Общая сумма». Из файла берутся только заказы и выручка → недели, объёмы, run-rate. Сегменты, комиссии, опекс, гарантии, прогнозы и Яндекс-пик остаются как настроено (они не в дневном файле).<br>
+        <b style="color:var(--dim)">Ожидаемый формат:</b> листы с датами в названии (ДД.ММ.ГГГГ); колонки: «Адрес», «ПВЗ» (код вида FRТАШ-…), «Дата», «Кол-во заказов», «Общая сумма». Из файла берутся только заказы и оборот → недели, объёмы, run-rate. Сегменты, комиссии, опекс, гарантии, прогнозы и Яндекс-пик остаются как настроено (они не в дневном файле).<br>
         Если формат не совпадёт — загрузка откажется и покажет, чего не хватает; текущие данные останутся нетронутыми.
       </div>
     </div>
@@ -426,7 +426,7 @@ function compute(d){
   const margin = S.chk * d.comm;                    // маржа с заказа, $
   const cost = d.rentSum + d.salarySum + (d.miscSum||0) + S.uk*S.fx;  // затраты/мес, сум (аренда+ЗП+разное фикс.; УК в $)
   const be = (cost/S.fx) / margin / 30;             // точка безубытка, зак/день
-  const rev = orders * S.chk * S.fx;                // выручка/день, сум (единый чек $14)
+  const rev = orders * S.chk * S.fx;                // оборот (GMV)/день, сум (единый чек $14)
   const commRev = orders * margin * 30 * S.fx;      // комиссия/мес, сум (= заказы×маржа$×30×курс)
   const reward = S.scen==='guar' ? Math.max(d.guarFull, commRev) : commRev;
   const pnl = reward - cost;
@@ -446,7 +446,7 @@ function renderKPIs(){
   const beRatio = ord>0 ? beSum/ord : 0;
   const k=[
     {l:'Заказов/день на 1 ПВЗ',v:fmt(ord/r.length),d:(S.flat!=null?`цель · ${S.flat}/ПВЗ`:(S.boost===1?'текущий результат · W3':`рост · ×${S.boost.toFixed(1)}`))},
-    {l:'Выручка/день',v:money(rev),d:(S.cur==='usd'?`≈ ${mln(rev)} сум`:`≈ $${fmt(rev/S.fx)}`)},
+    {l:'Оборот (GMV)/день',v:money(rev),d:(S.cur==='usd'?`≈ ${mln(rev)} сум`:`≈ $${fmt(rev/S.fx)}`)},
     {l:'Точек выше безубытка',v:above+' / '+r.length,d:above==0?'все в минусе':'',cls:above>0?'pos':'neg'},
     {l:'Безубыток/день на 1 ПВЗ',v:fmt(beSum/r.length),d:'в среднем на точку'},
     {l:'До безубытка',v:(beRatio<=1.001?'достигнут':'×'+beRatio.toFixed(1)),cls:beRatio<=1.001?'pos':'',d:beRatio<=1.001?'P&L ≥ 0':'рост к текущему'},
@@ -471,7 +471,7 @@ function renderUnit(){
     {l:'Затраты/мес',v:money(acost),d:'аренда+ЗП+УК+разное'},
     {l:'P&L/мес',v:money(apnl),cls:apnl>=0?'pos':'neg',d:'на 1 ПВЗ'},
     {l:'Маржа ПВЗ',v:Math.round(margin)+'%',cls:margin>=0?'pos':'neg',d:'P&L ÷ доход'},
-    {l:'Доход на заказ',v:money(perOrder),d:'выручка ПВЗ / заказ'},
+    {l:'Доход на заказ',v:money(perOrder),d:'доход ПВЗ / заказ'},
     {l:'Безубыток',v:fmt(abe)+' зак/д',d:'порог P&L = 0'},
   ];
   document.getElementById('unitEcon').innerHTML=k.map(x=>`<div class="kpi"><div class="lab">${x.l}</div><div class="val ${x.cls||''}">${x.v}</div><div class="delta">${x.d||''}</div></div>`).join('');
@@ -556,7 +556,7 @@ const cols=[
   {k:'orders',t:'Факт зак/д',c:1,f:(d,c)=>`<span class="mono">${fmt1(c.orders)}</span>`},
   {k:'be',t:'Безубыток',c:1,f:(d,c)=>`<span class="mono" style="color:var(--dim)">${fmt1(c.be)}</span>`},
   {k:'health',t:'Здоровье',c:1,f:(d,c)=>{const p=Math.min(c.health,1.4);const col=c.health>=1?'var(--mint)':c.health>=.6?'var(--amber)':'var(--coral)';return `<span class="health"><i style="width:${p/1.4*100}%;background:${col}"></i><span class="mark" style="left:${1/1.4*100}%"></span></span> <span class="mono" style="font-size:11px;color:${col}">${Math.round(c.health*100)}%</span>`;}},
-  {k:'rev',t:'Выручка/д',c:1,f:(d,c)=>`<span class="mono">${money(c.rev)}</span>`},
+  {k:'rev',t:'Оборот/д',c:1,f:(d,c)=>`<span class="mono">${money(c.rev)}</span>`},
   {k:'reward',t:'Вознагр./мес',c:1,f:(d,c)=>`<span class="mono">${money(c.reward)}</span>`},
   {k:'pnl',t:'P&L/мес',c:1,f:(d,c)=>`<span class="mono ${c.pnl>=0?'pos':'neg'}">${money(c.pnl)}</span>`},
 ];
@@ -603,7 +603,7 @@ function openDrawer(code){
     ${row('Комиссия',Math.round(d.comm*100)+'%')}
     ${row('Маржа с заказа',S.cur==='usd'?c.margin.toFixed(2)+' $':fmt(c.margin*S.fx)+' сум')}
     ${row('Средний чек (модель)',money(S.chk*S.fx))}
-    ${row('Выручка/день',money(c.rev))}
+    ${row('Оборот (GMV)/день',money(c.rev))}
     ${row('Гарантия/мес',money(d.guarFull))}
     ${row('Вознагр./мес ('+(S.scen==='guar'?'на гарантии':'комиссия')+')',money(c.reward))}
     ${row('Затраты/мес',money(c.cost))}
