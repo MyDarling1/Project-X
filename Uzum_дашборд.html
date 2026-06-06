@@ -590,7 +590,7 @@ function renderChart(){
   const pnlOf=x=>{const f=uf?factOf(x.d):null; return f?f.pnl:x.c.pnl;};
   document.getElementById('chTitle').textContent=meta.t;
   document.getElementById('chHint').textContent=(m==='pnl'&&uf)?`Факт · Uzum · ${(factMonths[FACT.latest]||{}).label||''}: доход из отчёта − затраты (прорейч.). Зелёная — прибыль, красная — убыток.`:meta.h;
-  let r=rows().map(d=>({d,c:compute(d)}));
+  let r=rows().map(d=>({d,c:simOf(d)}));
   const svg=document.getElementById('chart');
   const W=860, rowH=30, padT=22, padL=126, padR=64, padB=10;
   const H=padT+r.length*rowH+padB;
@@ -662,7 +662,7 @@ const cols=[
   {k:'pnl',t:'P&L/мес',c:1,f:(d,c)=>`<span class="mono ${c.pnl>=0?'pos':'neg'}">${money(c.pnl)}</span>`},
 ];
 function renderTable(){
-  let r=tableRows().map(d=>({d,c:compute(d)}));
+  let r=tableRows().map(d=>({d,c:simOf(d)}));
   r.sort((a,b)=>{
     const gv=o=>['orders','be','health','rev','reward','pnl'].includes(S.sortKey)?o.c[S.sortKey]:o.d[S.sortKey];
     let x=gv(a),y=gv(b);
@@ -678,7 +678,7 @@ function renderTable(){
 
 /* ---------- drawer ---------- */
 function openDrawer(code){
-  const d=DATA.find(x=>x.code===code), c=compute(d);
+  const d=DATA.find(x=>x.code===code), c=simOf(d);
   const wk=[d.w1,d.w2,d.w3,d.w4];
   const mx=Math.max(...wk,d.fcMonth1,1);
   const bw=46,gap=14,h=90;
@@ -867,11 +867,29 @@ function setLabels(){
   const sub=document.getElementById('subLab'); if(sub) sub.textContent=`${DATA.length} пунктов выдачи · данные ${span}`;
   const bh=document.getElementById('boostHint'); if(bh) bh.textContent=`Масштабирует текущий поток (${(WK.weeks&&WK.weeks[WK.runIdx])||'тек. неделя'}) по всем точкам.`;
 }
+/* ---------- сим-модель: база = последний фактический месяц (при ×1.0 = факт), рост проецирует от него ---------- */
+function factBaseOrders(d){
+  if(!hasFact) return d.runRate;
+  const m=monthList.find(x=>x.key===FACT.latest); if(!m) return d.runRate;
+  let o=0,dd=0; m.weekIdxs.forEach(i=>{const p=WK.pvz[d.code]; if(p){o+=(p.ord[i]||0)*wdays(i); dd+=wdays(i);}}); return dd?o/dd:0;
+}
+function simOf(d){
+  if(!hasFact) return compute(d);
+  const key=FACT.latest, DIM=daysInMonthKey(key);
+  const base=factBaseOrders(d), orders=(S.flat!=null)?S.flat:base*S.boost;
+  const cm=d.rentSum+d.salarySum+(d.miscSum||0)+S.uk*S.fx;
+  const cost=cm*activeDaysOf(d.code,key)/DIM;                         // факт-затраты (прорейчено), фикс. к росту
+  const factInc=(factMonths[key].income[d.code]||0);                 // факт-доход за месяц
+  const turn=orders*S.chk*S.fx*DIM, commRev=d.comm*turn;
+  const reward=S.scen==='guar'?Math.max(factInc,commRev):commRev;    // ×1: factInc (комиссия<гарантии) ⇒ = факт
+  const be=beOf(d), rev=orders*S.chk*S.fx;   // безубыток — как в «Обзоре» (полные мес. затраты)
+  return {orders,margin:S.chk*d.comm,be,rev,commRev,cost,reward,pnl:reward-cost,health:be>0?orders/be:0,gap:orders-be};
+}
 /* ---------- KPI-блок «Моделирование» (по модели, реагирует на ползунки) ---------- */
 function renderSimKPIs(){
   const el=document.getElementById('simKpis'); if(!el)return;
   const r=rows(), n=r.length||1; let ord=0,be=0,above=0,pnl=0,gmv=0;
-  r.forEach(d=>{const c=compute(d); ord+=c.orders; be+=c.be; if(c.gap>=0)above++; pnl+=c.pnl; gmv+=c.rev*30;});
+  r.forEach(d=>{const c=simOf(d); ord+=c.orders; be+=c.be; if(c.gap>=0)above++; pnl+=c.pnl; gmv+=c.rev*30;});
   const ordPV=ord/n, bePV=be/n, pnlPV=pnl/n;
   const ratio=bePV>0?ordPV/bePV:0, toBE=ordPV>0?bePV/ordPV:0;
   const col=ratio>=1?'var(--mint)':ratio>=.6?'var(--amber)':'var(--coral)';
@@ -931,10 +949,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
 
 /* ---------- break-even button ---------- */
 function networkBreakevenBoost(){
-  // рост, при котором ср. заказов/ПВЗ = ср. безубыток/ПВЗ (P&L сети ≈ 0)
-  let sumBe=0, sumW3=0;
-  DATA.forEach(d=>{ const margin=S.chk*d.comm; const cost=d.rentSum+d.salarySum+(d.miscSum||0)+S.uk*S.fx; sumBe += (cost/S.fx)/margin/30; sumW3 += d.runRate; });
-  return sumW3>0 ? sumBe/sumW3 : 1;
+  // рост (к базе = факт. месяц), при котором ср. заказов = ср. безубыток (P&L сети ≈ 0)
+  let sumBe=0, sumBase=0;
+  DATA.forEach(d=>{ sumBe += simOf(d).be; sumBase += factBaseOrders(d); });
+  return sumBase>0 ? sumBe/sumBase : 1;
 }
 let toastT;
 function toast(msg){const e=document.getElementById('toast');e.innerHTML=msg;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('on'),4600);}
