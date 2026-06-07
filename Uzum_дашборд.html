@@ -261,9 +261,8 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 
 <div class="viewnav" id="viewnav">
   <button data-v="main" class="on">Обзор</button>
-  <button data-v="history">Фактические результаты</button>
   <button data-v="map">Карта</button>
-  <button data-v="sim">Моделирование</button>
+  <button data-v="sim">Финмодель</button>
   <button data-v="upload">Загрузить файл</button>
 </div>
 
@@ -292,11 +291,35 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
   <div class="hint" id="unitEconHint" style="margin-bottom:13px"></div>
   <div class="kpis" id="unitEcon" style="margin:0"></div>
 </div>
+<div class="card" style="margin-bottom:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <div><h3>Фактические результаты</h3><div class="hint" style="margin:0">Факт по неделям. <b style="color:var(--dim)">Недели с * — неполные</b> (&lt; 7 дней с данными): показаны как есть, не для экстраполяции. Объём и P&L — в выбранной валюте.</div></div>
+      <div class="seg-toggle" id="histTog" style="max-width:420px">
+        <button data-h="orders" class="on">Заказы/день</button>
+        <button data-h="volume">Объём/день</button>
+        <button data-h="pnl">P&amp;L/нед.</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="hist-net" id="histNet"></div>
+
+  <div class="card" style="margin-bottom:18px">
+    <h3 id="histTblTitle"></h3>
+    <div class="hint">По каждому ПВЗ, по неделям. Отсортировано по последней полной неделе.</div>
+    <div class="tbl-scroll"><table id="histTbl"></table></div>
+  </div>
+
+  <div class="card">
+    <h3>Структура расходов (в месяц)</h3>
+    <div class="hint">OPEX = аренда + ЗП. Плюс затраты на УК и «разное». В выбранной валюте.</div>
+    <div class="tbl-scroll"><table id="costTbl"></table></div>
+  </div>
 </div><!-- /viewMain -->
 
 <div id="viewSim" style="display:none">
   <div class="card" style="margin-bottom:16px;border:1px solid var(--violet);box-shadow:0 0 0 1px var(--violet) inset">
-    <h3 style="margin-bottom:2px">Моделирование · прогноз <span class="tag" style="display:inline-block;margin-left:8px">ПРОГНОЗ — НЕ ФАКТ</span></h3>
+    <h3 style="margin-bottom:2px">Финмодель · прогноз <span class="tag" style="display:inline-block;margin-left:8px">ПРОГНОЗ — НЕ ФАКТ</span></h3>
     <div class="hint">Гипотетический расчёт: двигайте параметры — показатели ниже пересчитываются как <b style="color:var(--violet)">прогноз</b>, а не факт. Фактические данные — на вкладке «Обзор».</div>
   </div>
   <h3 style="margin:0 0 9px">Сеть · прогноз при заданных параметрах</h3>
@@ -357,33 +380,6 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 </div>
 
 </div><!-- /viewSim -->
-
-<div id="viewHistory" style="display:none">
-  <div class="card" style="margin-bottom:18px">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-      <div><h3>Фактические результаты</h3><div class="hint" style="margin:0">Факт по неделям. <b style="color:var(--dim)">Недели с * — неполные</b> (&lt; 7 дней с данными): показаны как есть, не для экстраполяции. Объём и P&L — в выбранной валюте.</div></div>
-      <div class="seg-toggle" id="histTog" style="max-width:420px">
-        <button data-h="orders" class="on">Заказы/день</button>
-        <button data-h="volume">Объём/день</button>
-        <button data-h="pnl">P&amp;L/нед.</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="hist-net" id="histNet"></div>
-
-  <div class="card" style="margin-bottom:18px">
-    <h3 id="histTblTitle"></h3>
-    <div class="hint">По каждому ПВЗ, по неделям. Отсортировано по последней полной неделе.</div>
-    <div class="tbl-scroll"><table id="histTbl"></table></div>
-  </div>
-
-  <div class="card">
-    <h3>Структура расходов (в месяц)</h3>
-    <div class="hint">OPEX = аренда + ЗП. Плюс затраты на УК и «разное». В выбранной валюте.</div>
-    <div class="tbl-scroll"><table id="costTbl"></table></div>
-  </div>
-</div>
 
 <div id="viewUpload" style="display:none">
   <div id="adminGate" class="card" style="max-width:440px;margin:0 auto">
@@ -490,7 +486,7 @@ const monthList = (()=>{ const seen={}, out=[];
     if(!seen[key]){ seen[key]={key,mn:m,label:(MONTH_RU2[m]||'?')+' '+NM_YEAR,weekIdxs:[],hasFact:!!factMonths[key]}; out.push(seen[key]); }
     seen[key].weekIdxs.push(i); });
   return out; })();
-if(S.monthKey==null) S.monthKey = (hasFact && monthList.some(m=>m.key===FACT.latest)) ? FACT.latest : (monthList.length?monthList[monthList.length-1].key:null);
+if(S.monthKey==null) S.monthKey = monthList.length?monthList[monthList.length-1].key:null;   // по умолчанию — самый свежий месяц
 if(S.weekIdx==null) S.weekIdx = WK.runIdx??(WK.weeks.length-1);
 const weekMonth = i => monthList.find(m=>m.weekIdxs.includes(i));
 const monthDaysOf = m => m? m.weekIdxs.reduce((a,j)=>a+wdays(j),0) : 0;
@@ -599,10 +595,10 @@ const chartMeta={
   pnl:{t:'P&L за месяц по точкам',h:'Зелёная — прибыль, красная — убыток (при текущих допущениях и сценарии).'}
 };
 function renderChart(){
-  const m=S.metric, meta=chartMeta[m], uf=useFact();
-  const pnlOf=x=>{const f=uf?factOf(x.d):null; return f?f.pnl:x.c.pnl;};
+  const m=S.metric, meta=chartMeta[m];
+  const pnlOf=x=>x.c.pnl;                 // Финмодель целиком по simOf (свежий месяц / модель)
   document.getElementById('chTitle').textContent=meta.t;
-  document.getElementById('chHint').textContent=(m==='pnl'&&uf)?`Факт · Uzum · ${(factMonths[FACT.latest]||{}).label||''}: доход из отчёта − затраты (прорейч.). Зелёная — прибыль, красная — убыток.`:meta.h;
+  document.getElementById('chHint').textContent=meta.h;
   let r=rows().map(d=>({d,c:simOf(d)}));
   const svg=document.getElementById('chart');
   const W=860, rowH=30, padT=22, padL=126, padR=64, padB=10;
@@ -880,25 +876,29 @@ function setLabels(){
   const sub=document.getElementById('subLab'); if(sub) sub.textContent=`${DATA.length} пунктов выдачи · данные ${span}`;
   const bh=document.getElementById('boostHint'); if(bh) bh.textContent=`Масштабирует текущий поток (${(WK.weeks&&WK.weeks[WK.runIdx])||'тек. неделя'}) по всем точкам.`;
 }
-/* ---------- сим-модель: база = последний фактический месяц (при ×1.0 = факт), рост проецирует от него ---------- */
-function factBaseOrders(d){
-  if(!hasFact) return d.runRate;
-  const m=monthList.find(x=>x.key===FACT.latest); if(!m) return d.runRate;
-  let o=0,dd=0; m.weekIdxs.forEach(i=>{const p=WK.pvz[d.code]; if(p){o+=(p.ord[i]||0)*wdays(i); dd+=wdays(i);}}); return dd?o/dd:0;
+/* ---------- Финмодель: база = самый свежий месяц (run-rate); при ×1.0 = факт, если месяц закрыт отчётом Сатори, иначе доход по модели ---------- */
+function baseOrders(d){   // база Финмодели = заказы/день за самый свежий месяц (run-rate); ×рост проецирует от неё
+  const m=monthList.length?monthList[monthList.length-1]:null; if(!m) return d.runRate;
+  let o=0,dd=0; m.weekIdxs.forEach(i=>{const p=WK.pvz[d.code]; if(p){o+=(p.ord[i]||0)*wdays(i); dd+=wdays(i);}}); return dd?o/dd:d.runRate;
 }
 function simOf(d){
-  if(!hasFact) return compute(d);
-  const key=FACT.latest, DIM=daysInMonthKey(key);
-  const base=factBaseOrders(d), orders=(S.flat!=null)?S.flat:base*S.boost;
+  // база — самый свежий месяц (run-rate). Есть факт Сатори за него → ×1 = факт; нет (текущий месяц) → доход по модели.
+  const m=monthList.length?monthList[monthList.length-1]:null, key=m?m.key:null, fm=key&&factMonths[key];
+  const base=baseOrders(d), orders=(S.flat!=null)?S.flat:base*S.boost;
   const cm=d.rentSum+d.salarySum+(d.miscSum||0)+S.uk*S.fx;
-  const cost=cm*activeDaysOf(d.code,key)/DIM;                         // факт-затраты (прорейчено), фикс. к росту
-  const factInc=(factMonths[key].income[d.code]||0);                 // факт-доход за месяц
-  const turn=orders*S.chk*S.fx*DIM, commRev=d.comm*turn;
-  const reward=S.scen==='guar'?Math.max(factInc,commRev):commRev;    // ×1: factInc (комиссия<гарантии) ⇒ = факт
-  const be=beOf(d), rev=orders*S.chk*S.fx;   // безубыток — как в «Обзоре» (полные мес. затраты)
+  const be=beOf(d), rev=orders*S.chk*S.fx;                            // безубыток — полные мес. затраты (как в «Обзоре»)
+  if(fm){                                                             // свежий месяц С фактом → как факт
+    const DIM=daysInMonthKey(key), cost=cm*activeDaysOf(d.code,key)/DIM;
+    const factInc=(fm.income[d.code]||0), commRev=d.comm*orders*S.chk*S.fx*DIM;
+    const reward=S.scen==='guar'?Math.max(factInc,commRev):commRev;  // ×1: factInc (комиссия<гарантии) ⇒ = факт
+    return {orders,margin:S.chk*d.comm,be,rev,commRev,cost,reward,pnl:reward-cost,health:be>0?orders/be:0,gap:orders-be};
+  }
+  // свежий месяц БЕЗ факта → модель: полный мес. опекс, доход = гарантия/комиссия
+  const cost=cm, commRev=orders*S.chk*d.comm*30*S.fx;
+  const reward=S.scen==='guar'?Math.max(d.guarFull,commRev):commRev;
   return {orders,margin:S.chk*d.comm,be,rev,commRev,cost,reward,pnl:reward-cost,health:be>0?orders/be:0,gap:orders-be};
 }
-/* ---------- KPI-блок «Моделирование» (по модели, реагирует на ползунки) ---------- */
+/* ---------- KPI-блок «Финмодель» (по модели, реагирует на ползунки) ---------- */
 function renderSimKPIs(){
   const el=document.getElementById('simKpis'); if(!el)return;
   const r=rows(), n=r.length||1; let ord=0,be=0,above=0,pnl=0,gmv=0;
@@ -947,7 +947,6 @@ document.querySelectorAll('#viewnav button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#viewnav button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
   S.view=b.dataset.v;
   document.getElementById('viewMain').style.display=S.view==='main'?'':'none';
-  document.getElementById('viewHistory').style.display=S.view==='history'?'':'none';
   document.getElementById('viewMap').style.display=S.view==='map'?'':'none';
   document.getElementById('viewSim').style.display=S.view==='sim'?'':'none';
   document.getElementById('viewUpload').style.display=S.view==='upload'?'':'none';
@@ -964,7 +963,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
 function networkBreakevenBoost(){
   // рост (к базе = факт. месяц), при котором ср. заказов = ср. безубыток (P&L сети ≈ 0)
   let sumBe=0, sumBase=0;
-  DATA.forEach(d=>{ sumBe += simOf(d).be; sumBase += factBaseOrders(d); });
+  DATA.forEach(d=>{ sumBe += simOf(d).be; sumBase += baseOrders(d); });
   return sumBase>0 ? sumBe/sumBase : 1;
 }
 let toastT;
