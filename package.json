@@ -4,6 +4,6 @@
   "private": true,
   "description": "Uzum ПВЗ — интерактивный дашборд (статический сайт)",
   "scripts": {
-    "start": "npx --yes serve -s . -l ${PORT:-3000}"
+    "start": "npx --yes serve . -c serve.json -l ${PORT:-3000}"
   }
 }
