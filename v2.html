@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Uzum ПВЗ — редизайн дашборда (концепт)</title>
+<title>Uzum ПВЗ — дашборд (новый дизайн)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -33,7 +33,7 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 .nav .in{max-width:var(--maxw); margin:0 auto; padding:16px 30px; display:flex; align-items:center; gap:30px}
 .wordmark{font-family:var(--ff-disp); font-weight:600; font-size:22px; letter-spacing:-.02em; white-space:nowrap}
 .wordmark b{color:var(--accent)}
-.tabs{display:flex; gap:4px; margin-left:8px}
+.tabs{display:flex; gap:4px; margin-left:8px; flex-wrap:wrap}
 .tab{font-family:var(--ff-mono); font-size:12px; letter-spacing:.08em; text-transform:uppercase; padding:8px 14px; border:0; background:transparent; color:var(--muted); cursor:pointer; border-radius:3px; transition:.15s}
 .tab.on{background:var(--ink); color:var(--paper)}
 .tab:not(.on):hover{color:var(--ink)}
@@ -59,7 +59,7 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 .dd{position:relative}
 .dd>button{display:flex; align-items:center; gap:10px; font-family:var(--ff-mono); font-size:13px; font-weight:500; background:var(--card); border:1px solid var(--line2); border-radius:4px; padding:8px 14px; cursor:pointer; color:var(--ink)}
 .dd .car{color:var(--muted); font-size:10px}
-.ddm{position:absolute; left:0; top:calc(100% + 6px); background:var(--card); border:1px solid var(--line2); border-radius:5px; padding:5px; min-width:180px; z-index:30; display:none; box-shadow:0 12px 32px rgba(12,28,48,.15)}
+.ddm{position:absolute; left:0; top:calc(100% + 6px); background:var(--card); border:1px solid var(--line2); border-radius:5px; padding:5px; min-width:190px; z-index:30; display:none; box-shadow:0 12px 32px rgba(12,28,48,.15); max-height:320px; overflow-y:auto}
 .ddm.open{display:block}
 .ddm button{display:block; width:100%; text-align:left; font-family:var(--ff-mono); font-size:13px; padding:8px 10px; border:0; background:transparent; cursor:pointer; color:var(--ink); border-radius:3px}
 .ddm button.on{background:var(--panel)} .ddm button:hover{background:var(--panel)}
@@ -103,8 +103,8 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
 
 /* ---------- table ---------- */
 .tblwrap{border:1px solid var(--line2); background:var(--card); overflow-x:auto}
-table{width:100%; border-collapse:collapse; font-size:14px; min-width:780px}
-thead th{font-family:var(--ff-mono); font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); font-weight:500; text-align:center; padding:14px 12px; border-bottom:1px solid var(--line2); white-space:nowrap; cursor:pointer; user-select:none}
+table{width:100%; border-collapse:collapse; font-size:14px; min-width:720px}
+thead th{font-family:var(--ff-mono); font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); font-weight:500; text-align:center; padding:14px 12px; border-bottom:1px solid var(--line2); white-space:nowrap; user-select:none}
 thead th:first-child{text-align:left}
 th.s{color:var(--ink)}
 tbody td{padding:13px 12px; border-bottom:1px solid var(--line); text-align:center; white-space:nowrap; font-family:var(--ff-mono); font-size:13.5px}
@@ -122,31 +122,22 @@ tbody tr{transition:background .12s} tbody tr:hover{background:var(--panel)}
 .chartcard{border:1px solid var(--line2); background:var(--card); padding:30px 34px}
 .chtop{display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; flex-wrap:wrap; gap:14px}
 .chtop h3{font-family:var(--ff-disp); font-weight:700; font-size:17px; letter-spacing:-.01em; text-transform:uppercase}
-.bars{display:flex; align-items:flex-end; gap:26px; height:230px; border-bottom:1px solid var(--ink); padding-top:24px}
+.bars{display:flex; align-items:flex-end; gap:18px; height:230px; border-bottom:1px solid var(--ink); padding-top:24px}
 .cbar{flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:100%}
 .cbar i{width:100%; max-width:74px; background:linear-gradient(180deg,#9db1cf,var(--accent)); height:0; transition:height .9s cubic-bezier(.2,.7,.2,1); border-radius:3px 3px 0 0}
 .cbar.part i{background:repeating-linear-gradient(45deg,var(--accent) 0 5px,#9db1cf 5px 9px)}
-.cbar .v{font-family:var(--ff-mono); font-weight:700; font-size:15px; margin-bottom:8px}
+.cbar .v{font-family:var(--ff-mono); font-weight:700; font-size:14px; margin-bottom:8px}
 .cbar .x{font-family:var(--ff-mono); font-size:10.5px; color:var(--muted); margin-top:10px}
 
-/* ---------- screens row (map + finmodel) ---------- */
-.screens{display:grid; grid-template-columns:1fr 1fr; gap:26px; margin-top:24px}
+/* ---------- map / screens ---------- */
 .scr{border:1px solid var(--line2); background:var(--card); padding:28px 30px}
 .scr .h{font-family:var(--ff-disp); font-weight:700; font-size:18px; letter-spacing:-.01em; text-transform:uppercase; margin-bottom:4px}
 .scr .sub{font-family:var(--ff-mono); font-size:11.5px; color:var(--muted); margin-bottom:20px; letter-spacing:.04em}
-.map{position:relative; height:300px; background:linear-gradient(180deg,var(--paper),var(--panel)); border:1px solid var(--line2); border-radius:6px; overflow:hidden}
-.mk{position:absolute; border-radius:50%; transform:translate(-50%,-50%); border:1.5px solid var(--card); transition:transform .2s}
-.mk:hover{transform:translate(-50%,-50%) scale(1.18); z-index:3}
+.map{position:relative; height:362px; background:linear-gradient(180deg,var(--paper),var(--panel)); border:1px solid var(--line2); border-radius:6px; overflow:hidden}
+.mapfull{height:520px}
+.mlab{font-family:var(--ff-mono); font-size:15px; fill:var(--ink2)}
 .maplg{display:flex; gap:18px; margin-top:14px; font-family:var(--ff-mono); font-size:11px; color:var(--muted); flex-wrap:wrap}
 .maplg span{display:flex; align-items:center; gap:6px} .maplg .d{width:9px;height:9px;border-radius:50%}
-
-.fm .big{font-family:var(--ff-mono); font-weight:600; font-size:50px; line-height:1; letter-spacing:-.04em; margin:6px 0}
-.fm .row{display:flex; justify-content:space-between; align-items:baseline; font-family:var(--ff-mono); font-size:12px; color:var(--muted); margin-top:18px}
-.fm input[type=range]{-webkit-appearance:none; width:100%; height:3px; background:var(--line2); margin-top:12px; cursor:pointer}
-.fm input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:22px; height:22px; border-radius:50%; background:var(--ink); border:3px solid var(--card); box-shadow:0 0 0 1.5px var(--ink)}
-.fm .proj{font-family:var(--ff-mono); font-size:13px; color:var(--ink2); margin-top:20px; line-height:1.7}
-.fm .proj b{color:var(--pos)}
-.badge{display:inline-block; font-family:var(--ff-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--neg); border:1.5px solid var(--neg); padding:3px 9px; border-radius:99px; margin-bottom:14px}
 
 /* ---------- footer ---------- */
 .foot{display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:46px 0 60px; margin-top:50px; border-top:1px solid var(--ink); font-family:var(--ff-mono); font-size:12px; color:var(--muted); letter-spacing:.04em}
@@ -154,15 +145,49 @@ tbody tr{transition:background .12s} tbody tr:hover{background:var(--panel)}
 @media(max-width:900px){
   .heroband{grid-template-columns:1fr} .hero{border-right:0; border-bottom:1px solid var(--line); padding-right:0}
   .unit{grid-template-columns:repeat(2,1fr)} .unit .c:nth-child(4n){border-right:1px solid var(--line)} .unit .c:nth-child(2n){border-right:0} .unit .c:nth-child(n+5){border-bottom:1px solid var(--line)}
-  .screens{grid-template-columns:1fr}
 }
 .unit,.tblwrap,.chartcard,.scr{border-radius:5px; box-shadow:0 1px 2px rgba(12,28,48,.04), 0 10px 26px rgba(12,28,48,.06)}
 .nav{box-shadow:0 1px 0 var(--line)}
-.tab.on,.seg button.on,.cur button.on{background:var(--ink); color:var(--paper)}
-.lh h1 em{color:var(--accent)}
-.map{height:362px}
-.mlab{font-family:var(--ff-mono); font-size:15px; fill:var(--ink2)}
-tbody tr{cursor:pointer}
+
+/* ---------- views ---------- */
+.view{display:none}
+.view.on{display:block; animation:vfade .28s ease}
+@keyframes vfade{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+
+/* ---------- deltas + sorting ---------- */
+.delta{font-weight:700} .delta.pos{color:var(--pos)} .delta.neg{color:var(--neg)}
+th.sortable{cursor:pointer} th .sar{opacity:.35; font-size:8px; margin-left:3px} th.sorted{color:var(--ink)} th.sorted .sar{opacity:1; color:var(--accent)}
+
+/* ---------- finmodel ---------- */
+.fmtop{display:grid; grid-template-columns:1fr 1.15fr; gap:26px; align-items:start}
+.fmhead,.fmctls{border:1px solid var(--line2); background:var(--card); border-radius:5px; padding:28px 30px; box-shadow:0 1px 2px rgba(12,28,48,.04),0 10px 26px rgba(12,28,48,.06)}
+.badge{display:inline-block; font-family:var(--ff-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--neg); border:1.5px solid var(--neg); padding:3px 9px; border-radius:99px; margin-bottom:14px}
+.fmbig{font-family:var(--ff-mono); font-weight:600; font-size:clamp(40px,6vw,62px); line-height:1; letter-spacing:-.04em; margin:10px 0 14px}
+.fmsub{font-family:var(--ff-mono); font-size:13px; color:var(--ink2); line-height:1.8}
+.fmsub b{color:var(--ink)} .fmsub b.pos{color:var(--pos)} .fmsub b.neg{color:var(--neg)}
+.fmscn{display:flex; align-items:center; gap:12px; font-family:var(--ff-mono); font-size:12px; color:var(--ink2); margin-bottom:20px; flex-wrap:wrap}
+.fmrow{margin:16px 0}
+.fmrow .lab{display:flex; justify-content:space-between; font-family:var(--ff-mono); font-size:12px; color:var(--ink2)}
+.fmrow .lab b{color:var(--ink); font-weight:700}
+.fmrow input[type=range]{-webkit-appearance:none; width:100%; height:3px; background:var(--line2); margin-top:10px; cursor:pointer; border-radius:2px}
+.fmrow input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:20px; height:20px; border-radius:50%; background:var(--ink); border:3px solid var(--card); box-shadow:0 0 0 1.5px var(--ink); cursor:pointer}
+.fmbtns{display:flex; gap:10px; margin-top:24px; flex-wrap:wrap}
+.fmbtn{font-family:var(--ff-mono); font-size:12px; font-weight:600; padding:10px 16px; border-radius:6px; border:1px solid var(--ink); background:var(--ink); color:var(--paper); cursor:pointer; transition:.15s}
+.fmbtn.ghost{background:transparent; color:var(--ink)} .fmbtn:hover{opacity:.85}
+.fmsat{font-family:var(--ff-mono); font-size:12.5px; color:var(--ink2); line-height:1.7; border-top:1px dashed var(--line2); padding-top:16px}
+.fmsat b{color:var(--ink)}
+
+/* ---------- upload ---------- */
+.upzone{border:2px dashed var(--line2); border-radius:10px; padding:46px 30px; text-align:center; color:var(--muted); font-family:var(--ff-mono); background:var(--card)}
+.srcgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:24px}
+.srccard{border:1px solid var(--line2); background:var(--card); border-radius:6px; padding:24px; box-shadow:0 1px 2px rgba(12,28,48,.04),0 8px 20px rgba(12,28,48,.05)}
+.srccard .tag{font-family:var(--ff-mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:10px}
+.srccard h4{font-family:var(--ff-disp); font-size:17px; margin-bottom:8px; letter-spacing:-.01em}
+.srccard p{font-size:13px; color:var(--ink2); line-height:1.65}
+.srccard b{color:var(--ink)}
+
+/* ---------- drawer ---------- */
+tbody tr.prow{cursor:pointer}
 .scrim{position:fixed; inset:0; background:rgba(54,59,66,.34); backdrop-filter:blur(2px); opacity:0; pointer-events:none; transition:.25s; z-index:60}
 .scrim.on{opacity:1; pointer-events:auto}
 .drawer{position:fixed; top:0; right:0; height:100%; width:432px; max-width:92vw; background:var(--card); border-left:1px solid var(--line2); box-shadow:-22px 0 55px rgba(54,59,66,.16); transform:translateX(100%); transition:transform .32s cubic-bezier(.2,.7,.2,1); z-index:61; overflow-y:auto; padding:28px 32px}
@@ -183,15 +208,18 @@ tbody tr{cursor:pointer}
 .dhint{font-family:var(--ff-mono); font-size:11px; color:var(--muted); margin:0 0 8px; letter-spacing:.03em}
 .backlink{font-family:var(--ff-mono); font-size:12px; color:var(--ink2); text-decoration:none; border:1px solid var(--line2); padding:7px 12px; border-radius:6px; margin-right:14px; transition:.15s}
 .backlink:hover{border-color:var(--ink); color:var(--ink)}
+
+@media(max-width:900px){ .fmtop{grid-template-columns:1fr} .srcgrid{grid-template-columns:1fr} .mapfull{height:380px} }
 </style>
 </head>
 <body>
 
 <nav class="nav"><div class="in">
   <div class="tabs">
-    <button class="tab on">Обзор</button>
-    <button class="tab" id="tabMap">Карта</button>
-    <button class="tab" id="tabFm">Финмодель</button>
+    <button class="tab on" data-v="overview">Обзор</button>
+    <button class="tab" data-v="map">Карта</button>
+    <button class="tab" data-v="fin">Финмодель</button>
+    <button class="tab" data-v="upload">Загрузить</button>
   </div>
   <div class="navsp"></div>
   <a class="backlink" href="index.html">← Классический</a>
@@ -200,20 +228,17 @@ tbody tr{cursor:pointer}
 
 <main class="wrap">
 
-  <div class="lh">
+  <div class="lh" id="lh">
     <h1>Сеть · фактические показатели</h1>
-    <div class="dl">по состоянию на<br><b>июнь 2026 · неполный</b><br>18 ПВЗ · 8 городов</div>
+    <div class="dl" id="lhDl">загрузка живых данных…</div>
   </div>
 
-  <div class="ctl">
+  <div class="ctl" id="ctl">
     <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
       <div class="seg" id="gran"><button class="on" data-g="m">Месяц</button><button data-g="w">Неделя</button></div>
       <div class="dd" id="perdd">
-        <button id="perddBtn"><span id="perddLab">июнь 2026 *</span><span class="car">▼</span></button>
-        <div class="ddm" id="perddMenu">
-          <button data-k="may">май 2026</button>
-          <button class="on" data-k="jun">июнь 2026 *</button>
-        </div>
+        <button id="perddBtn"><span id="perddLab">—</span><span class="car">▼</span></button>
+        <div class="ddm" id="perddMenu"></div>
       </div>
     </div>
     <div class="pills" id="pills">
@@ -224,271 +249,385 @@ tbody tr{cursor:pointer}
     </div>
   </div>
 
-  <!-- hero + kpis -->
-  <div class="heroband">
-    <div class="hero">
-      <div class="cap">Заказы / безубыток · зак/д на 1 ПВЗ</div>
-      <div class="big"><span id="hOrd">20,5</span> <span class="of">/ <span id="hBe">68</span></span></div>
-      <div class="bar"><i id="hFill" style="width:30%"></i><span class="mk" id="hMark" style="left:90%"></span></div>
-      <div class="st" id="hSt">×3,4 до безубытка сети</div>
+  <!-- ========== OVERVIEW ========== -->
+  <section class="view on" data-view="overview">
+    <div class="heroband">
+      <div class="hero">
+        <div class="cap">Заказы / безубыток · зак/д на 1 ПВЗ</div>
+        <div class="big"><span id="hOrd">—</span> <span class="of">/ <span id="hBe">—</span></span></div>
+        <div class="bar"><i id="hFill" style="width:0%"></i><span class="mk" id="hMark" style="left:71%"></span></div>
+        <div class="st" id="hSt">—</div>
+      </div>
+      <div class="kpis">
+        <div class="kp"><div class="l">P&amp;L по сети / мес</div><div class="v" id="kPnl">—</div><div class="d" id="kPnlD">модель</div></div>
+        <div class="kp"><div class="l">Оборот (GMV) / мес</div><div class="v" id="kGmv">—</div><div class="d" id="kGmvD">по всей сети</div></div>
+        <div class="kp"><div class="l">Точек выше безубытка</div><div class="v" id="kAbove">—</div><div class="d" id="kAboveD">—</div></div>
+        <div class="kp"><div class="l">P&amp;L на 1 ПВЗ / мес</div><div class="v" id="kPnlPv">—</div><div class="d">средн. по точке</div></div>
+      </div>
     </div>
-    <div class="kpis">
-      <div class="kp"><div class="l">P&amp;L по сети / мес</div><div class="v" id="kPnl">—</div><div class="d" id="kPnlD">модель · текущий темп</div></div>
-      <div class="kp"><div class="l">Оборот (GMV) / мес</div><div class="v" id="kGmv">—</div><div class="d">по всей сети</div></div>
-      <div class="kp"><div class="l">Точек выше безубытка</div><div class="v" id="kAbove">—</div><div class="d" id="kAboveD">из 18</div></div>
-      <div class="kp"><div class="l">P&amp;L на 1 ПВЗ / мес</div><div class="v" id="kPnlPv">—</div><div class="d">средн. по точке</div></div>
+
+    <div class="slab"><span class="n">02</span> Юнит-экономика · среднее на 1 ПВЗ</div>
+    <div class="unit" id="unit"></div>
+
+    <div class="slab"><span class="n">03</span> По точкам · <span id="tblPer">—</span></div>
+    <div class="tblwrap"><table id="tbl"></table></div>
+
+    <div class="slab"><span class="n">04</span> Динамика сети · по неделям</div>
+    <div class="chartcard">
+      <div class="chtop"><h3>Заказов в день на 1 ПВЗ</h3>
+        <div class="seg" id="chTog"><button class="on" data-h="ord">Заказы</button><button data-h="rev">Оборот</button><button data-h="pnl">P&amp;L</button></div>
+      </div>
+      <div class="bars" id="bars"></div>
     </div>
-  </div>
 
-  <!-- unit econ -->
-  <div class="slab"><span class="n">02</span> Юнит-экономика · среднее на 1 ПВЗ</div>
-  <div class="unit" id="unit"></div>
+    <div class="slab"><span class="n">05</span> Структура расходов · в месяц</div>
+    <div class="tblwrap"><table id="costtbl"></table></div>
+  </section>
 
-  <!-- table -->
-  <div class="slab"><span class="n">03</span> По точкам · <span id="tblPer">июнь 2026</span></div>
-  <div class="tblwrap"><table id="tbl"></table></div>
-
-  <!-- weekly chart -->
-  <div class="slab"><span class="n">04</span> Динамика сети · по неделям</div>
-  <div class="chartcard">
-    <div class="chtop"><h3>Заказов в день на 1 ПВЗ</h3>
-      <div class="seg" id="chTog"><button class="on" data-h="ord">Заказы</button><button data-h="rev">Оборот</button><button data-h="pnl">P&amp;L</button></div>
-    </div>
-    <div class="bars" id="bars"></div>
-  </div>
-
-  <!-- costs -->
-  <div class="slab"><span class="n">05</span> Структура расходов · в месяц</div>
-  <div class="tblwrap"><table id="costtbl"></table></div>
-
-  <!-- screens row -->
-  <div class="slab"><span class="n">06</span> Тот же язык · на всех экранах</div>
-  <div class="screens">
-    <div class="scr" id="mapScr">
+  <!-- ========== MAP ========== -->
+  <section class="view" data-view="map">
+    <div class="slab"><span class="n">06</span> Карта сети · <span id="mapPer">—</span></div>
+    <div class="scr">
       <div class="h">Карта сети</div>
-      <div class="sub">размер точки = заказы/день · цвет = сегмент</div>
-      <div class="map"><svg id="mapsvg" viewBox="0 0 900 623" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block"></svg></div>
+      <div class="sub">размер пузыря = заказы/день города · цвет = сегмент</div>
+      <div class="map mapfull"><svg id="mapsvg" viewBox="0 0 900 623" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block"></svg></div>
       <div class="maplg">
         <span><span class="d" style="background:var(--s1)"></span>Сег 1</span>
         <span><span class="d" style="background:var(--s2)"></span>Сег 2</span>
         <span><span class="d" style="background:var(--s3)"></span>Сег 3</span>
-        <span>○ размер = поток</span>
+        <span>○ размер = поток заказов</span>
       </div>
     </div>
-    <div class="scr fm" id="fmScr">
-      <div class="h">Финмодель · прогноз</div>
-      <div class="sub">двигай рост заказов — пересчёт мгновенный</div>
-      <div class="badge">прогноз — не факт</div>
-      <div class="cap mono" style="font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase">P&amp;L по сети при росте</div>
-      <div class="big" id="fmPnl">—</div>
-      <div class="row"><span>рост заказов</span><span class="mono" id="fmBoostL" style="color:var(--ink);font-weight:700">×1.0</span></div>
-      <input type="range" id="fmBoost" min="1" max="6" step="0.1" value="1">
-      <div class="proj" id="fmProj"></div>
+    <div class="slab" style="margin-top:42px"><span class="n">·</span> Города</div>
+    <div class="tblwrap"><table id="citytbl"></table></div>
+  </section>
+
+  <!-- ========== FINMODEL ========== -->
+  <section class="view" data-view="fin">
+    <div class="slab"><span class="n">07</span> Финмодель · симулятор</div>
+    <div class="fmtop">
+      <div class="fmhead">
+        <div class="badge">прогноз — не факт</div>
+        <div class="cap mono" style="font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase">P&amp;L по сети / мес</div>
+        <div class="fmbig" id="fmPnl">—</div>
+        <div class="fmsub" id="fmSub"></div>
+      </div>
+      <div class="fmctls">
+        <div class="fmscn">Сценарий дохода:
+          <div class="seg" id="fmScen"><button class="on" data-s="guar">Гарантия</button><button data-s="comm">Только комиссия</button></div>
+        </div>
+        <div class="fmrow"><div class="lab"><span>Рост заказов</span><b id="fmBoostL">×1.0</b></div><input type="range" id="fmBoost" min="1" max="8" step="0.1" value="1"></div>
+        <div class="fmrow"><div class="lab"><span>Курс, сум / $</span><b id="fmFxL">12 000</b></div><input type="range" id="fmFx" min="10000" max="15000" step="100" value="12000"></div>
+        <div class="fmrow"><div class="lab"><span>Средний чек</span><b id="fmChkL">×1.00</b></div><input type="range" id="fmChk" min="0.7" max="1.5" step="0.05" value="1"></div>
+        <div class="fmrow"><div class="lab"><span>УК + накладные, $ / ПВЗ</span><b id="fmUkL">$320</b></div><input type="range" id="fmUk" min="0" max="800" step="10" value="320"></div>
+        <div class="fmbtns"><button class="fmbtn" id="fmBE">Найти безубыток сети</button><button class="fmbtn ghost" id="fmReset">Сбросить</button></div>
+      </div>
     </div>
-  </div>
+    <div class="slab" style="margin-top:38px"><span class="n">·</span> Прогноз по точкам</div>
+    <div class="tblwrap"><table id="fmtbl"></table></div>
+    <div class="fmsat" id="fmSat" style="margin-top:24px"></div>
+  </section>
+
+  <!-- ========== UPLOAD ========== -->
+  <section class="view" data-view="upload">
+    <div class="slab"><span class="n">08</span> Обновление данных</div>
+    <div class="upzone">
+      <div style="font-size:30px;margin-bottom:10px">⤓</div>
+      <div style="font-size:15px;color:var(--ink)">Дашборд обновляется автоматически из пайплайна</div>
+      <div style="margin-top:8px">дневная выгрузка · эталон · отчёт Сатори → пересборка → деплой</div>
+    </div>
+    <div class="srcgrid">
+      <div class="srccard"><div class="tag">источник 1 · операция</div><h4>Дневная выгрузка</h4><p>Google-таблица управленческой отчётности (заказы и оборот по ПВЗ, лист на дату). Команда <b>/sync</b> тянет новые даты и накопительно пересчитывает недели.</p></div>
+      <div class="srccard"><div class="tag">источник 2 · правда</div><h4>Эталон ПВЗ</h4><p>Справочник точек (статика, затраты) + накопленные недели + факт Сатори. Источник правды, из которого собирается дашборд.</p></div>
+      <div class="srccard"><div class="tag">источник 3 · деньги</div><h4>Отчёт Сатори</h4><p>Месячный отчёт Uzum (агентское вознаграждение). Команда <b>/satori</b> вносит факт — он замещает смоделированный P&amp;L.</p></div>
+    </div>
+    <div class="fmsat" style="margin-top:26px"><b>Это превью нового дизайна.</b> Загрузка файлов и пересборка выполняются на стороне пайплайна (классический дашборд / команды). Здесь данные подтягиваются из боевого дашборда в реальном времени.</div>
+  </section>
 
   <div class="foot">
-    <div>© 2026 · Сеть ПВЗ Uzum · концепт-редизайн</div>
-    <div>Editorial / financial direction · светлая тема</div>
-    <div>Данные — иллюстративные (порядок реальный)</div>
+    <div>© 2026 · Сеть ПВЗ Uzum</div>
+    <div>новый дизайн · данные из боевого дашборда</div>
+    <div>P&amp;L — модель (гарантия / комиссия)</div>
   </div>
 </main>
 
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer"></aside>
 <script>
-const FX=12600;
-const fmtN=(n,d=0)=>n.toLocaleString('ru-RU',{minimumFractionDigits:d,maximumFractionDigits:d}).replace(/ /g,' ');
+const fmtN=(n,d=0)=>(isFinite(n)?n:0).toLocaleString('ru-RU',{minimumFractionDigits:d,maximumFractionDigits:d}).replace(/ /g,' ');
 const segHex={1:'var(--s1)',2:'var(--s2)',3:'var(--s3)'};
+const RUM={'01':'январь','02':'февраль','03':'март','04':'апрель','05':'май','06':'июнь','07':'июль','08':'август','09':'сентябрь','10':'октябрь','11':'ноябрь','12':'декабрь'};
 let cur='usd';
-const money=(usd)=>{const neg=usd<0,a=Math.abs(Math.round(cur==='usd'?usd:usd*FX));return (neg?'−':'')+(cur==='usd'?'$'+fmtN(a):fmtN(a)+' сум');};
+function moneyAt(usd,fx){const neg=usd<0,a=Math.abs(Math.round(cur==='usd'?usd:usd*fx));return (neg?'−':'')+(cur==='usd'?'$'+fmtN(a):fmtN(a)+' сум');}
 
-// mock data: orders/day (june run-rate), seg, commission, avg check $, opex $/mo, guarantee $/mo
-// === живые данные: тянутся из index.html (тот же DATA/WK/FACT, что строит пайплайн) ===
-let DATA=[], WKD=null, FACTD=null; const ADAPTfx=12600;
+// === живые данные из index.html (тот же DATA/WK/FACT, что строит пайплайн) ===
+let DATA=[], WKD=null, FACTD=null, MONTHS=[], MKEYS=[], MG={};
 function _ext(html,decl,o,c){const i=html.indexOf(decl); if(i<0)return null; const j=html.indexOf(o,i); let d=0; for(let k=j;k<html.length;k++){const ch=html[k]; if(ch===o)d++; else if(ch===c){d--; if(d===0)return html.slice(j,k+1);}} return null;}
 function _po(s){try{return JSON.parse(s);}catch(e){return (0,eval)('('+s+')');}}
 
-// map positions (stylized cluster: Tashkent dense centre-right + regions)
 const MAPGEO={path:"M545.6 563.0L546.9 524.5L484.1 497.6L434.8 466.8L404.0 437.2L350.1 393.8L326.9 329.0L311.1 317.6L260.0 320.5L242.0 307.6L237.0 257.5L173.4 224.2L133.6 260.8L93.3 282.4L101.1 314.1L47.9 314.9L46.0 83.1L167.4 46.0L176.3 51.5L249.4 96.5L288.0 120.2L333.1 176.9L388.4 167.7L469.3 162.8L525.8 208.8L522.2 271.8L545.2 272.3L554.8 323.7L614.8 325.8L627.8 355.6L645.3 355.2L666.0 310.2L728.2 266.4L755.3 254.7L769.3 260.9L729.7 301.6L764.5 325.3L798.1 309.6L854.0 342.8L793.6 388.0L757.7 381.8L738.2 383.5L731.5 366.0L741.3 336.8L678.2 351.4L663.2 391.8L640.8 426.5L601.4 423.6L589.2 451.3L623.8 466.2L634.0 513.1L607.5 576.7L571.9 563.4L545.6 563.0Z",
  cities:{"Ташкент":{x:674.0,y:315.5},"Алмалык":{x:690.9,y:343.9},"Самарканд":{x:567.1,y:418.9},"Бухара":{x:446.6,y:411.8},"Газалкент":{x:699.4,y:299.4},"Бука":{x:672.2,y:346.1},"Пскент":{x:679.2,y:340.6},"Маргилан":{x:791.2,y:367.6}}};
 
-let S={seg:'all', per:'jun'};
+// модель (дефолты как в классике)
+const BASE={fx:12000, uk:320, scen:'guar', boost:1, chkMul:1};
+let FM={boost:1, fx:12000, chkMul:1, uk:320, scen:'guar'};
+const money=u=>moneyAt(u,BASE.fx);
+const moneyFm=u=>moneyAt(u,FM.fx);
 
-function ordOf(d){ return S.per==='jun'?d.ordJun:d.ordMay; }
-function beOf(d){ return d.opex/(d.chk*d.comm)/30; }
-function pnlOf(d){ const ord=ordOf(d); const comm=ord*d.chk*d.comm*30; const inc=Math.max(d.guar,comm); return inc-d.opex; }
-function rows(){ return DATA.filter(d=>S.seg==='all'||d.seg==+S.seg); }
+let S={seg:'all', gran:'m', mKey:null, wIdx:0, view:'overview'};
+let ovSort={key:'ord',dir:-1}, costSort={key:'tot',dir:-1}, fmSort={key:'pnl',dir:-1};
+let chMetric='ord';
 
-function render(){
-  if(!DATA.length) return;
-  const r=rows(), n=r.length||1;
-  const ordPV=r.reduce((a,d)=>a+ordOf(d),0)/n;
-  const bePV=r.reduce((a,d)=>a+beOf(d),0)/n;
-  const gmv=r.reduce((a,d)=>a+ordOf(d)*d.chk*30,0);
-  const pnl=r.reduce((a,d)=>a+pnlOf(d),0);
-  const inc=r.reduce((a,d)=>a+Math.max(d.guar,ordOf(d)*d.chk*d.comm*30),0);
-  const cost=r.reduce((a,d)=>a+d.opex,0);
-  const above=r.filter(d=>ordOf(d)>=beOf(d)).length;
-  const ratio=ordPV/bePV, toBE=bePV/ordPV;
+// ---- период ----
+function ordForSel(d,sel){ if(sel.gran==='m') return (d.om&&d.om[sel.mKey]!=null)?d.om[sel.mKey]:0; const p=WKD&&WKD.pvz[d.code]; return (p&&p.ord[sel.wIdx]!=null)?+p.ord[sel.wIdx]:0; }
+function curSel(){ return {gran:S.gran, mKey:S.mKey, wIdx:S.wIdx}; }
+function prevSel(){ if(S.gran==='m'){ const i=MKEYS.indexOf(S.mKey); return i>0?{gran:'m',mKey:MKEYS[i-1]}:null; } const i=S.wIdx-1; return i>=0?{gran:'w',wIdx:i}:null; }
+function selLabel(sel){ if(!sel) return '—'; if(sel.gran==='m'){ const m=MONTHS.find(x=>x.mm===sel.mKey); return m?(m.label+(m.partial?' *':'')):sel.mKey; } const part=WKD&&WKD.dayCounts&&WKD.dayCounts[sel.wIdx]<7; return (WKD?WKD.weeks[sel.wIdx]:'')+(part?' *':''); }
 
+// ---- экономика (единая, по формулам классики) ----
+function econ(d,o,sel){
+  sel=sel||curSel();
+  const ord=ordForSel(d,sel)*(o.boost||1);
+  const chkSum=d.avgCheck*(o.chkMul||1);
+  const cost_sum=d.rentSum+d.salarySum+(d.miscSum||0)+o.uk*o.fx;
+  const opex=cost_sum/o.fx;
+  const commRev=ord*chkSum*d.comm*30;
+  const reward=(o.scen==='comm')?commRev:Math.max(d.guarFull,commRev);
+  const inc=reward/o.fx;
+  const chk=chkSum/o.fx;
+  const be=(chk>0&&d.comm>0)?opex/(chk*d.comm)/30:0;
+  const gmvDay=ord*chk;
+  return {ord,chk,opex,inc,pnl:inc-opex,be,gmvDay,gmvMo:gmvDay*30,guar:d.guarFull/o.fx,above:be>0&&ord>=be};
+}
+function rows(){ return DATA.filter(d=>S.seg==='all'||d.seg===+S.seg); }
+function netAgg(o,sel){ const r=rows(); const A={ord:0,gmv:0,pnl:0,inc:0,cost:0,above:0,be:0,n:r.length}; r.forEach(d=>{const e=econ(d,o,sel); A.ord+=e.ord; A.gmv+=e.gmvMo; A.pnl+=e.pnl; A.inc+=e.inc; A.cost+=e.opex; A.be+=e.be; if(e.above)A.above++;}); return A; }
+function deltaD(curV,prevV){ const ps=prevSel(); if(prevV==null||prevV===0||!ps) return ''; const dd=curV-prevV, pct=dd/Math.abs(prevV)*100, up=dd>=0; return ' · <span class="delta '+(up?'pos':'neg')+'">'+(up?'▲':'▼')+' '+fmtN(Math.abs(pct),0)+'%</span> к '+selLabel(ps); }
+
+// ---- header ----
+function renderHead(){
+  const r=rows();
+  document.getElementById('lhDl').innerHTML='по состоянию на<br><b>'+selLabel(curSel())+'</b><br>'+r.length+' ПВЗ · '+new Set(r.map(d=>d.city)).size+' городов';
+  document.getElementById('tblPer').textContent=selLabel(curSel());
+  document.getElementById('mapPer').textContent=selLabel(curSel());
+}
+// ---- hero + kpis ----
+function renderHeroKpis(){
+  const a=netAgg(BASE,curSel()), n=a.n||1, prev=prevSel(), pa=prev?netAgg(BASE,prev):null;
+  const ordPV=a.ord/n, bePV=a.be/n, ratio=bePV>0?ordPV/bePV:0;
   document.getElementById('hOrd').textContent=fmtN(ordPV,1);
   document.getElementById('hBe').textContent=fmtN(bePV,0);
   document.getElementById('hFill').style.width=Math.min(ratio,1.4)/1.4*100+'%';
   document.getElementById('hMark').style.left=(1/1.4*100)+'%';
-  document.getElementById('hSt').innerHTML=ratio>=1?'<b style="color:var(--pos)">безубыток достигнут</b>':'×'+fmtN(toBE,1)+' до безубытка сети';
-
-  const kp=document.getElementById('kPnl'); kp.textContent=money(pnl); kp.className='v '+(pnl>=0?'pos':'neg');
-  document.getElementById('kGmv').textContent=money(gmv);
-  document.getElementById('kAbove').textContent=above+' / '+n; document.getElementById('kAbove').className='v '+(above>0?'pos':'neg');
-  document.getElementById('kAboveD').textContent='из '+n+' точек';
-  const kpv=document.getElementById('kPnlPv'); kpv.textContent=money(pnl/n); kpv.className='v '+(pnl>=0?'pos':'neg');
-
-  // unit econ
-  const margin=inc>0?(pnl/inc*100):0;
-  const ue=[['Заказов/день',fmtN(ordPV,1)],['Оборот/мес',money(gmv/n)],['Доход/мес',money(inc/n)],['Затраты/мес',money(cost/n)],
-    ['P&L/мес',money(pnl/n),pnl>=0?'pos':'neg'],['Маржа ПВЗ',Math.round(margin)+'%',margin>=0?'pos':'neg'],['Безубыток',fmtN(bePV,0)+' з/д'],['Чек · комиссия','$'+fmtN(r[0]?r[0].chk:14,0)+' · '+(S.seg==='all'?'5–6':(+S.seg===1?'6':'5'))+'%']];
-  document.getElementById('unit').innerHTML=ue.map(c=>`<div class="c"><div class="l">${c[0]}</div><div class="v ${c[2]||''}">${c[1]}</div></div>`).join('');
-
-  // table
-  const sorted=r.slice().sort((a,b)=>ordOf(b)-ordOf(a));
-  let h='<thead><tr><th class="s">Точка</th><th>Сег</th><th>Зак/д</th><th>Безубыток</th><th>Здоровье</th><th>Оборот/д</th><th>P&L/мес</th><th>Тренд</th></tr></thead><tbody>';
-  const maxord=Math.max(...DATA.map(ordOf));
-  sorted.forEach((d,i)=>{const o=ordOf(d),be=beOf(d),hp=Math.min(o/be,1.4),hc=o>=be?'var(--pos)':o>=be*.6?'var(--gold)':'var(--neg)';const p=pnlOf(d);
-    const tr=[0.55,0.7,0.82,1].map(f=>Math.round(o*f)); const tmax=Math.max(...tr,1);
-    const spark=tr.map(v=>`<i style="height:${Math.max(v/tmax*22,3)}px"></i>`).join('');
-    h+=`<tr class="prow" data-i="${i}"><td><span class="pt-n">${d.name}</span> <span class="pt-c">${d.city}</span></td>`+
-       `<td><span class="chip" style="background:${segHex[d.seg]}">${d.seg}</span></td>`+
-       `<td>${fmtN(o,1)}</td><td style="color:var(--muted)">${fmtN(be,0)}</td>`+
-       `<td><span class="hbar"><i style="width:${hp/1.4*100}%;background:${hc}"></i></span><span style="color:${hc};font-size:12px">${Math.round(o/be*100)}%</span></td>`+
-       `<td>${money(o*d.chk)}</td>`+
-       `<td class="${p>=0?'pos':'neg'}">${money(p)}</td>`+
-       `<td><span class="spark">${spark}</span></td></tr>`;});
-  const tb=document.getElementById('tbl'); tb.innerHTML=h+'</tbody>';
-  tb.querySelectorAll('tbody tr').forEach(tr=>tr.onclick=()=>openCard(sorted[+tr.dataset.i]));
-
-  document.getElementById('tblPer').textContent = S.per==='jun'?'июнь 2026 (неполный)':'май 2026';
-  renderFm(); renderCosts();
+  document.getElementById('hSt').innerHTML=ratio>=1?'<b style="color:var(--pos)">безубыток сети достигнут</b>':'×'+fmtN(ratio>0?1/ratio:0,1)+' до безубытка сети';
+  const kPnl=document.getElementById('kPnl'); kPnl.textContent=money(a.pnl); kPnl.className='v '+(a.pnl>=0?'pos':'neg');
+  document.getElementById('kPnlD').innerHTML='модель'+(pa?deltaD(a.pnl,pa.pnl):'');
+  document.getElementById('kGmv').textContent=money(a.gmv);
+  document.getElementById('kGmvD').innerHTML='по всей сети'+(pa?deltaD(a.gmv,pa.gmv):'');
+  const kAb=document.getElementById('kAbove'); kAb.textContent=a.above+' / '+n; kAb.className='v '+(a.above>0?'pos':'neg');
+  document.getElementById('kAboveD').innerHTML='из '+n+' точек'+(pa?deltaD(a.above,pa.above):'');
+  const kpv=document.getElementById('kPnlPv'); kpv.textContent=money(a.pnl/n); kpv.className='v '+(a.pnl>=0?'pos':'neg');
 }
-
-// weekly chart
-let chMetric='ord';
-const WEEKS=['11.05','18.05','25.05','01.06*'];
+// ---- unit econ ----
+function renderUnit(){
+  const a=netAgg(BASE,curSel()), n=a.n||1, margin=a.inc>0?a.pnl/a.inc*100:0;
+  const chkAvg=rows().reduce((s,d)=>s+econ(d,BASE).chk,0)/n;
+  const ue=[['Заказов/день',fmtN(a.ord/n,1)],['Оборот/мес',money(a.gmv/n)],['Доход/мес',money(a.inc/n)],['Затраты/мес',money(a.cost/n)],
+    ['P&L/мес',money(a.pnl/n),a.pnl>=0?'pos':'neg'],['Маржа ПВЗ',fmtN(margin,0)+'%',margin>=0?'pos':'neg'],['Безубыток',fmtN(a.be/n,0)+' з/д'],['Чек · комиссия','$'+fmtN(chkAvg,0)+' · '+(S.seg==='all'?'5–6':(+S.seg===1?'6':'5'))+'%']];
+  document.getElementById('unit').innerHTML=ue.map(c=>'<div class="c"><div class="l">'+c[0]+'</div><div class="v '+(c[2]||'')+'">'+c[1]+'</div></div>').join('');
+}
+// ---- table (sortable) ----
+const OVCOLS=[{k:'name',t:'Точка',s:1},{k:'seg',t:'Сег'},{k:'ord',t:'Зак/д'},{k:'be',t:'Безубыток'},{k:'health',t:'Здоровье'},{k:'gmv',t:'Оборот/д'},{k:'pnl',t:'P&L/мес'},{k:'trend',t:'Тренд'}];
+function trendArr(d){ if(!WKD||!WKD.pvz[d.code]) return [0,0,0,1]; return WKD.pvz[d.code].ord.slice(-5).map(v=>Math.max(+v||0,0)); }
+function renderTable(){
+  const r=rows();
+  const arr=r.map(d=>{const e=econ(d,BASE); return {d,e,name:d.name,seg:d.seg,ord:e.ord,be:e.be,health:e.be>0?e.ord/e.be:0,gmv:e.gmvDay,pnl:e.pnl};});
+  const k=ovSort.key,dir=ovSort.dir;
+  arr.sort((a,b)=>k==='name'?dir*String(a.name).localeCompare(String(b.name),'ru'):dir*((a[k]||0)-(b[k]||0)));
+  let h='<thead><tr>'+OVCOLS.map(c=>'<th class="'+(c.s?'s ':'')+'sortable'+(ovSort.key===c.k?' sorted':'')+'" data-k="'+c.k+'">'+c.t+'<span class="sar">'+(ovSort.key===c.k?(ovSort.dir<0?'▾':'▴'):'▾')+'</span></th>').join('')+'</tr></thead><tbody>';
+  arr.forEach(x=>{const d=x.d,e=x.e,o=e.ord,be=e.be,hp=be>0?Math.min(o/be,1.4):0,hc=o>=be?'var(--pos)':o>=be*.6?'var(--gold)':'var(--neg)';
+    const tr=trendArr(d),tmax=Math.max.apply(null,tr.concat([1]));
+    const spark=tr.map(v=>'<i style="height:'+Math.max(v/tmax*22,3)+'px"></i>').join('');
+    h+='<tr class="prow" data-code="'+d.code+'"><td><span class="pt-n">'+d.name+'</span> <span class="pt-c">'+d.city+'</span></td>'+
+       '<td><span class="chip" style="background:'+segHex[d.seg]+'">'+d.seg+'</span></td>'+
+       '<td>'+fmtN(o,1)+'</td><td style="color:var(--muted)">'+fmtN(be,0)+'</td>'+
+       '<td><span class="hbar"><i style="width:'+(hp/1.4*100)+'%;background:'+hc+'"></i></span><span style="color:'+hc+';font-size:12px">'+(be>0?Math.round(o/be*100):0)+'%</span></td>'+
+       '<td>'+money(e.gmvDay)+'</td>'+
+       '<td class="'+(e.pnl>=0?'pos':'neg')+'">'+money(e.pnl)+'</td>'+
+       '<td><span class="spark">'+spark+'</span></td></tr>';});
+  const tb=document.getElementById('tbl'); tb.innerHTML=h+'</tbody>';
+  tb.querySelectorAll('thead th').forEach(th=>th.onclick=()=>{const kk=th.dataset.k; if(kk==='trend')return; if(ovSort.key===kk)ovSort.dir*=-1; else{ovSort.key=kk; ovSort.dir=(kk==='name')?1:-1;} renderTable();});
+  tb.querySelectorAll('tbody tr.prow').forEach(tr=>tr.onclick=()=>openCard(DATA.find(d=>d.code===tr.dataset.code)));
+}
+// ---- costs (sortable) ----
+const COSTCOLS=[{k:'name',t:'Точка',s:1},{k:'rent',t:'Аренда'},{k:'sal',t:'ЗП'},{k:'uk',t:'УК + разное'},{k:'tot',t:'Итого / мес'}];
+function renderCosts(){
+  const r=rows(), n=r.length||1, fx=BASE.fx;
+  const arr=r.map(d=>{const rent=d.rentSum/fx, sal=d.salarySum/fx, uk=BASE.uk+(d.miscSum||0)/fx; return {d,name:d.name,rent,sal,uk,tot:rent+sal+uk};});
+  const k=costSort.key,dir=costSort.dir;
+  arr.sort((a,b)=>k==='name'?dir*String(a.name).localeCompare(String(b.name),'ru'):dir*((a[k]||0)-(b[k]||0)));
+  let h='<thead><tr>'+COSTCOLS.map(c=>'<th class="'+(c.s?'s ':'')+'sortable'+(costSort.key===c.k?' sorted':'')+'" data-k="'+c.k+'">'+c.t+'<span class="sar">'+(costSort.key===c.k?(costSort.dir<0?'▾':'▴'):'▾')+'</span></th>').join('')+'</tr></thead><tbody>';
+  let tr=0,ts=0,tu=0,tt=0;
+  arr.forEach(x=>{tr+=x.rent;ts+=x.sal;tu+=x.uk;tt+=x.tot;
+    h+='<tr><td><span class="pt-n">'+x.d.name+'</span> <span class="pt-c">'+x.d.city+'</span></td><td>'+money(x.rent)+'</td><td>'+money(x.sal)+'</td><td>'+money(x.uk)+'</td><td style="font-weight:600;color:var(--ink)">'+money(x.tot)+'</td></tr>';});
+  h+='<tr style="border-top:1.5px solid var(--line2)"><td style="color:var(--muted)">В среднем на ПВЗ</td><td>'+money(tr/n)+'</td><td>'+money(ts/n)+'</td><td>'+money(tu/n)+'</td><td style="font-weight:600">'+money(tt/n)+'</td></tr>';
+  h+='<tr><td style="color:var(--muted);font-weight:600">Итого по сети</td><td>'+money(tr)+'</td><td>'+money(ts)+'</td><td>'+money(tu)+'</td><td style="font-weight:700;color:var(--ink)">'+money(tt)+'</td></tr>';
+  const tb=document.getElementById('costtbl'); tb.innerHTML=h+'</tbody>';
+  tb.querySelectorAll('thead th').forEach(th=>th.onclick=()=>{const kk=th.dataset.k; if(costSort.key===kk)costSort.dir*=-1; else{costSort.key=kk; costSort.dir=(kk==='name')?1:-1;} renderCosts();});
+}
+// ---- weekly chart (segment-aware) ----
 function renderBars(){
   if(!WKD) return;
-  const n=DATA.length||1;
-  const idxs=WKD.weeks.map((_,i)=>i).slice(-6);
-  const wpnl=i=>DATA.reduce((a,d)=>{const p=WKD.pvz[d.code]; const o=p?(p.ord[i]||0):0; const comm=o*d.chk*d.comm*30; return a+(Math.max(d.guar,comm)-d.opex);},0);
-  let series, fmt;
-  if(chMetric==='ord'){ series=idxs.map(i=>WKD.net.ord[i]/n); fmt=v=>fmtN(v,1); }
-  else if(chMetric==='rev'){ series=idxs.map(i=>WKD.net.rev[i]/n/ADAPTfx); fmt=v=>money(v); }
-  else { series=idxs.map(i=>wpnl(i)); fmt=v=>money(v); }
+  const r=rows(), n=r.length||1, idxs=WKD.weeks.map((_,i)=>i);
+  let series,fmt;
+  if(chMetric==='ord'){ series=idxs.map(i=>r.reduce((a,d)=>a+((WKD.pvz[d.code]&&WKD.pvz[d.code].ord[i])||0),0)/n); fmt=v=>fmtN(v,1); }
+  else if(chMetric==='rev'){ series=idxs.map(i=>r.reduce((a,d)=>a+((WKD.pvz[d.code]&&WKD.pvz[d.code].rev[i])||0),0)/n/BASE.fx); fmt=v=>money(v); }
+  else { series=idxs.map(i=>r.reduce((a,d)=>a+econ(d,BASE,{gran:'w',wIdx:i}).pnl,0)); fmt=v=>money(v); }
   const title=chMetric==='ord'?'Заказов в день на 1 ПВЗ':chMetric==='rev'?'Оборот в день на 1 ПВЗ':'P&L сети по неделям';
   document.querySelector('.chtop h3').textContent=title;
-  const max=Math.max(...series.map(Math.abs),1);
-  document.getElementById('bars').innerHTML=idxs.map((wi,k)=>{
-    const v=series[k]; const pct=Math.abs(v)/max*100; const part=!!(WKD.dayCounts&&WKD.dayCounts[wi]<7);
-    const lbl=String(WKD.weeks[wi]).split('–')[0]+(part?'*':'');
-    return `<div class="cbar ${part?'part':''}"><span class="v">${fmt(v)}${part?'*':''}</span><i style="height:0" data-h="${pct}"></i><span class="x">${lbl}</span></div>`;
-  }).join('');
-  setTimeout(()=>document.querySelectorAll('#bars .cbar i').forEach((b,i)=>setTimeout(()=>b.style.height=b.dataset.h+'%',i*110)),40);
+  const max=Math.max.apply(null,series.map(Math.abs).concat([1]));
+  document.getElementById('bars').innerHTML=idxs.map((wi,k)=>{const v=series[k],pct=Math.abs(v)/max*100,part=!!(WKD.dayCounts&&WKD.dayCounts[wi]<7),lbl=String(WKD.weeks[wi]).split('–')[0]+(part?'*':'');
+    return '<div class="cbar '+(part?'part':'')+'"><span class="v">'+fmt(v)+(part?'*':'')+'</span><i style="height:0" data-h="'+pct+'"></i><span class="x">'+lbl+'</span></div>';}).join('');
+  setTimeout(()=>document.querySelectorAll('#bars .cbar i').forEach((b,i)=>setTimeout(()=>b.style.height=b.dataset.h+'%',i*100)),40);
 }
-
-// map
+// ---- map + city table ----
 function renderMap(){
   if(!DATA.length) return;
-  const r=rows();
-  const byCity={}; r.forEach(d=>{const k=d.city; (byCity[k]=byCity[k]||{sum:0,seg:d.seg,n:0}); byCity[k].sum+=ordOf(d); byCity[k].n++;});
-  const ents=Object.keys(byCity).map(city=>({city,sum:byCity[city].sum,seg:byCity[city].seg,n:byCity[city].n,c:MAPGEO.cities[city]})).filter(e=>e.c).sort((a,b)=>b.sum-a.sum);
-  const mx=Math.max(...ents.map(e=>e.sum),1);
-  let el=`<path d="${MAPGEO.path}" fill="var(--card)" stroke="var(--line2)" stroke-width="1.5"/>`;
-  ents.forEach(e=>{ e._r=13+e.sum/mx*40;
-    el+=`<circle cx="${e.c.x}" cy="${e.c.y}" r="${e._r.toFixed(1)}" fill="${segHex[e.seg]}" fill-opacity=".8" stroke="var(--card)" stroke-width="2"><title>${e.city} · ${e.n} ПВЗ · ${fmtN(e.sum,0)} зак/д</title></circle>`;});
-  ents.forEach(e=>{ el+=`<text x="${e.c.x}" y="${(e.c.y+e._r+15).toFixed(0)}" text-anchor="middle" class="mlab">${e.city}</text>`;});
-  document.getElementById('mapsvg').innerHTML=el;
+  const r=rows(), sel=curSel(), byCity={};
+  r.forEach(d=>{const k=d.city; (byCity[k]=byCity[k]||{sum:0,seg:d.seg,n:0,gmv:0}); const e=econ(d,BASE,sel); byCity[k].sum+=e.ord; byCity[k].gmv+=e.gmvMo; byCity[k].n++;});
+  const ents=Object.keys(byCity).map(city=>({city,sum:byCity[city].sum,seg:byCity[city].seg,n:byCity[city].n,gmv:byCity[city].gmv,c:MAPGEO.cities[city]})).filter(e=>e.c).sort((a,b)=>b.sum-a.sum);
+  const mx=Math.max.apply(null,ents.map(e=>e.sum).concat([1]));
+  let el='<path d="'+MAPGEO.path+'" fill="var(--card)" stroke="var(--line2)" stroke-width="1.5"/>';
+  ents.forEach(e=>{ e._r=13+e.sum/mx*40; el+='<circle cx="'+e.c.x+'" cy="'+e.c.y+'" r="'+e._r.toFixed(1)+'" fill="'+segHex[e.seg]+'" fill-opacity=".8" stroke="var(--card)" stroke-width="2"><title>'+e.city+' · '+e.n+' ПВЗ · '+fmtN(e.sum,0)+' зак/д</title></circle>';});
+  ents.forEach(e=>{ el+='<text x="'+e.c.x+'" y="'+(e.c.y+e._r+15).toFixed(0)+'" text-anchor="middle" class="mlab">'+e.city+'</text>';});
+  const ms=document.getElementById('mapsvg'); if(ms)ms.innerHTML=el;
+  const tot=ents.reduce((a,e)=>a+e.sum,0)||1;
+  let h='<thead><tr><th class="s">Город</th><th>ПВЗ</th><th>Заказы/день</th><th>Оборот/мес</th><th>Доля сети</th></tr></thead><tbody>';
+  ents.forEach(e=>{ h+='<tr><td><span class="pt-n">'+e.city+'</span></td><td>'+e.n+'</td><td>'+fmtN(e.sum,1)+'</td><td>'+money(e.gmv)+'</td><td>'+fmtN(e.sum/tot*100,0)+'%</td></tr>';});
+  const ct=document.getElementById('citytbl'); if(ct)ct.innerHTML=h+'</tbody>';
 }
-function renderCosts(){
-  const r=rows(), n=r.length||1;
-  let h='<thead><tr><th class="s">Точка</th><th>Аренда</th><th>ЗП</th><th>УК + разное</th><th>Итого / мес</th></tr></thead><tbody>';
-  let tr=0,ts=0,tu=0,tt=0;
-  r.forEach(d=>{const rent=Math.round(d.opex*0.46), sal=Math.round(d.opex*0.40), uk=d.opex-rent-sal, tot=d.opex;
-    tr+=rent;ts+=sal;tu+=uk;tt+=tot;
-    h+=`<tr><td><span class="pt-n">${d.name}</span> <span class="pt-c">${d.city}</span></td><td>${money(rent)}</td><td>${money(sal)}</td><td>${money(uk)}</td><td style="font-weight:600;color:var(--ink)">${money(tot)}</td></tr>`;});
-  h+=`<tr style="border-top:1.5px solid var(--line2)"><td style="color:var(--muted)">В среднем на ПВЗ</td><td>${money(tr/n)}</td><td>${money(ts/n)}</td><td>${money(tu/n)}</td><td style="font-weight:600">${money(tt/n)}</td></tr>`;
-  h+=`<tr><td style="color:var(--muted);font-weight:600">Итого по сети</td><td>${money(tr)}</td><td>${money(ts)}</td><td>${money(tu)}</td><td style="font-weight:700;color:var(--ink)">${money(tt)}</td></tr>`;
-  document.getElementById('costtbl').innerHTML=h+'</tbody>';
-}
+// ---- drawer ----
 function openCard(d){
   if(!d) return;
-  const o=ordOf(d), be=beOf(d), health=be>0?o/be:0, comm=o*d.chk*d.comm*30, inc=Math.max(d.guar,comm), p=inc-d.opex;
-  const wk=[0.55,0.7,0.82,1].map(f=>+(o*f).toFixed(1)), mx=Math.max(...wk,1);
-  let spark=''; ['11.05','18.05','25.05','01.06*'].forEach((w,i)=>{const part=i===3; spark+=`<div class="b ${part?'part':''}"><span class="v">${fmtN(wk[i],1)}${part?'*':''}</span><i style="height:${Math.max(wk[i]/mx*70,4)}px"></i></div>`;});
-  const xs=['11.05','18.05','25.05','01.06*'].map(w=>`<span>${w}</span>`).join('');
-  const row=(k,v,cls)=>`<div class="stat"><span class="k">${k}</span><span class="v ${cls||''}">${v}</span></div>`;
-  const per=S.per==='jun'?'июнь 2026 (неполный)':'май 2026';
-  document.getElementById('drawer').innerHTML=`
-    <button class="dx" onclick="closeCard()">✕</button>
-    <div class="dcode">Сег ${d.seg} · комиссия ${Math.round(d.comm*100)}% · ${d.city}</div>
-    <h2>${d.name}</h2>
-    <div class="dhint">Заказы/день по неделям (неполная — со *)</div>
-    <div class="dspark">${spark}</div>
-    <div class="dspark-x">${xs}</div>
-    ${row('Период',per)}
-    ${row('Заказы/день',fmtN(o,1))}
-    ${row('Оборот (GMV)/день',money(o*d.chk))}
-    ${row('Точка безубытка',fmtN(be,0)+' з/д')}
-    ${row('Здоровье',Math.round(health*100)+'%',health>=1?'pos':'neg')}
-    ${row('Доход / мес',money(inc))}
-    ${row('Затраты / мес',money(d.opex))}
-    ${row('P&L / мес',money(p),p>=0?'pos':'neg')}
-    ${row('Средний чек',money(d.chk))}
-    ${row('Гарантия / мес',money(d.guar))}`;
+  const e=econ(d,BASE,curSel()), health=e.be>0?e.ord/e.be:0;
+  const wks=WKD?WKD.weeks.map((w,i)=>({lbl:String(w).split('–')[0],v:(WKD.pvz[d.code]&&WKD.pvz[d.code].ord[i])||0,part:!!(WKD.dayCounts&&WKD.dayCounts[i]<7)})):[];
+  const mx=Math.max.apply(null,wks.map(w=>w.v).concat([1]));
+  const spark=wks.map(w=>'<div class="b '+(w.part?'part':'')+'"><span class="v">'+fmtN(w.v,1)+(w.part?'*':'')+'</span><i style="height:'+Math.max(w.v/mx*70,4)+'px"></i></div>').join('');
+  const xs=wks.map(w=>'<span>'+w.lbl+(w.part?'*':'')+'</span>').join('');
+  const row=(k,v,cls)=>'<div class="stat"><span class="k">'+k+'</span><span class="v '+(cls||'')+'">'+v+'</span></div>';
+  document.getElementById('drawer').innerHTML=
+    '<button class="dx" onclick="closeCard()">✕</button>'+
+    '<div class="dcode">Сег '+d.seg+' · комиссия '+Math.round(d.comm*100)+'% · '+d.city+'</div>'+
+    '<h2>'+d.name+'</h2>'+
+    '<div class="dhint">Заказы/день по неделям (неполная — со *)</div>'+
+    '<div class="dspark">'+spark+'</div>'+
+    '<div class="dspark-x">'+xs+'</div>'+
+    row('Период',selLabel(curSel()))+
+    row('Заказы/день',fmtN(e.ord,1))+
+    row('Оборот (GMV)/день',money(e.gmvDay))+
+    row('Точка безубытка',fmtN(e.be,0)+' з/д')+
+    row('Здоровье',Math.round(health*100)+'%',health>=1?'pos':'neg')+
+    row('Доход / мес',money(e.inc))+
+    row('Затраты / мес',money(e.opex))+
+    row('P&L / мес',money(e.pnl),e.pnl>=0?'pos':'neg')+
+    row('Средний чек',money(e.chk))+
+    row('Гарантия / мес',money(e.guar));
   document.getElementById('drawer').classList.add('open');
   document.getElementById('scrim').classList.add('on');
 }
 function closeCard(){document.getElementById('drawer').classList.remove('open');document.getElementById('scrim').classList.remove('on');}
-
-// finmodel
-let boost=1;
-function renderFm(){
-  const r=rows(),n=r.length||1;
-  let pnl=0, above=0;
-  r.forEach(d=>{const ord=ordOf(d)*boost; const comm=ord*d.chk*d.comm*30; const inc=Math.max(d.guar,comm); pnl+=inc-d.opex; if(ord>=beOf(d))above++;});
-  const el=document.getElementById('fmPnl'); el.textContent=money(pnl); el.className='big '+(pnl>=0?'pos':'neg');
-  document.getElementById('fmBoostL').textContent='×'+boost.toFixed(1);
-  const need=boost;
-  document.getElementById('fmProj').innerHTML=`При росте <b>×${boost.toFixed(1)}</b> к текущему потоку: <b>${above}/${n}</b> точек выше безубытка, P&L на ПВЗ <b class="${pnl>=0?'pos':'neg'}" style="color:${pnl>=0?'var(--pos)':'var(--neg)'}">${money(pnl/n)}</b>.`;
+// ---- finmodel ----
+const FMCOLS=[{k:'name',t:'Точка',s:1},{k:'ord',t:'Зак/д'},{k:'gmv',t:'Оборот/д'},{k:'pnl',t:'P&L/мес'},{k:'status',t:'Статус'}];
+function renderFin(){
+  if(!DATA.length) return;
+  document.getElementById('fmBoostL').textContent='×'+FM.boost.toFixed(1);
+  document.getElementById('fmFxL').textContent=fmtN(FM.fx,0);
+  document.getElementById('fmChkL').textContent='×'+FM.chkMul.toFixed(2);
+  document.getElementById('fmUkL').textContent='$'+fmtN(FM.uk,0);
+  const r=rows(), n=r.length||1;
+  let pnl=0,above=0,gmv=0;
+  const arr=r.map(d=>{const e=econ(d,FM); pnl+=e.pnl; gmv+=e.gmvMo; if(e.above)above++; return {d,e,name:d.name,ord:e.ord,gmv:e.gmvDay,pnl:e.pnl,status:e.above?1:0};});
+  const el=document.getElementById('fmPnl'); el.textContent=moneyFm(pnl); el.className='fmbig '+(pnl>=0?'pos':'neg');
+  document.getElementById('fmSub').innerHTML='<b class="'+(above>=n?'pos':'')+'">'+above+'/'+n+'</b> точек выше безубытка · P&L на ПВЗ <b class="'+(pnl>=0?'pos':'neg')+'">'+moneyFm(pnl/n)+'</b> · оборот <b>'+moneyFm(gmv)+'</b>/мес';
+  const k=fmSort.key,dir=fmSort.dir;
+  arr.sort((a,b)=>k==='name'?dir*String(a.name).localeCompare(String(b.name),'ru'):dir*((a[k]||0)-(b[k]||0)));
+  let h='<thead><tr>'+FMCOLS.map(c=>'<th class="'+(c.s?'s ':'')+'sortable'+(fmSort.key===c.k?' sorted':'')+'" data-k="'+c.k+'">'+c.t+'<span class="sar">'+(fmSort.key===c.k?(fmSort.dir<0?'▾':'▴'):'▾')+'</span></th>').join('')+'</tr></thead><tbody>';
+  arr.forEach(x=>{h+='<tr><td><span class="pt-n">'+x.d.name+'</span> <span class="pt-c">'+x.d.city+'</span></td><td>'+fmtN(x.ord,1)+'</td><td>'+moneyFm(x.gmv)+'</td><td class="'+(x.pnl>=0?'pos':'neg')+'">'+moneyFm(x.pnl)+'</td><td>'+(x.status?'<span style="color:var(--pos)">▲ выше</span>':'<span style="color:var(--neg)">▼ ниже</span>')+'</td></tr>';});
+  const tb=document.getElementById('fmtbl'); tb.innerHTML=h+'</tbody>';
+  tb.querySelectorAll('thead th').forEach(th=>th.onclick=()=>{const kk=th.dataset.k; if(kk==='status')return; if(fmSort.key===kk)fmSort.dir*=-1; else{fmSort.key=kk; fmSort.dir=(kk==='name')?1:-1;} renderFin();});
+  document.getElementById('fmSat').innerHTML=satoriLine();
 }
+function solveBE(){
+  const o=Object.assign({},FM); const f=b=>{o.boost=b; let p=0; rows().forEach(d=>p+=econ(d,o).pnl); return p;};
+  if(f(0.01)>=0) return 1; let hi=1,g=0; while(f(hi)<0 && hi<200 && g++<60) hi*=1.5; if(f(hi)<0) return hi;
+  let lo=0.01; for(let k=0;k<60;k++){const mid=(lo+hi)/2; if(f(mid)<0)lo=mid; else hi=mid;} return (lo+hi)/2;
+}
+function satoriLine(){
+  try{
+    if(!FACTD||!FACTD.months) return '<span style="color:var(--muted)">Факт Сатори недоступен.</span>';
+    const key=FACTD.latest||Object.keys(FACTD.months).slice(-1)[0]; const m=FACTD.months[key]; if(!m) return '';
+    const inc=m.income||m.fact||m; let sInc=0,sOpex=0,cnt=0;
+    rows().forEach(d=>{const v=inc[d.code]; if(v!=null&&!isNaN(+v)){ sInc+=+v; sOpex+=econ(d,BASE).opex; cnt++; }});
+    if(!cnt) return '<span style="color:var(--muted)">Факт Сатори: нет совпадений по точкам в этом сегменте.</span>';
+    const incUsd=sInc/BASE.fx, pnl=incUsd-sOpex, lbl=m.label||key;
+    return '<b>Факт Сатори ('+lbl+'):</b> доход '+money(incUsd)+' · P&L <span class="'+(pnl>=0?'pos':'neg')+'">'+money(pnl)+'</span> по '+cnt+' ПВЗ. <span style="color:var(--muted)">Сравнение с моделью выше (та же база затрат).</span>';
+  }catch(e){ return ''; }
+}
+// ---- views ----
+function setView(v){
+  S.view=v;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===v));
+  document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.dataset.view===v));
+  document.getElementById('lh').style.display=(v==='upload')?'none':'';
+  document.getElementById('ctl').style.display=(v==='upload')?'none':'';
+  if(v==='map')renderMap(); if(v==='fin')renderFin(); if(v==='overview')renderBars();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+// ---- period menu ----
+function buildPerMenu(){
+  const pm=document.getElementById('perddMenu');
+  if(S.gran==='m'){ pm.innerHTML=MONTHS.map(m=>'<button data-t="m" data-k="'+m.mm+'" class="'+(m.mm===S.mKey?'on':'')+'">'+m.label+(m.partial?' *':'')+'</button>').join(''); }
+  else { pm.innerHTML=WKD.weeks.map((w,i)=>{const part=WKD.dayCounts&&WKD.dayCounts[i]<7; return '<button data-t="w" data-w="'+i+'" class="'+(i===S.wIdx?'on':'')+'">'+w+(part?' *':'')+'</button>';}).join(''); }
+  document.getElementById('perddLab').textContent=selLabel(curSel());
+}
+// ---- render all ----
+function renderAll(){ renderHead(); renderHeroKpis(); renderUnit(); renderTable(); renderCosts(); renderBars(); renderMap(); renderFin(); }
 
-// interactions
-document.getElementById('cur').onclick=e=>{const b=e.target.closest('button'); if(!b)return; cur=b.dataset.c; document.querySelectorAll('#cur button').forEach(x=>x.classList.toggle('on',x===b)); render(); renderBars();};
-document.getElementById('pills').onclick=e=>{const p=e.target.closest('.pill'); if(!p)return; S.seg=p.dataset.s; document.querySelectorAll('#pills .pill').forEach(x=>x.classList.toggle('on',x===p)); render(); renderMap();};
-document.getElementById('gran').onclick=e=>{const b=e.target.closest('button'); if(!b)return; document.querySelectorAll('#gran button').forEach(x=>x.classList.toggle('on',x===b));};
+// ---- interactions ----
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>setView(t.dataset.v));
+document.getElementById('cur').onclick=e=>{const b=e.target.closest('button'); if(!b)return; cur=b.dataset.c; document.querySelectorAll('#cur button').forEach(x=>x.classList.toggle('on',x===b)); renderAll();};
+document.getElementById('pills').onclick=e=>{const p=e.target.closest('.pill'); if(!p)return; S.seg=p.dataset.s; document.querySelectorAll('#pills .pill').forEach(x=>x.classList.toggle('on',x===p)); renderAll();};
+document.getElementById('gran').onclick=e=>{const b=e.target.closest('button'); if(!b)return; S.gran=b.dataset.g; document.querySelectorAll('#gran button').forEach(x=>x.classList.toggle('on',x===b)); if(S.gran==='m'){S.mKey=MKEYS[MKEYS.length-1];} else {S.wIdx=WKD.weeks.length-1;} buildPerMenu(); renderAll();};
 document.getElementById('chTog').onclick=e=>{const b=e.target.closest('button'); if(!b)return; chMetric=b.dataset.h; document.querySelectorAll('#chTog button').forEach(x=>x.classList.toggle('on',x===b)); renderBars();};
 const pm=document.getElementById('perddMenu');
 document.getElementById('perddBtn').onclick=e=>{e.stopPropagation(); pm.classList.toggle('open');};
 document.addEventListener('click',e=>{if(!e.target.closest('#perdd'))pm.classList.remove('open');});
-pm.onclick=e=>{const b=e.target.closest('button'); if(!b)return; S.per=b.dataset.k; document.getElementById('perddLab').textContent=b.textContent; document.querySelectorAll('#perddMenu button').forEach(x=>x.classList.toggle('on',x===b)); pm.classList.remove('open'); render(); renderMap();};
-document.getElementById('fmBoost').oninput=e=>{boost=+e.target.value; renderFm();};
-document.getElementById('tabMap').onclick=()=>document.getElementById('mapScr').scrollIntoView({behavior:'smooth',block:'center'});
-document.getElementById('tabFm').onclick=()=>document.getElementById('fmScr').scrollIntoView({behavior:'smooth',block:'center'});
-
+pm.onclick=e=>{const b=e.target.closest('button'); if(!b)return; if(b.dataset.t==='m')S.mKey=b.dataset.k; else S.wIdx=+b.dataset.w; document.querySelectorAll('#perddMenu button').forEach(x=>x.classList.toggle('on',x===b)); document.getElementById('perddLab').textContent=selLabel(curSel()); pm.classList.remove('open'); renderAll();};
+document.getElementById('fmScen').onclick=e=>{const b=e.target.closest('button'); if(!b)return; FM.scen=b.dataset.s; document.querySelectorAll('#fmScen button').forEach(x=>x.classList.toggle('on',x===b)); renderFin();};
+document.getElementById('fmBoost').oninput=e=>{FM.boost=+e.target.value; renderFin();};
+document.getElementById('fmFx').oninput=e=>{FM.fx=+e.target.value; renderFin();};
+document.getElementById('fmChk').oninput=e=>{FM.chkMul=+e.target.value; renderFin();};
+document.getElementById('fmUk').oninput=e=>{FM.uk=+e.target.value; renderFin();};
+document.getElementById('fmBE').onclick=()=>{const b=solveBE(); FM.boost=Math.min(8,Math.max(1,+b.toFixed(2))); document.getElementById('fmBoost').value=FM.boost; renderFin();};
+document.getElementById('fmReset').onclick=()=>{FM={boost:1,fx:12000,chkMul:1,uk:320,scen:'guar'}; document.getElementById('fmBoost').value=1; document.getElementById('fmFx').value=12000; document.getElementById('fmChk').value=1; document.getElementById('fmUk').value=320; document.querySelectorAll('#fmScen button').forEach(x=>x.classList.toggle('on',x.dataset.s==='guar')); renderFin();};
 document.getElementById('scrim').onclick=closeCard;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCard();});
-function _initApp(){ render(); renderBars(); renderMap(); }
+
+// ---- load live data ----
 fetch('./index.html',{cache:'no-store'}).then(r=>r.text()).then(html=>{
   const RD=_po(_ext(html,'const DATA','[',']'));
   WKD=_po(_ext(html,'const WK','{','}'));
   const fr=_ext(html,'const FACT','{','}'); if(fr){try{FACTD=_po(fr);}catch(e){}}
-  const lw=WKD.weeks.length-1;
-  DATA=RD.map(d=>{const p=WKD.pvz[d.code]||{ord:[]};
+  MG={}; WKD.weeks.forEach((w,i)=>{const mm=String(w).slice(3,5); (MG[mm]=MG[mm]||[]).push(i);});
+  MKEYS=Object.keys(MG).sort();
+  MONTHS=MKEYS.map(mm=>{const li=MG[mm][MG[mm].length-1]; return {mm, idxs:MG[mm], label:(RUM[mm]||mm)+' 2026', partial:!!(WKD.dayCounts&&WKD.dayCounts[li]<7)};});
+  S.mKey=MKEYS[MKEYS.length-1]; S.wIdx=WKD.weeks.length-1;
+  function monthAvg(code,idxs){const p=WKD.pvz[code]; if(!p)return 0; let o=0,dd=0; idxs.forEach(i=>{const wd=(WKD.dayCounts&&WKD.dayCounts[i])||7; o+=(p.ord[i]||0)*wd; dd+=wd;}); return dd?o/dd:0;}
+  DATA=RD.map(d=>{const om={}; MKEYS.forEach(mm=>om[mm]=monthAvg(d.code,MG[mm]));
     return {code:d.code, name:d.aka, city:d.city, seg:d.seg, comm:d.comm,
-      chk:+(((d.avgCheck||176000)/ADAPTfx)).toFixed(1),
-      opex:Math.round((d.rentSum+d.salarySum+(d.miscSum||0))/ADAPTfx+(d.uk||0)),
-      guar:Math.round((d.guarFull||0)/ADAPTfx),
-      ordJun:+(((p.ord&&p.ord[lw]!=null)?p.ord[lw]:(d.runRate||0))).toFixed(1),
-      ordMay:+(((p.ord&&p.ord.length>1)?p.ord[0]:0)).toFixed(1)};});
-  _initApp();
+      rentSum:d.rentSum||0, salarySum:d.salarySum||0, miscSum:d.miscSum||0,
+      avgCheck:d.avgCheck||0, guarFull:d.guarFull||0, om};});
+  buildPerMenu();
+  renderAll();
 }).catch(e=>{const m=document.querySelector('main.wrap'); if(m)m.insertAdjacentHTML('afterbegin','<div style="padding:24px;font-family:var(--ff-mono);color:var(--neg)">Не удалось загрузить живые данные: '+e+'. Открой через Railway (не как локальный файл).</div>');});
 </script>
 </body>
