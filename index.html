@@ -170,6 +170,8 @@ th.sorted{color:var(--violet)}
 td{padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
 tr.prow{cursor:pointer;transition:background .14s}
 tr.prow:hover{background:rgba(139,109,255,.06)}
+#ovTbl th,#ovTbl td{text-align:center}
+#ovTbl th.lft,#ovTbl td:first-child{text-align:left}
 .chip{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;color:#0a0c11}
 .health{position:relative;width:96px;height:8px;background:var(--line2);border-radius:99px;overflow:hidden;display:inline-block;vertical-align:middle}
 .health i{position:absolute;left:0;top:0;height:100%;border-radius:99px;transition:width .5s cubic-bezier(.22,1,.36,1)}
@@ -689,15 +691,15 @@ function openDrawer(code){
   const d=DATA.find(x=>x.code===code), c=simOf(d);
   const wk=[d.w1,d.w2,d.w3,d.w4];
   const mx=Math.max(...wk,d.fcMonth1,1);
-  const bw=46,gap=14,h=90;
-  let spark=`<svg viewBox="0 0 ${4*(bw+gap)} ${h+22}" style="width:100%">`;
+  const bw=46,gap=14,h=82,padT=22;
+  let spark=`<svg viewBox="0 0 ${4*(bw+gap)} ${padT+h+22}" style="width:100%">`;
   ['W1','W2','W3','W4'].forEach((lab,i)=>{
-    const v=wk[i],bh=v/mx*h,x=i*(bw+gap);
-    spark+=`<rect x="${x}" y="${h-bh+2}" width="${bw}" height="${bh}" rx="5" fill="${i===2?segHex[d.seg]:'var(--line2)'}"/>`;
-    spark+=`<text x="${x+bw/2}" y="${h+16}" text-anchor="middle" class="glabel">${lab}</text>`;
-    spark+=`<text x="${x+bw/2}" y="${h-bh-4}" text-anchor="middle" class="blabel" style="font-size:10px">${fmt1(v)}</text>`;
+    const v=wk[i],bh=v/mx*h,x=i*(bw+gap),y=padT+h-bh;
+    spark+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="5" fill="${i===2?segHex[d.seg]:'var(--line2)'}"/>`;
+    spark+=`<text x="${x+bw/2}" y="${padT+h+16}" text-anchor="middle" class="glabel">${lab}</text>`;
+    spark+=`<text x="${x+bw/2}" y="${y-4}" text-anchor="middle" class="blabel" style="font-size:10px">${fmt1(v)}</text>`;
   });
-  const fcY=h-d.fcMonth1/mx*h+2;
+  const fcY=padT+h-d.fcMonth1/mx*h;
   spark+=`<line x1="0" y1="${fcY}" x2="${4*(bw+gap)-gap}" y2="${fcY}" stroke="var(--coral)" stroke-width="2" stroke-dasharray="4 3"/></svg>`;
   const guarEnd=new Date(d.start);guarEnd.setMonth(guarEnd.getMonth()+6);
   const row=(k,v)=>`<div class="stat"><span class="k">${k}</span><span class="v">${v}</span></div>`;
@@ -745,7 +747,7 @@ function renderPointsFact(){
   const gv=x=>({aka:x.d.aka,seg:x.d.seg,o:x.o,be:x.be,health:x.health,rev:x.rev,income:x.income,pnl:x.pnl})[S.ovSortKey];
   r.sort((a,b)=>{let x=gv(a),y=gv(b); return typeof x==='string'?S.ovSortDir*x.localeCompare(y):S.ovSortDir*(x-y);});
   const C=[{k:'aka',t:'Точка',lft:1},{k:'seg',t:'Сег'},{k:'o',t:'Зак/д'},{k:'be',t:'Безубыток'},{k:'health',t:'Здоровье'},{k:'rev',t:'Оборот/д'},{k:'income',t:'Доход'},{k:'pnl',t:'P&L'},{k:'trend',t:'тренд',ns:1}];
-  let h='<thead><tr>'+C.map(c=>`<th class="${c.lft?'lft':''} ${S.ovSortKey===c.k?'sorted':''}"${c.ns?' style="text-align:center;padding-left:24px"':` data-k="${c.k}"`}>${c.t}${S.ovSortKey===c.k?(S.ovSortDir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr></thead><tbody>';
+  let h='<thead><tr>'+C.map(c=>`<th class="${c.lft?'lft':''} ${S.ovSortKey===c.k?'sorted':''}"${c.ns?'':` data-k="${c.k}"`}>${c.t}${S.ovSortKey===c.k?(S.ovSortDir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr></thead><tbody>';
   r.forEach(x=>{
     const hp=Math.min(x.health,1.4), hc=x.health>=1?'var(--mint)':x.health>=.6?'var(--amber)':'var(--coral)';
     h+=`<tr class="prow" data-code="${x.d.code}">`+
@@ -757,7 +759,7 @@ function renderPointsFact(){
       `<td><span class="mono">${money(x.rev)}</span></td>`+
       `<td><span class="mono">${money(x.income)}</span></td>`+
       `<td><span class="mono ${x.pnl>=0?'pos':'neg'}">${money(x.pnl)}</span></td>`+
-      `<td style="text-align:center;padding-left:24px;white-space:nowrap">${sparkline(x.trend,'var(--violet)',sp)}</td>`+
+      `<td style="white-space:nowrap">${sparkline(x.trend,'var(--violet)',sp)}</td>`+
       `</tr>`;
   });
   el.innerHTML=h+'</tbody>';
@@ -771,12 +773,13 @@ function openFactDrawer(code){
   const o=ordOf(d), rev=revOf(d), be=beOf(d), health=be>0?o/be:0, f=periodFin(d,idxs,P.mode,P.monthDays,P.factKey);
   const src=P.mode==='model'?'модель':'факт · Uzum';
   const wk=show.map(i=>(WK.pvz[code]?(WK.pvz[code].ord[i]||0):0)), labels=show.map(i=>WK.weeks[i]);
-  const n=wk.length, slot=44, bw=30, hh=90, mx=Math.max(...wk,1), showVal=n<=8;
-  let spark=`<svg viewBox="0 0 ${n*slot} ${hh+22}" style="width:100%">`;
-  wk.forEach((v,i)=>{const bh=v/mx*hh, x=i*slot+(slot-bw)/2;
-    spark+=`<rect x="${x}" y="${hh-bh+2}" width="${bw}" height="${bh}" rx="4" fill="${sp[i]?'var(--line2)':'var(--violet)'}"/>`;
-    if(showVal) spark+=`<text x="${x+bw/2}" y="${hh-bh-4}" text-anchor="middle" class="blabel" style="font-size:9px">${fmt1(v)}</text>`;
-    spark+=`<text x="${x+bw/2}" y="${hh+16}" text-anchor="middle" class="glabel" style="font-size:8px">${String(labels[i]).split('–')[0]}${sp[i]?'*':''}</text>`;});
+  const n=wk.length, slot=44, bw=30, barH=82, padT=22, padB=20, mx=Math.max(...wk,1), showVal=n<=8;
+  const H=padT+barH+padB;
+  let spark=`<svg viewBox="0 0 ${n*slot} ${H}" style="width:100%">`;
+  wk.forEach((v,i)=>{const bh=v/mx*barH, x=i*slot+(slot-bw)/2, y=padT+barH-bh;
+    spark+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="${sp[i]?'var(--line2)':'var(--violet)'}"/>`;
+    if(showVal) spark+=`<text x="${x+bw/2}" y="${y-5}" text-anchor="middle" class="blabel" style="font-size:9px">${fmt1(v)}</text>`;
+    spark+=`<text x="${x+bw/2}" y="${padT+barH+15}" text-anchor="middle" class="glabel" style="font-size:8px">${String(labels[i]).split('–')[0]}${sp[i]?'*':''}</text>`;});
   spark+='</svg>';
   const guarEnd=new Date(d.start);guarEnd.setMonth(guarEnd.getMonth()+6);
   const row=(k,v,cls)=>`<div class="stat"><span class="k">${k}</span><span class="v ${cls||''}">${v}</span></div>`;
