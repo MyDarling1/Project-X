@@ -518,10 +518,11 @@ function periodFin(d, idxs, mode, monthDays, factKey){   // {income,cost,pnl} П
 }
 function netStats(idxs, mode, monthDays, factKey){
   const r=rows(), n=r.length||1, tot=idxs.reduce((a,i)=>a+wdays(i),0)||1;
-  const netOrdDay=idxs.reduce((a,i)=>a+(WK.net.ord[i]*wdays(i)),0)/tot, ordPV=netOrdDay/n;
-  const gmv=idxs.reduce((a,i)=>a+(WK.net.rev[i]*wdays(i)),0);
+  const ordOf=d=>idxs.reduce((a,i)=>a+((WK.pvz[d.code]?WK.pvz[d.code].ord[i]:0)*wdays(i)),0)/tot;   // заказы/день этого ПВЗ
+  const revOf=d=>idxs.reduce((a,i)=>a+((WK.pvz[d.code]?WK.pvz[d.code].rev[i]:0)*wdays(i)),0);       // оборот ПВЗ за период
+  const netOrdDay=r.reduce((a,d)=>a+ordOf(d),0), ordPV=netOrdDay/n;   // числитель — только выбранный сегмент rows(), не вся сеть (для «Все» == сетевому)
+  const gmv=r.reduce((a,d)=>a+revOf(d),0);
   const bePV=r.reduce((a,d)=>a+beOf(d),0)/n;
-  const ordOf=d=>idxs.reduce((a,i)=>a+((WK.pvz[d.code]?WK.pvz[d.code].ord[i]:0)*wdays(i)),0)/tot;
   const above=r.filter(d=>ordOf(d)>=beOf(d)).length;
   let income=0,cost=0,pnl=0; r.forEach(d=>{const f=periodFin(d,idxs,mode,monthDays,factKey); income+=f.income;cost+=f.cost;pnl+=f.pnl;});
   return {ordPV,bePV,above,n,pnl,income,cost,gmv,netOrdDay};
