@@ -287,8 +287,7 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 <div class="kpis" id="kpis"></div>
 
 <div id="unitEconCard" style="margin-bottom:22px">
-  <h3 style="margin-bottom:3px">Юнит-экономика · среднее на 1 ПВЗ</h3>
-  <div class="hint" id="unitEconHint" style="margin-bottom:13px"></div>
+  <h3 style="margin-bottom:12px">Юнит-экономика · среднее на 1 ПВЗ</h3>
   <div class="kpis" id="unitEcon" style="margin:0"></div>
 </div>
 <div class="card" style="margin-bottom:18px">
@@ -583,8 +582,6 @@ function renderUnit(){
     {l:'Безубыток',v:fmt(abe)+' зак/д',d:'порог P&L = 0'},
   ];
   document.getElementById('unitEcon').innerHTML=k.map(x=>`<div class="kpi"><div class="lab">${x.l}</div><div class="val ${x.cls||''}">${x.v}</div><div class="delta">${x.d||''}</div></div>`).join('');
-  const seg=S.seg!=='all'?' · Сег '+S.seg:'';
-  document.getElementById('unitEconHint').textContent=`Среднее на 1 ПВЗ · ${P.label}${P.partial?' (неполный)':''}${seg}. Доход и P&L — ${src}; заказы и оборот — из управленческой отчётности. Тот же период, что и в блоке сверху.`;
 }
 
 /* ---------- main chart ---------- */
