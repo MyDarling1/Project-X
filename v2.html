@@ -210,6 +210,16 @@ tbody tr.prow{cursor:pointer}
 .backlink:hover{border-color:var(--ink); color:var(--ink)}
 
 @media(max-width:900px){ .fmtop{grid-template-columns:1fr} .srcgrid{grid-template-columns:1fr} .mapfull{height:380px} }
+.barsc{position:relative; height:13px; font-family:var(--ff-mono); font-size:9.5px; color:var(--muted); margin:0 0 8px}
+.barsc span{position:absolute} .barsc .be{left:71.43%; transform:translateX(-50%); color:var(--neg)}
+.search{font-family:var(--ff-mono); font-size:13px; padding:9px 14px; border:1px solid var(--line2); border-radius:6px; background:var(--card); color:var(--ink); width:300px; max-width:100%}
+.search:focus{outline:none; border-color:var(--ink)}
+.mc{cursor:pointer; transition:fill-opacity .15s}
+.mc:hover{fill-opacity:1; stroke:var(--ink)}
+#maptip{position:fixed; z-index:80; pointer-events:none; background:var(--ink); color:var(--paper); font-family:var(--ff-mono); font-size:12px; line-height:1.55; padding:8px 11px; border-radius:6px; opacity:0; transition:opacity .12s; box-shadow:0 8px 24px rgba(0,0,0,.25); max-width:260px}
+#maptip b{color:#fff}
+.mlab{paint-order:stroke; stroke:var(--paper); stroke-width:3px; stroke-linejoin:round}
+@media(max-width:560px){ #tbl th:last-child, #tbl td:last-child{display:none} }
 </style>
 </head>
 <body>
@@ -256,6 +266,7 @@ tbody tr.prow{cursor:pointer}
         <div class="cap">Заказы / безубыток · зак/д на 1 ПВЗ</div>
         <div class="big"><span id="hOrd">—</span> <span class="of">/ <span id="hBe">—</span></span></div>
         <div class="bar"><i id="hFill" style="width:0%"></i><span class="mk" id="hMark" style="left:71%"></span></div>
+        <div class="barsc"><span>0</span><span class="be">безубыток</span></div>
         <div class="st" id="hSt">—</div>
       </div>
       <div class="kpis">
@@ -270,12 +281,13 @@ tbody tr.prow{cursor:pointer}
     <div class="unit" id="unit"></div>
 
     <div class="slab"><span class="n">03</span> По точкам · <span id="tblPer">—</span></div>
+    <div style="margin:0 0 14px"><input id="ovSearch" class="search" placeholder="Поиск точки или города…"></div>
     <div class="tblwrap"><table id="tbl"></table></div>
 
     <div class="slab"><span class="n">04</span> Динамика сети · по неделям</div>
     <div class="chartcard">
       <div class="chtop"><h3>Заказов в день на 1 ПВЗ</h3>
-        <div class="seg" id="chTog"><button class="on" data-h="ord">Заказы</button><button data-h="rev">Оборот</button><button data-h="pnl">P&amp;L</button></div>
+        <div class="seg" id="chTog"><button class="on" data-h="ord">Заказы</button><button data-h="rev">Оборот</button><button data-h="comm">Комиссия</button></div>
       </div>
       <div class="bars" id="bars"></div>
     </div>
@@ -353,8 +365,11 @@ tbody tr.prow{cursor:pointer}
 
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer"></aside>
+<div id="maptip"></div>
 <script>
 const fmtN=(n,d=0)=>(isFinite(n)?n:0).toLocaleString('ru-RU',{minimumFractionDigits:d,maximumFractionDigits:d}).replace(/ /g,' ');
+function fmtDate(s){ if(!s)return null; const x=new Date(s); return isNaN(x.getTime())?null:x.toLocaleDateString('ru-RU'); }
+function guarUntil(s){ const x=new Date(s); if(isNaN(x.getTime()))return '—'; x.setMonth(x.getMonth()+6); return x.toLocaleDateString('ru-RU'); }
 const segHex={1:'var(--s1)',2:'var(--s2)',3:'var(--s3)'};
 const RUM={'01':'январь','02':'февраль','03':'март','04':'апрель','05':'май','06':'июнь','07':'июль','08':'август','09':'сентябрь','10':'октябрь','11':'ноябрь','12':'декабрь'};
 let cur='usd';
@@ -374,7 +389,7 @@ let FM={boost:1, fx:12000, chkMul:1, uk:320, scen:'guar'};
 const money=u=>moneyAt(u,BASE.fx);
 const moneyFm=u=>moneyAt(u,FM.fx);
 
-let S={seg:'all', gran:'m', mKey:null, wIdx:0, view:'overview'};
+let S={seg:'all', gran:'m', mKey:null, wIdx:0, view:'overview', q:''};
 let ovSort={key:'ord',dir:-1}, costSort={key:'tot',dir:-1}, fmSort={key:'pnl',dir:-1};
 let chMetric='ord';
 
@@ -436,11 +451,12 @@ function renderUnit(){
   document.getElementById('unit').innerHTML=ue.map(c=>'<div class="c"><div class="l">'+c[0]+'</div><div class="v '+(c[2]||'')+'">'+c[1]+'</div></div>').join('');
 }
 // ---- table (sortable) ----
-const OVCOLS=[{k:'name',t:'Точка',s:1},{k:'seg',t:'Сег'},{k:'ord',t:'Зак/д'},{k:'be',t:'Безубыток'},{k:'health',t:'Здоровье'},{k:'gmv',t:'Оборот/д'},{k:'pnl',t:'P&L/мес'},{k:'trend',t:'Тренд'}];
+const OVCOLS=[{k:'name',t:'Точка',s:1},{k:'seg',t:'Сег'},{k:'ord',t:'Зак/д'},{k:'be',t:'Безубыток'},{k:'health',t:'Здоровье'},{k:'gmv',t:'Оборот/д'},{k:'income',t:'Доход/мес'},{k:'pnl',t:'P&L/мес'},{k:'trend',t:'Тренд'}];
 function trendArr(d){ if(!WKD||!WKD.pvz[d.code]) return [0,0,0,1]; return WKD.pvz[d.code].ord.slice(-5).map(v=>Math.max(+v||0,0)); }
 function renderTable(){
-  const r=rows();
-  const arr=r.map(d=>{const e=econ(d,BASE); return {d,e,name:d.name,seg:d.seg,ord:e.ord,be:e.be,health:e.be>0?e.ord/e.be:0,gmv:e.gmvDay,pnl:e.pnl};});
+  const q=(S.q||'').trim().toLowerCase();
+  const r=rows().filter(d=>!q||((d.name+' '+d.city+' '+d.code).toLowerCase().indexOf(q)>=0));
+  const arr=r.map(d=>{const e=econ(d,BASE); return {d,e,name:d.name,seg:d.seg,ord:e.ord,be:e.be,health:e.be>0?e.ord/e.be:0,gmv:e.gmvDay,income:e.inc,pnl:e.pnl};});
   const k=ovSort.key,dir=ovSort.dir;
   arr.sort((a,b)=>k==='name'?dir*String(a.name).localeCompare(String(b.name),'ru'):dir*((a[k]||0)-(b[k]||0)));
   let h='<thead><tr>'+OVCOLS.map(c=>'<th class="'+(c.s?'s ':'')+'sortable'+(ovSort.key===c.k?' sorted':'')+'" data-k="'+c.k+'">'+c.t+'<span class="sar">'+(ovSort.key===c.k?(ovSort.dir<0?'▾':'▴'):'▾')+'</span></th>').join('')+'</tr></thead><tbody>';
@@ -452,8 +468,10 @@ function renderTable(){
        '<td>'+fmtN(o,1)+'</td><td style="color:var(--muted)">'+fmtN(be,0)+'</td>'+
        '<td><span class="hbar"><i style="width:'+(hp/1.4*100)+'%;background:'+hc+'"></i></span><span style="color:'+hc+';font-size:12px">'+(be>0?Math.round(o/be*100):0)+'%</span></td>'+
        '<td>'+money(e.gmvDay)+'</td>'+
+       '<td>'+money(e.income)+'</td>'+
        '<td class="'+(e.pnl>=0?'pos':'neg')+'">'+money(e.pnl)+'</td>'+
        '<td><span class="spark">'+spark+'</span></td></tr>';});
+  if(!arr.length) h+='<tr><td colspan="9" style="text-align:center;padding:26px;color:var(--muted)">Ничего не найдено</td></tr>';
   const tb=document.getElementById('tbl'); tb.innerHTML=h+'</tbody>';
   tb.querySelectorAll('thead th').forEach(th=>th.onclick=()=>{const kk=th.dataset.k; if(kk==='trend')return; if(ovSort.key===kk)ovSort.dir*=-1; else{ovSort.key=kk; ovSort.dir=(kk==='name')?1:-1;} renderTable();});
   tb.querySelectorAll('tbody tr.prow').forEach(tr=>tr.onclick=()=>openCard(DATA.find(d=>d.code===tr.dataset.code)));
@@ -481,8 +499,8 @@ function renderBars(){
   let series,fmt;
   if(chMetric==='ord'){ series=idxs.map(i=>r.reduce((a,d)=>a+((WKD.pvz[d.code]&&WKD.pvz[d.code].ord[i])||0),0)/n); fmt=v=>fmtN(v,1); }
   else if(chMetric==='rev'){ series=idxs.map(i=>r.reduce((a,d)=>a+((WKD.pvz[d.code]&&WKD.pvz[d.code].rev[i])||0),0)/n/BASE.fx); fmt=v=>money(v); }
-  else { series=idxs.map(i=>r.reduce((a,d)=>a+econ(d,BASE,{gran:'w',wIdx:i}).pnl,0)); fmt=v=>money(v); }
-  const title=chMetric==='ord'?'Заказов в день на 1 ПВЗ':chMetric==='rev'?'Оборот в день на 1 ПВЗ':'P&L сети по неделям';
+  else { series=idxs.map(i=>r.reduce((a,d)=>a+((WKD.pvz[d.code]&&WKD.pvz[d.code].ord[i])||0)*(d.avgCheck/BASE.fx)*d.comm,0)/n); fmt=v=>money(v); }
+  const title=chMetric==='ord'?'Заказов в день на 1 ПВЗ':chMetric==='rev'?'Оборот в день на 1 ПВЗ':'Комиссия в день на 1 ПВЗ';
   document.querySelector('.chtop h3').textContent=title;
   const max=Math.max.apply(null,series.map(Math.abs).concat([1]));
   document.getElementById('bars').innerHTML=idxs.map((wi,k)=>{const v=series[k],pct=Math.abs(v)/max*100,part=!!(WKD.dayCounts&&WKD.dayCounts[wi]<7),lbl=String(WKD.weeks[wi]).split('–')[0]+(part?'*':'');
@@ -491,16 +509,21 @@ function renderBars(){
 }
 // ---- map + city table ----
 function renderMap(){
-  if(!DATA.length) return;
+  if(!DATA.length||!WKD) return;
   const r=rows(), sel=curSel(), byCity={};
   r.forEach(d=>{const k=d.city; (byCity[k]=byCity[k]||{sum:0,seg:d.seg,n:0,gmv:0}); const e=econ(d,BASE,sel); byCity[k].sum+=e.ord; byCity[k].gmv+=e.gmvMo; byCity[k].n++;});
   const ents=Object.keys(byCity).map(city=>({city,sum:byCity[city].sum,seg:byCity[city].seg,n:byCity[city].n,gmv:byCity[city].gmv,c:MAPGEO.cities[city]})).filter(e=>e.c).sort((a,b)=>b.sum-a.sum);
   const mx=Math.max.apply(null,ents.map(e=>e.sum).concat([1]));
-  let el='<path d="'+MAPGEO.path+'" fill="var(--card)" stroke="var(--line2)" stroke-width="1.5"/>';
-  ents.forEach(e=>{ e._r=13+e.sum/mx*40; el+='<circle cx="'+e.c.x+'" cy="'+e.c.y+'" r="'+e._r.toFixed(1)+'" fill="'+segHex[e.seg]+'" fill-opacity=".8" stroke="var(--card)" stroke-width="2"><title>'+e.city+' · '+e.n+' ПВЗ · '+fmtN(e.sum,0)+' зак/д</title></circle>';});
-  ents.forEach(e=>{ el+='<text x="'+e.c.x+'" y="'+(e.c.y+e._r+15).toFixed(0)+'" text-anchor="middle" class="mlab">'+e.city+'</text>';});
-  const ms=document.getElementById('mapsvg'); if(ms)ms.innerHTML=el;
   const tot=ents.reduce((a,e)=>a+e.sum,0)||1;
+  let el='<path d="'+MAPGEO.path+'" fill="var(--card)" stroke="var(--line2)" stroke-width="1.5"/>';
+  ents.forEach(e=>{ e._r=13+e.sum/mx*40; el+='<circle class="mc" data-city="'+e.city+'" data-n="'+e.n+'" data-ord="'+fmtN(e.sum,1)+'" data-gmv="'+e.gmv+'" data-share="'+Math.round(e.sum/tot*100)+'" cx="'+e.c.x+'" cy="'+e.c.y+'" r="'+e._r.toFixed(1)+'" fill="'+segHex[e.seg]+'" fill-opacity=".82" stroke="var(--card)" stroke-width="2"/>';});
+  ents.forEach(e=>{ el+='<text x="'+e.c.x+'" y="'+(e.c.y+e._r+15).toFixed(0)+'" text-anchor="middle" class="mlab">'+e.city+'</text>';});
+  const ms=document.getElementById('mapsvg'); if(!ms) return; ms.innerHTML=el;
+  const tip=document.getElementById('maptip');
+  if(tip) ms.querySelectorAll('.mc').forEach(c=>{
+    c.addEventListener('mousemove',ev=>{ tip.innerHTML='<b>'+c.dataset.city+'</b><br>'+c.dataset.n+' ПВЗ · '+c.dataset.ord+' зак/д<br>оборот '+money(+c.dataset.gmv)+' / мес<br>'+c.dataset.share+'% потока сети'; tip.style.opacity='1'; tip.style.left=(ev.clientX+14)+'px'; tip.style.top=(ev.clientY+14)+'px'; });
+    c.addEventListener('mouseleave',()=>{ tip.style.opacity='0'; });
+  });
   let h='<thead><tr><th class="s">Город</th><th>ПВЗ</th><th>Заказы/день</th><th>Оборот/мес</th><th>Доля сети</th></tr></thead><tbody>';
   ents.forEach(e=>{ h+='<tr><td><span class="pt-n">'+e.city+'</span></td><td>'+e.n+'</td><td>'+fmtN(e.sum,1)+'</td><td>'+money(e.gmv)+'</td><td>'+fmtN(e.sum/tot*100,0)+'%</td></tr>';});
   const ct=document.getElementById('citytbl'); if(ct)ct.innerHTML=h+'</tbody>';
@@ -516,7 +539,7 @@ function openCard(d){
   const row=(k,v,cls)=>'<div class="stat"><span class="k">'+k+'</span><span class="v '+(cls||'')+'">'+v+'</span></div>';
   document.getElementById('drawer').innerHTML=
     '<button class="dx" onclick="closeCard()">✕</button>'+
-    '<div class="dcode">Сег '+d.seg+' · комиссия '+Math.round(d.comm*100)+'% · '+d.city+'</div>'+
+    '<div class="dcode">'+(d.code||'')+' · Сег '+d.seg+' · комиссия '+Math.round(d.comm*100)+'% · '+d.city+'</div>'+
     '<h2>'+d.name+'</h2>'+
     '<div class="dhint">Заказы/день по неделям (неполная — со *)</div>'+
     '<div class="dspark">'+spark+'</div>'+
@@ -530,7 +553,9 @@ function openCard(d){
     row('Затраты / мес',money(e.opex))+
     row('P&L / мес',money(e.pnl),e.pnl>=0?'pos':'neg')+
     row('Средний чек',money(e.chk))+
-    row('Гарантия / мес',money(e.guar));
+    row('Гарантия / мес',money(e.guar))+
+    (fmtDate(d.start)?row('Старт',fmtDate(d.start)):'')+
+    (fmtDate(d.start)?row('Гарантия до',guarUntil(d.start)):'');
   document.getElementById('drawer').classList.add('open');
   document.getElementById('scrim').classList.add('on');
 }
@@ -538,7 +563,7 @@ function closeCard(){document.getElementById('drawer').classList.remove('open');
 // ---- finmodel ----
 const FMCOLS=[{k:'name',t:'Точка',s:1},{k:'ord',t:'Зак/д'},{k:'gmv',t:'Оборот/д'},{k:'pnl',t:'P&L/мес'},{k:'status',t:'Статус'}];
 function renderFin(){
-  if(!DATA.length) return;
+  if(!DATA.length||!WKD) return;
   document.getElementById('fmBoostL').textContent='×'+FM.boost.toFixed(1);
   document.getElementById('fmFxL').textContent=fmtN(FM.fx,0);
   document.getElementById('fmChkL').textContent='×'+FM.chkMul.toFixed(2);
@@ -598,6 +623,7 @@ document.getElementById('cur').onclick=e=>{const b=e.target.closest('button'); i
 document.getElementById('pills').onclick=e=>{const p=e.target.closest('.pill'); if(!p)return; S.seg=p.dataset.s; document.querySelectorAll('#pills .pill').forEach(x=>x.classList.toggle('on',x===p)); renderAll();};
 document.getElementById('gran').onclick=e=>{const b=e.target.closest('button'); if(!b)return; S.gran=b.dataset.g; document.querySelectorAll('#gran button').forEach(x=>x.classList.toggle('on',x===b)); if(S.gran==='m'){S.mKey=MKEYS[MKEYS.length-1];} else {S.wIdx=WKD.weeks.length-1;} buildPerMenu(); renderAll();};
 document.getElementById('chTog').onclick=e=>{const b=e.target.closest('button'); if(!b)return; chMetric=b.dataset.h; document.querySelectorAll('#chTog button').forEach(x=>x.classList.toggle('on',x===b)); renderBars();};
+document.getElementById('ovSearch').oninput=e=>{S.q=e.target.value; renderTable();};
 const pm=document.getElementById('perddMenu');
 document.getElementById('perddBtn').onclick=e=>{e.stopPropagation(); pm.classList.toggle('open');};
 document.addEventListener('click',e=>{if(!e.target.closest('#perdd'))pm.classList.remove('open');});
@@ -616,16 +642,18 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCard();});
 fetch('./index.html',{cache:'no-store'}).then(r=>r.text()).then(html=>{
   const RD=_po(_ext(html,'const DATA','[',']'));
   WKD=_po(_ext(html,'const WK','{','}'));
+  if(!RD||!RD.length||!WKD||!WKD.weeks||!WKD.weeks.length){throw new Error('неожиданный формат данных в index.html');}
   const fr=_ext(html,'const FACT','{','}'); if(fr){try{FACTD=_po(fr);}catch(e){}}
   MG={}; WKD.weeks.forEach((w,i)=>{const mm=String(w).slice(3,5); (MG[mm]=MG[mm]||[]).push(i);});
   MKEYS=Object.keys(MG).sort();
-  MONTHS=MKEYS.map(mm=>{const li=MG[mm][MG[mm].length-1]; return {mm, idxs:MG[mm], label:(RUM[mm]||mm)+' 2026', partial:!!(WKD.dayCounts&&WKD.dayCounts[li]<7)};});
+  const YR=(FACTD&&FACTD.latest&&String(FACTD.latest).split('-')[0])||'2026';
+  MONTHS=MKEYS.map(mm=>{const li=MG[mm][MG[mm].length-1]; return {mm, idxs:MG[mm], label:(RUM[mm]||mm)+' '+YR, partial:!!(WKD.dayCounts&&WKD.dayCounts[li]<7)};});
   S.mKey=MKEYS[MKEYS.length-1]; S.wIdx=WKD.weeks.length-1;
   function monthAvg(code,idxs){const p=WKD.pvz[code]; if(!p)return 0; let o=0,dd=0; idxs.forEach(i=>{const wd=(WKD.dayCounts&&WKD.dayCounts[i])||7; o+=(p.ord[i]||0)*wd; dd+=wd;}); return dd?o/dd:0;}
   DATA=RD.map(d=>{const om={}; MKEYS.forEach(mm=>om[mm]=monthAvg(d.code,MG[mm]));
     return {code:d.code, name:d.aka, city:d.city, seg:d.seg, comm:d.comm,
       rentSum:d.rentSum||0, salarySum:d.salarySum||0, miscSum:d.miscSum||0,
-      avgCheck:d.avgCheck||0, guarFull:d.guarFull||0, om};});
+      avgCheck:d.avgCheck||0, guarFull:d.guarFull||0, start:d.start||null, om};});
   buildPerMenu();
   renderAll();
 }).catch(e=>{const m=document.querySelector('main.wrap'); if(m)m.insertAdjacentHTML('afterbegin','<div style="padding:24px;font-family:var(--ff-mono);color:var(--neg)">Не удалось загрузить живые данные: '+e+'. Открой через Railway (не как локальный файл).</div>');});
