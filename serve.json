@@ -3,6 +3,7 @@
   "trailingSlash": false,
   "directoryListing": false,
   "rewrites": [
-    { "source": "/", "destination": "/index.html" }
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/v2", "destination": "/v2.html" }
   ]
 }
