@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Uzum ПВЗ — редизайн дашборда (концепт)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#eef0f1; --panel:#e6e9ea; --card:#fafbfb; --ink:#363b42; --ink2:#646b73;
+  --muted:#969ca4; --line:#e2e5e6; --line2:#d2d6d8;
+  --pos:#5f8a72; --pos2:#74a187; --neg:#b27a72; --gold:#a99467; --accent:#7f95b6;
+  --s1:#7f95b6; --s2:#6a9b92; --s3:#a48fb0;
+  --ff-disp:"Schibsted Grotesk",system-ui,sans-serif; --ff-ui:"Schibsted Grotesk",system-ui,sans-serif; --ff-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --maxw:1280px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--paper); color:var(--ink); font-family:var(--ff-ui); font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x:hidden; position:relative}
+::selection{background:var(--ink); color:var(--paper)}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(58% 48% at 10% 6%, rgba(127,149,182,.18), transparent 68%),
+    radial-gradient(54% 50% at 92% 96%, rgba(106,155,146,.15), transparent 70%),
+    radial-gradient(42% 42% at 90% 4%, rgba(164,143,176,.12), transparent 70%);}
+.mono{font-family:var(--ff-mono); font-variant-numeric:tabular-nums}
+.pos{color:var(--pos)} .neg{color:var(--neg)}
+
+/* ---------- top nav ---------- */
+.nav{position:sticky; top:0; z-index:40; background:rgba(243,238,226,.85); backdrop-filter:blur(8px); border-bottom:1px solid var(--line2)}
+.nav .in{max-width:var(--maxw); margin:0 auto; padding:16px 30px; display:flex; align-items:center; gap:30px}
+.wordmark{font-family:var(--ff-disp); font-weight:600; font-size:22px; letter-spacing:-.02em; white-space:nowrap}
+.wordmark b{color:var(--accent)}
+.tabs{display:flex; gap:4px; margin-left:8px}
+.tab{font-family:var(--ff-mono); font-size:12px; letter-spacing:.08em; text-transform:uppercase; padding:8px 14px; border:0; background:transparent; color:var(--muted); cursor:pointer; border-radius:3px; transition:.15s}
+.tab.on{background:var(--ink); color:var(--paper)}
+.tab:not(.on):hover{color:var(--ink)}
+.navsp{flex:1}
+.cur{display:flex; border:1px solid var(--line2); border-radius:4px; overflow:hidden}
+.cur button{font-family:var(--ff-mono); font-size:12px; padding:7px 12px; border:0; background:transparent; cursor:pointer; color:var(--ink)}
+.cur button.on{background:var(--ink); color:var(--paper)}
+
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 30px; position:relative; z-index:1}
+
+/* ---------- ledger head ---------- */
+.lh{display:flex; justify-content:space-between; align-items:flex-end; padding:46px 0 26px; border-bottom:1px solid var(--ink); flex-wrap:wrap; gap:18px}
+.lh h1{font-family:var(--ff-disp); font-weight:600; font-size:clamp(32px,4.4vw,54px); line-height:1.02; letter-spacing:-.025em}
+.lh h1 em{color:var(--accent); font-weight:700; font-style:normal}
+.lh .dl{font-family:var(--ff-mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); text-align:right; line-height:1.7}
+.lh .dl b{color:var(--accent)}
+
+/* ---------- controls ---------- */
+.ctl{display:flex; justify-content:space-between; align-items:center; gap:18px; flex-wrap:wrap; padding:22px 0; border-bottom:1px solid var(--line)}
+.seg{display:flex; border:1px solid var(--line2); border-radius:4px; overflow:hidden}
+.seg button{font-family:var(--ff-mono); font-size:12px; padding:8px 16px; border:0; background:transparent; cursor:pointer; color:var(--ink); white-space:nowrap}
+.seg button.on{background:var(--ink); color:var(--paper)}
+.dd{position:relative}
+.dd>button{display:flex; align-items:center; gap:10px; font-family:var(--ff-mono); font-size:13px; font-weight:500; background:var(--card); border:1px solid var(--line2); border-radius:4px; padding:8px 14px; cursor:pointer; color:var(--ink)}
+.dd .car{color:var(--muted); font-size:10px}
+.ddm{position:absolute; left:0; top:calc(100% + 6px); background:var(--card); border:1px solid var(--line2); border-radius:5px; padding:5px; min-width:180px; z-index:30; display:none; box-shadow:0 12px 32px rgba(12,28,48,.15)}
+.ddm.open{display:block}
+.ddm button{display:block; width:100%; text-align:left; font-family:var(--ff-mono); font-size:13px; padding:8px 10px; border:0; background:transparent; cursor:pointer; color:var(--ink); border-radius:3px}
+.ddm button.on{background:var(--panel)} .ddm button:hover{background:var(--panel)}
+.pills{display:flex; gap:8px; flex-wrap:wrap}
+.pill{font-family:var(--ff-mono); font-size:12px; border:1.5px solid var(--line2); background:transparent; color:var(--ink2); padding:7px 13px; border-radius:99px; cursor:pointer; display:flex; align-items:center; gap:7px; transition:.15s}
+.pill .dot{width:8px; height:8px; border-radius:50%}
+.pill.on{border-color:var(--ink); color:var(--ink); background:var(--card)}
+.pill.on.s1{box-shadow:inset 0 0 0 1.5px var(--s1)} .pill.on.s2{box-shadow:inset 0 0 0 1.5px var(--s2)} .pill.on.s3{box-shadow:inset 0 0 0 1.5px var(--s3)} .pill.on.all{box-shadow:inset 0 0 0 1.5px var(--ink)}
+
+/* ---------- hero + kpis ---------- */
+.heroband{display:grid; grid-template-columns:1.15fr 1fr; gap:0; border-bottom:1px solid var(--ink)}
+.hero{padding:44px 40px 44px 0; border-right:1px solid var(--line)}
+.hero .cap{font-family:var(--ff-mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
+.hero .big{font-family:var(--ff-mono); font-weight:600; font-size:clamp(54px,8.4vw,104px); line-height:.94; letter-spacing:-.05em; margin:16px 0 4px}
+.hero .big .of{font-size:.34em; color:var(--muted); letter-spacing:-.02em}
+.bar{height:10px; background:var(--panel); border:1px solid var(--line2); border-radius:99px; overflow:hidden; margin:24px 0 12px; position:relative}
+.bar i{display:block; height:100%; background:linear-gradient(90deg,var(--pos2),var(--pos)); border-radius:99px; transition:width 1s cubic-bezier(.2,.7,.2,1)}
+.bar .mk{position:absolute; top:-4px; bottom:-4px; width:2px; background:var(--neg)}
+.hero .st{font-family:var(--ff-mono); font-size:14px; color:var(--ink2)}
+.hero .st b{color:var(--neg); font-weight:700}
+
+.kpis{display:grid; grid-template-columns:1fr 1fr; }
+.kp{padding:30px 30px; border-bottom:1px solid var(--line); border-right:1px solid var(--line)}
+.kp:nth-child(2n){border-right:0}
+.kp:nth-child(n+3){border-bottom:0}
+.kp .l{font-family:var(--ff-mono); font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted)}
+.kp .v{font-family:var(--ff-mono); font-weight:700; font-size:clamp(26px,3.4vw,38px); letter-spacing:-.02em; margin-top:10px; line-height:1}
+.kp .d{font-family:var(--ff-mono); font-size:11.5px; color:var(--muted); margin-top:8px}
+
+/* ---------- section label ---------- */
+.slab{display:flex; align-items:center; gap:16px; font-family:var(--ff-mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink); margin:54px 0 22px}
+.slab .n{color:var(--accent); font-weight:700}
+.slab::after{content:""; flex:1; height:1px; background:var(--line)}
+
+/* ---------- unit econ ---------- */
+.unit{display:grid; grid-template-columns:repeat(4,1fr); border:1px solid var(--line2); background:var(--card)}
+.unit .c{padding:22px 22px; border-right:1px solid var(--line); border-bottom:1px solid var(--line)}
+.unit .c:nth-child(4n){border-right:0} .unit .c:nth-child(n+5){border-bottom:0}
+.unit .c .l{font-family:var(--ff-mono); font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted)}
+.unit .c .v{font-family:var(--ff-mono); font-weight:700; font-size:clamp(20px,2.6vw,28px); margin-top:9px; letter-spacing:-.01em}
+
+/* ---------- table ---------- */
+.tblwrap{border:1px solid var(--line2); background:var(--card); overflow-x:auto}
+table{width:100%; border-collapse:collapse; font-size:14px; min-width:780px}
+thead th{font-family:var(--ff-mono); font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); font-weight:500; text-align:center; padding:14px 12px; border-bottom:1px solid var(--line2); white-space:nowrap; cursor:pointer; user-select:none}
+thead th:first-child{text-align:left}
+th.s{color:var(--ink)}
+tbody td{padding:13px 12px; border-bottom:1px solid var(--line); text-align:center; white-space:nowrap; font-family:var(--ff-mono); font-size:13.5px}
+tbody td:first-child{text-align:left; font-family:var(--ff-ui)}
+tbody tr:last-child td{border-bottom:0}
+tbody tr{transition:background .12s} tbody tr:hover{background:var(--panel)}
+.pt-n{font-weight:600; font-size:14.5px} .pt-c{font-size:11px; color:var(--muted); font-family:var(--ff-mono)}
+.chip{display:inline-block; width:22px; height:22px; line-height:22px; text-align:center; border-radius:4px; font-family:var(--ff-mono); font-size:11px; font-weight:700; color:#fff}
+.hbar{display:inline-block; width:70px; height:7px; background:var(--panel); border:1px solid var(--line2); border-radius:99px; overflow:hidden; vertical-align:middle; margin-right:8px}
+.hbar i{display:block; height:100%; border-radius:99px}
+.spark{display:inline-flex; align-items:flex-end; gap:2px; height:22px; vertical-align:middle}
+.spark i{width:5px; background:var(--ink); border-radius:1px; opacity:.85}
+
+/* ---------- weekly chart ---------- */
+.chartcard{border:1px solid var(--line2); background:var(--card); padding:30px 34px}
+.chtop{display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; flex-wrap:wrap; gap:14px}
+.chtop h3{font-family:var(--ff-disp); font-weight:700; font-size:17px; letter-spacing:-.01em; text-transform:uppercase}
+.bars{display:flex; align-items:flex-end; gap:26px; height:230px; border-bottom:1px solid var(--ink); padding-top:24px}
+.cbar{flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:100%}
+.cbar i{width:100%; max-width:74px; background:linear-gradient(180deg,#9db1cf,var(--accent)); height:0; transition:height .9s cubic-bezier(.2,.7,.2,1); border-radius:3px 3px 0 0}
+.cbar.part i{background:repeating-linear-gradient(45deg,var(--accent) 0 5px,#9db1cf 5px 9px)}
+.cbar .v{font-family:var(--ff-mono); font-weight:700; font-size:15px; margin-bottom:8px}
+.cbar .x{font-family:var(--ff-mono); font-size:10.5px; color:var(--muted); margin-top:10px}
+
+/* ---------- screens row (map + finmodel) ---------- */
+.screens{display:grid; grid-template-columns:1fr 1fr; gap:26px; margin-top:24px}
+.scr{border:1px solid var(--line2); background:var(--card); padding:28px 30px}
+.scr .h{font-family:var(--ff-disp); font-weight:700; font-size:18px; letter-spacing:-.01em; text-transform:uppercase; margin-bottom:4px}
+.scr .sub{font-family:var(--ff-mono); font-size:11.5px; color:var(--muted); margin-bottom:20px; letter-spacing:.04em}
+.map{position:relative; height:300px; background:linear-gradient(180deg,var(--paper),var(--panel)); border:1px solid var(--line2); border-radius:6px; overflow:hidden}
+.mk{position:absolute; border-radius:50%; transform:translate(-50%,-50%); border:1.5px solid var(--card); transition:transform .2s}
+.mk:hover{transform:translate(-50%,-50%) scale(1.18); z-index:3}
+.maplg{display:flex; gap:18px; margin-top:14px; font-family:var(--ff-mono); font-size:11px; color:var(--muted); flex-wrap:wrap}
+.maplg span{display:flex; align-items:center; gap:6px} .maplg .d{width:9px;height:9px;border-radius:50%}
+
+.fm .big{font-family:var(--ff-mono); font-weight:600; font-size:50px; line-height:1; letter-spacing:-.04em; margin:6px 0}
+.fm .row{display:flex; justify-content:space-between; align-items:baseline; font-family:var(--ff-mono); font-size:12px; color:var(--muted); margin-top:18px}
+.fm input[type=range]{-webkit-appearance:none; width:100%; height:3px; background:var(--line2); margin-top:12px; cursor:pointer}
+.fm input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:22px; height:22px; border-radius:50%; background:var(--ink); border:3px solid var(--card); box-shadow:0 0 0 1.5px var(--ink)}
+.fm .proj{font-family:var(--ff-mono); font-size:13px; color:var(--ink2); margin-top:20px; line-height:1.7}
+.fm .proj b{color:var(--pos)}
+.badge{display:inline-block; font-family:var(--ff-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--neg); border:1.5px solid var(--neg); padding:3px 9px; border-radius:99px; margin-bottom:14px}
+
+/* ---------- footer ---------- */
+.foot{display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:46px 0 60px; margin-top:50px; border-top:1px solid var(--ink); font-family:var(--ff-mono); font-size:12px; color:var(--muted); letter-spacing:.04em}
+
+@media(max-width:900px){
+  .heroband{grid-template-columns:1fr} .hero{border-right:0; border-bottom:1px solid var(--line); padding-right:0}
+  .unit{grid-template-columns:repeat(2,1fr)} .unit .c:nth-child(4n){border-right:1px solid var(--line)} .unit .c:nth-child(2n){border-right:0} .unit .c:nth-child(n+5){border-bottom:1px solid var(--line)}
+  .screens{grid-template-columns:1fr}
+}
+.unit,.tblwrap,.chartcard,.scr{border-radius:5px; box-shadow:0 1px 2px rgba(12,28,48,.04), 0 10px 26px rgba(12,28,48,.06)}
+.nav{box-shadow:0 1px 0 var(--line)}
+.tab.on,.seg button.on,.cur button.on{background:var(--ink); color:var(--paper)}
+.lh h1 em{color:var(--accent)}
+.map{height:362px}
+.mlab{font-family:var(--ff-mono); font-size:15px; fill:var(--ink2)}
+tbody tr{cursor:pointer}
+.scrim{position:fixed; inset:0; background:rgba(54,59,66,.34); backdrop-filter:blur(2px); opacity:0; pointer-events:none; transition:.25s; z-index:60}
+.scrim.on{opacity:1; pointer-events:auto}
+.drawer{position:fixed; top:0; right:0; height:100%; width:432px; max-width:92vw; background:var(--card); border-left:1px solid var(--line2); box-shadow:-22px 0 55px rgba(54,59,66,.16); transform:translateX(100%); transition:transform .32s cubic-bezier(.2,.7,.2,1); z-index:61; overflow-y:auto; padding:28px 32px}
+.drawer.open{transform:none}
+.drawer .dx{position:absolute; top:20px; right:22px; width:32px; height:32px; border:1px solid var(--line2); background:transparent; border-radius:6px; cursor:pointer; color:var(--ink2); font-size:14px; line-height:1}
+.drawer .dx:hover{background:var(--panel)}
+.drawer .dcode{font-family:var(--ff-mono); font-size:12px; letter-spacing:.05em; color:var(--accent); margin-bottom:6px}
+.drawer h2{font-family:var(--ff-disp); font-weight:700; font-size:26px; letter-spacing:-.015em; margin-bottom:22px}
+.dspark{display:flex; align-items:flex-end; gap:8px; height:96px; border-bottom:1px solid var(--line); padding-top:20px}
+.dspark .b{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%}
+.dspark .b i{width:100%; max-width:42px; background:linear-gradient(180deg,#9db1cf,var(--accent)); border-radius:3px 3px 0 0}
+.dspark .b .v{font-family:var(--ff-mono); font-size:11px; margin-bottom:6px; color:var(--ink2)}
+.dspark .b.part i{background:repeating-linear-gradient(45deg,var(--accent) 0 4px,#9db1cf 4px 8px)}
+.dspark-x{display:flex; gap:8px; margin:6px 0 22px} .dspark-x span{flex:1; text-align:center; font-family:var(--ff-mono); font-size:10px; color:var(--muted)}
+.stat{display:flex; justify-content:space-between; align-items:baseline; padding:11px 0; border-bottom:1px solid var(--line); font-size:14px}
+.stat .k{color:var(--ink2)} .stat .v{font-family:var(--ff-mono); font-weight:600}
+.stat:last-child{border-bottom:0}
+.dhint{font-family:var(--ff-mono); font-size:11px; color:var(--muted); margin:0 0 8px; letter-spacing:.03em}
+.backlink{font-family:var(--ff-mono); font-size:12px; color:var(--ink2); text-decoration:none; border:1px solid var(--line2); padding:7px 12px; border-radius:6px; margin-right:14px; transition:.15s}
+.backlink:hover{border-color:var(--ink); color:var(--ink)}
+</style>
+</head>
+<body>
+
+<nav class="nav"><div class="in">
+  <div class="tabs">
+    <button class="tab on">Обзор</button>
+    <button class="tab" id="tabMap">Карта</button>
+    <button class="tab" id="tabFm">Финмодель</button>
+  </div>
+  <div class="navsp"></div>
+  <a class="backlink" href="index.html">← Классический</a>
+  <div class="cur" id="cur"><button class="on" data-c="usd">$</button><button data-c="uzs">сум</button></div>
+</div></nav>
+
+<main class="wrap">
+
+  <div class="lh">
+    <h1>Сеть · фактические показатели</h1>
+    <div class="dl">по состоянию на<br><b>июнь 2026 · неполный</b><br>18 ПВЗ · 8 городов</div>
+  </div>
+
+  <div class="ctl">
+    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
+      <div class="seg" id="gran"><button class="on" data-g="m">Месяц</button><button data-g="w">Неделя</button></div>
+      <div class="dd" id="perdd">
+        <button id="perddBtn"><span id="perddLab">июнь 2026 *</span><span class="car">▼</span></button>
+        <div class="ddm" id="perddMenu">
+          <button data-k="may">май 2026</button>
+          <button class="on" data-k="jun">июнь 2026 *</button>
+        </div>
+      </div>
+    </div>
+    <div class="pills" id="pills">
+      <div class="pill all on" data-s="all">Все</div>
+      <div class="pill s1" data-s="1"><span class="dot" style="background:var(--s1)"></span>Сег 1 · 6%</div>
+      <div class="pill s2" data-s="2"><span class="dot" style="background:var(--s2)"></span>Сег 2 · 5%</div>
+      <div class="pill s3" data-s="3"><span class="dot" style="background:var(--s3)"></span>Сег 3 · 5%</div>
+    </div>
+  </div>
+
+  <!-- hero + kpis -->
+  <div class="heroband">
+    <div class="hero">
+      <div class="cap">Заказы / безубыток · зак/д на 1 ПВЗ</div>
+      <div class="big"><span id="hOrd">20,5</span> <span class="of">/ <span id="hBe">68</span></span></div>
+      <div class="bar"><i id="hFill" style="width:30%"></i><span class="mk" id="hMark" style="left:90%"></span></div>
+      <div class="st" id="hSt">×3,4 до безубытка сети</div>
+    </div>
+    <div class="kpis">
+      <div class="kp"><div class="l">P&amp;L по сети / мес</div><div class="v" id="kPnl">—</div><div class="d" id="kPnlD">модель · текущий темп</div></div>
+      <div class="kp"><div class="l">Оборот (GMV) / мес</div><div class="v" id="kGmv">—</div><div class="d">по всей сети</div></div>
+      <div class="kp"><div class="l">Точек выше безубытка</div><div class="v" id="kAbove">—</div><div class="d" id="kAboveD">из 18</div></div>
+      <div class="kp"><div class="l">P&amp;L на 1 ПВЗ / мес</div><div class="v" id="kPnlPv">—</div><div class="d">средн. по точке</div></div>
+    </div>
+  </div>
+
+  <!-- unit econ -->
+  <div class="slab"><span class="n">02</span> Юнит-экономика · среднее на 1 ПВЗ</div>
+  <div class="unit" id="unit"></div>
+
+  <!-- table -->
+  <div class="slab"><span class="n">03</span> По точкам · <span id="tblPer">июнь 2026</span></div>
+  <div class="tblwrap"><table id="tbl"></table></div>
+
+  <!-- weekly chart -->
+  <div class="slab"><span class="n">04</span> Динамика сети · по неделям</div>
+  <div class="chartcard">
+    <div class="chtop"><h3>Заказов в день на 1 ПВЗ</h3>
+      <div class="seg" id="chTog"><button class="on" data-h="ord">Заказы</button><button data-h="rev">Оборот</button><button data-h="pnl">P&amp;L</button></div>
+    </div>
+    <div class="bars" id="bars"></div>
+  </div>
+
+  <!-- costs -->
+  <div class="slab"><span class="n">05</span> Структура расходов · в месяц</div>
+  <div class="tblwrap"><table id="costtbl"></table></div>
+
+  <!-- screens row -->
+  <div class="slab"><span class="n">06</span> Тот же язык · на всех экранах</div>
+  <div class="screens">
+    <div class="scr" id="mapScr">
+      <div class="h">Карта сети</div>
+      <div class="sub">размер точки = заказы/день · цвет = сегмент</div>
+      <div class="map"><svg id="mapsvg" viewBox="0 0 900 623" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block"></svg></div>
+      <div class="maplg">
+        <span><span class="d" style="background:var(--s1)"></span>Сег 1</span>
+        <span><span class="d" style="background:var(--s2)"></span>Сег 2</span>
+        <span><span class="d" style="background:var(--s3)"></span>Сег 3</span>
+        <span>○ размер = поток</span>
+      </div>
+    </div>
+    <div class="scr fm" id="fmScr">
+      <div class="h">Финмодель · прогноз</div>
+      <div class="sub">двигай рост заказов — пересчёт мгновенный</div>
+      <div class="badge">прогноз — не факт</div>
+      <div class="cap mono" style="font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase">P&amp;L по сети при росте</div>
+      <div class="big" id="fmPnl">—</div>
+      <div class="row"><span>рост заказов</span><span class="mono" id="fmBoostL" style="color:var(--ink);font-weight:700">×1.0</span></div>
+      <input type="range" id="fmBoost" min="1" max="6" step="0.1" value="1">
+      <div class="proj" id="fmProj"></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div>© 2026 · Сеть ПВЗ Uzum · концепт-редизайн</div>
+    <div>Editorial / financial direction · светлая тема</div>
+    <div>Данные — иллюстративные (порядок реальный)</div>
+  </div>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer"></aside>
+<script>
+const FX=12600;
+const fmtN=(n,d=0)=>n.toLocaleString('ru-RU',{minimumFractionDigits:d,maximumFractionDigits:d}).replace(/ /g,' ');
+const segHex={1:'var(--s1)',2:'var(--s2)',3:'var(--s3)'};
+let cur='usd';
+const money=(usd)=>{const neg=usd<0,a=Math.abs(Math.round(cur==='usd'?usd:usd*FX));return (neg?'−':'')+(cur==='usd'?'$'+fmtN(a):fmtN(a)+' сум');};
+
+// mock data: orders/day (june run-rate), seg, commission, avg check $, opex $/mo, guarantee $/mo
+// === живые данные: тянутся из index.html (тот же DATA/WK/FACT, что строит пайплайн) ===
+let DATA=[], WKD=null, FACTD=null; const ADAPTfx=12600;
+function _ext(html,decl,o,c){const i=html.indexOf(decl); if(i<0)return null; const j=html.indexOf(o,i); let d=0; for(let k=j;k<html.length;k++){const ch=html[k]; if(ch===o)d++; else if(ch===c){d--; if(d===0)return html.slice(j,k+1);}} return null;}
+function _po(s){try{return JSON.parse(s);}catch(e){return (0,eval)('('+s+')');}}
+
+// map positions (stylized cluster: Tashkent dense centre-right + regions)
+const MAPGEO={path:"M545.6 563.0L546.9 524.5L484.1 497.6L434.8 466.8L404.0 437.2L350.1 393.8L326.9 329.0L311.1 317.6L260.0 320.5L242.0 307.6L237.0 257.5L173.4 224.2L133.6 260.8L93.3 282.4L101.1 314.1L47.9 314.9L46.0 83.1L167.4 46.0L176.3 51.5L249.4 96.5L288.0 120.2L333.1 176.9L388.4 167.7L469.3 162.8L525.8 208.8L522.2 271.8L545.2 272.3L554.8 323.7L614.8 325.8L627.8 355.6L645.3 355.2L666.0 310.2L728.2 266.4L755.3 254.7L769.3 260.9L729.7 301.6L764.5 325.3L798.1 309.6L854.0 342.8L793.6 388.0L757.7 381.8L738.2 383.5L731.5 366.0L741.3 336.8L678.2 351.4L663.2 391.8L640.8 426.5L601.4 423.6L589.2 451.3L623.8 466.2L634.0 513.1L607.5 576.7L571.9 563.4L545.6 563.0Z",
+ cities:{"Ташкент":{x:674.0,y:315.5},"Алмалык":{x:690.9,y:343.9},"Самарканд":{x:567.1,y:418.9},"Бухара":{x:446.6,y:411.8},"Газалкент":{x:699.4,y:299.4},"Бука":{x:672.2,y:346.1},"Пскент":{x:679.2,y:340.6},"Маргилан":{x:791.2,y:367.6}}};
+
+let S={seg:'all', per:'jun'};
+
+function ordOf(d){ return S.per==='jun'?d.ordJun:d.ordMay; }
+function beOf(d){ return d.opex/(d.chk*d.comm)/30; }
+function pnlOf(d){ const ord=ordOf(d); const comm=ord*d.chk*d.comm*30; const inc=Math.max(d.guar,comm); return inc-d.opex; }
+function rows(){ return DATA.filter(d=>S.seg==='all'||d.seg==+S.seg); }
+
+function render(){
+  if(!DATA.length) return;
+  const r=rows(), n=r.length||1;
+  const ordPV=r.reduce((a,d)=>a+ordOf(d),0)/n;
+  const bePV=r.reduce((a,d)=>a+beOf(d),0)/n;
+  const gmv=r.reduce((a,d)=>a+ordOf(d)*d.chk*30,0);
+  const pnl=r.reduce((a,d)=>a+pnlOf(d),0);
+  const inc=r.reduce((a,d)=>a+Math.max(d.guar,ordOf(d)*d.chk*d.comm*30),0);
+  const cost=r.reduce((a,d)=>a+d.opex,0);
+  const above=r.filter(d=>ordOf(d)>=beOf(d)).length;
+  const ratio=ordPV/bePV, toBE=bePV/ordPV;
+
+  document.getElementById('hOrd').textContent=fmtN(ordPV,1);
+  document.getElementById('hBe').textContent=fmtN(bePV,0);
+  document.getElementById('hFill').style.width=Math.min(ratio,1.4)/1.4*100+'%';
+  document.getElementById('hMark').style.left=(1/1.4*100)+'%';
+  document.getElementById('hSt').innerHTML=ratio>=1?'<b style="color:var(--pos)">безубыток достигнут</b>':'×'+fmtN(toBE,1)+' до безубытка сети';
+
+  const kp=document.getElementById('kPnl'); kp.textContent=money(pnl); kp.className='v '+(pnl>=0?'pos':'neg');
+  document.getElementById('kGmv').textContent=money(gmv);
+  document.getElementById('kAbove').textContent=above+' / '+n; document.getElementById('kAbove').className='v '+(above>0?'pos':'neg');
+  document.getElementById('kAboveD').textContent='из '+n+' точек';
+  const kpv=document.getElementById('kPnlPv'); kpv.textContent=money(pnl/n); kpv.className='v '+(pnl>=0?'pos':'neg');
+
+  // unit econ
+  const margin=inc>0?(pnl/inc*100):0;
+  const ue=[['Заказов/день',fmtN(ordPV,1)],['Оборот/мес',money(gmv/n)],['Доход/мес',money(inc/n)],['Затраты/мес',money(cost/n)],
+    ['P&L/мес',money(pnl/n),pnl>=0?'pos':'neg'],['Маржа ПВЗ',Math.round(margin)+'%',margin>=0?'pos':'neg'],['Безубыток',fmtN(bePV,0)+' з/д'],['Чек · комиссия','$'+fmtN(r[0]?r[0].chk:14,0)+' · '+(S.seg==='all'?'5–6':(+S.seg===1?'6':'5'))+'%']];
+  document.getElementById('unit').innerHTML=ue.map(c=>`<div class="c"><div class="l">${c[0]}</div><div class="v ${c[2]||''}">${c[1]}</div></div>`).join('');
+
+  // table
+  const sorted=r.slice().sort((a,b)=>ordOf(b)-ordOf(a));
+  let h='<thead><tr><th class="s">Точка</th><th>Сег</th><th>Зак/д</th><th>Безубыток</th><th>Здоровье</th><th>Оборот/д</th><th>P&L/мес</th><th>Тренд</th></tr></thead><tbody>';
+  const maxord=Math.max(...DATA.map(ordOf));
+  sorted.forEach((d,i)=>{const o=ordOf(d),be=beOf(d),hp=Math.min(o/be,1.4),hc=o>=be?'var(--pos)':o>=be*.6?'var(--gold)':'var(--neg)';const p=pnlOf(d);
+    const tr=[0.55,0.7,0.82,1].map(f=>Math.round(o*f)); const tmax=Math.max(...tr,1);
+    const spark=tr.map(v=>`<i style="height:${Math.max(v/tmax*22,3)}px"></i>`).join('');
+    h+=`<tr class="prow" data-i="${i}"><td><span class="pt-n">${d.name}</span> <span class="pt-c">${d.city}</span></td>`+
+       `<td><span class="chip" style="background:${segHex[d.seg]}">${d.seg}</span></td>`+
+       `<td>${fmtN(o,1)}</td><td style="color:var(--muted)">${fmtN(be,0)}</td>`+
+       `<td><span class="hbar"><i style="width:${hp/1.4*100}%;background:${hc}"></i></span><span style="color:${hc};font-size:12px">${Math.round(o/be*100)}%</span></td>`+
+       `<td>${money(o*d.chk)}</td>`+
+       `<td class="${p>=0?'pos':'neg'}">${money(p)}</td>`+
+       `<td><span class="spark">${spark}</span></td></tr>`;});
+  const tb=document.getElementById('tbl'); tb.innerHTML=h+'</tbody>';
+  tb.querySelectorAll('tbody tr').forEach(tr=>tr.onclick=()=>openCard(sorted[+tr.dataset.i]));
+
+  document.getElementById('tblPer').textContent = S.per==='jun'?'июнь 2026 (неполный)':'май 2026';
+  renderFm(); renderCosts();
+}
+
+// weekly chart
+let chMetric='ord';
+const WEEKS=['11.05','18.05','25.05','01.06*'];
+function renderBars(){
+  if(!WKD) return;
+  const n=DATA.length||1;
+  const idxs=WKD.weeks.map((_,i)=>i).slice(-6);
+  const wpnl=i=>DATA.reduce((a,d)=>{const p=WKD.pvz[d.code]; const o=p?(p.ord[i]||0):0; const comm=o*d.chk*d.comm*30; return a+(Math.max(d.guar,comm)-d.opex);},0);
+  let series, fmt;
+  if(chMetric==='ord'){ series=idxs.map(i=>WKD.net.ord[i]/n); fmt=v=>fmtN(v,1); }
+  else if(chMetric==='rev'){ series=idxs.map(i=>WKD.net.rev[i]/n/ADAPTfx); fmt=v=>money(v); }
+  else { series=idxs.map(i=>wpnl(i)); fmt=v=>money(v); }
+  const title=chMetric==='ord'?'Заказов в день на 1 ПВЗ':chMetric==='rev'?'Оборот в день на 1 ПВЗ':'P&L сети по неделям';
+  document.querySelector('.chtop h3').textContent=title;
+  const max=Math.max(...series.map(Math.abs),1);
+  document.getElementById('bars').innerHTML=idxs.map((wi,k)=>{
+    const v=series[k]; const pct=Math.abs(v)/max*100; const part=!!(WKD.dayCounts&&WKD.dayCounts[wi]<7);
+    const lbl=String(WKD.weeks[wi]).split('–')[0]+(part?'*':'');
+    return `<div class="cbar ${part?'part':''}"><span class="v">${fmt(v)}${part?'*':''}</span><i style="height:0" data-h="${pct}"></i><span class="x">${lbl}</span></div>`;
+  }).join('');
+  setTimeout(()=>document.querySelectorAll('#bars .cbar i').forEach((b,i)=>setTimeout(()=>b.style.height=b.dataset.h+'%',i*110)),40);
+}
+
+// map
+function renderMap(){
+  if(!DATA.length) return;
+  const r=rows();
+  const byCity={}; r.forEach(d=>{const k=d.city; (byCity[k]=byCity[k]||{sum:0,seg:d.seg,n:0}); byCity[k].sum+=ordOf(d); byCity[k].n++;});
+  const ents=Object.keys(byCity).map(city=>({city,sum:byCity[city].sum,seg:byCity[city].seg,n:byCity[city].n,c:MAPGEO.cities[city]})).filter(e=>e.c).sort((a,b)=>b.sum-a.sum);
+  const mx=Math.max(...ents.map(e=>e.sum),1);
+  let el=`<path d="${MAPGEO.path}" fill="var(--card)" stroke="var(--line2)" stroke-width="1.5"/>`;
+  ents.forEach(e=>{ e._r=13+e.sum/mx*40;
+    el+=`<circle cx="${e.c.x}" cy="${e.c.y}" r="${e._r.toFixed(1)}" fill="${segHex[e.seg]}" fill-opacity=".8" stroke="var(--card)" stroke-width="2"><title>${e.city} · ${e.n} ПВЗ · ${fmtN(e.sum,0)} зак/д</title></circle>`;});
+  ents.forEach(e=>{ el+=`<text x="${e.c.x}" y="${(e.c.y+e._r+15).toFixed(0)}" text-anchor="middle" class="mlab">${e.city}</text>`;});
+  document.getElementById('mapsvg').innerHTML=el;
+}
+function renderCosts(){
+  const r=rows(), n=r.length||1;
+  let h='<thead><tr><th class="s">Точка</th><th>Аренда</th><th>ЗП</th><th>УК + разное</th><th>Итого / мес</th></tr></thead><tbody>';
+  let tr=0,ts=0,tu=0,tt=0;
+  r.forEach(d=>{const rent=Math.round(d.opex*0.46), sal=Math.round(d.opex*0.40), uk=d.opex-rent-sal, tot=d.opex;
+    tr+=rent;ts+=sal;tu+=uk;tt+=tot;
+    h+=`<tr><td><span class="pt-n">${d.name}</span> <span class="pt-c">${d.city}</span></td><td>${money(rent)}</td><td>${money(sal)}</td><td>${money(uk)}</td><td style="font-weight:600;color:var(--ink)">${money(tot)}</td></tr>`;});
+  h+=`<tr style="border-top:1.5px solid var(--line2)"><td style="color:var(--muted)">В среднем на ПВЗ</td><td>${money(tr/n)}</td><td>${money(ts/n)}</td><td>${money(tu/n)}</td><td style="font-weight:600">${money(tt/n)}</td></tr>`;
+  h+=`<tr><td style="color:var(--muted);font-weight:600">Итого по сети</td><td>${money(tr)}</td><td>${money(ts)}</td><td>${money(tu)}</td><td style="font-weight:700;color:var(--ink)">${money(tt)}</td></tr>`;
+  document.getElementById('costtbl').innerHTML=h+'</tbody>';
+}
+function openCard(d){
+  if(!d) return;
+  const o=ordOf(d), be=beOf(d), health=be>0?o/be:0, comm=o*d.chk*d.comm*30, inc=Math.max(d.guar,comm), p=inc-d.opex;
+  const wk=[0.55,0.7,0.82,1].map(f=>+(o*f).toFixed(1)), mx=Math.max(...wk,1);
+  let spark=''; ['11.05','18.05','25.05','01.06*'].forEach((w,i)=>{const part=i===3; spark+=`<div class="b ${part?'part':''}"><span class="v">${fmtN(wk[i],1)}${part?'*':''}</span><i style="height:${Math.max(wk[i]/mx*70,4)}px"></i></div>`;});
+  const xs=['11.05','18.05','25.05','01.06*'].map(w=>`<span>${w}</span>`).join('');
+  const row=(k,v,cls)=>`<div class="stat"><span class="k">${k}</span><span class="v ${cls||''}">${v}</span></div>`;
+  const per=S.per==='jun'?'июнь 2026 (неполный)':'май 2026';
+  document.getElementById('drawer').innerHTML=`
+    <button class="dx" onclick="closeCard()">✕</button>
+    <div class="dcode">Сег ${d.seg} · комиссия ${Math.round(d.comm*100)}% · ${d.city}</div>
+    <h2>${d.name}</h2>
+    <div class="dhint">Заказы/день по неделям (неполная — со *)</div>
+    <div class="dspark">${spark}</div>
+    <div class="dspark-x">${xs}</div>
+    ${row('Период',per)}
+    ${row('Заказы/день',fmtN(o,1))}
+    ${row('Оборот (GMV)/день',money(o*d.chk))}
+    ${row('Точка безубытка',fmtN(be,0)+' з/д')}
+    ${row('Здоровье',Math.round(health*100)+'%',health>=1?'pos':'neg')}
+    ${row('Доход / мес',money(inc))}
+    ${row('Затраты / мес',money(d.opex))}
+    ${row('P&L / мес',money(p),p>=0?'pos':'neg')}
+    ${row('Средний чек',money(d.chk))}
+    ${row('Гарантия / мес',money(d.guar))}`;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('scrim').classList.add('on');
+}
+function closeCard(){document.getElementById('drawer').classList.remove('open');document.getElementById('scrim').classList.remove('on');}
+
+// finmodel
+let boost=1;
+function renderFm(){
+  const r=rows(),n=r.length||1;
+  let pnl=0, above=0;
+  r.forEach(d=>{const ord=ordOf(d)*boost; const comm=ord*d.chk*d.comm*30; const inc=Math.max(d.guar,comm); pnl+=inc-d.opex; if(ord>=beOf(d))above++;});
+  const el=document.getElementById('fmPnl'); el.textContent=money(pnl); el.className='big '+(pnl>=0?'pos':'neg');
+  document.getElementById('fmBoostL').textContent='×'+boost.toFixed(1);
+  const need=boost;
+  document.getElementById('fmProj').innerHTML=`При росте <b>×${boost.toFixed(1)}</b> к текущему потоку: <b>${above}/${n}</b> точек выше безубытка, P&L на ПВЗ <b class="${pnl>=0?'pos':'neg'}" style="color:${pnl>=0?'var(--pos)':'var(--neg)'}">${money(pnl/n)}</b>.`;
+}
+
+// interactions
+document.getElementById('cur').onclick=e=>{const b=e.target.closest('button'); if(!b)return; cur=b.dataset.c; document.querySelectorAll('#cur button').forEach(x=>x.classList.toggle('on',x===b)); render(); renderBars();};
+document.getElementById('pills').onclick=e=>{const p=e.target.closest('.pill'); if(!p)return; S.seg=p.dataset.s; document.querySelectorAll('#pills .pill').forEach(x=>x.classList.toggle('on',x===p)); render(); renderMap();};
+document.getElementById('gran').onclick=e=>{const b=e.target.closest('button'); if(!b)return; document.querySelectorAll('#gran button').forEach(x=>x.classList.toggle('on',x===b));};
+document.getElementById('chTog').onclick=e=>{const b=e.target.closest('button'); if(!b)return; chMetric=b.dataset.h; document.querySelectorAll('#chTog button').forEach(x=>x.classList.toggle('on',x===b)); renderBars();};
+const pm=document.getElementById('perddMenu');
+document.getElementById('perddBtn').onclick=e=>{e.stopPropagation(); pm.classList.toggle('open');};
+document.addEventListener('click',e=>{if(!e.target.closest('#perdd'))pm.classList.remove('open');});
+pm.onclick=e=>{const b=e.target.closest('button'); if(!b)return; S.per=b.dataset.k; document.getElementById('perddLab').textContent=b.textContent; document.querySelectorAll('#perddMenu button').forEach(x=>x.classList.toggle('on',x===b)); pm.classList.remove('open'); render(); renderMap();};
+document.getElementById('fmBoost').oninput=e=>{boost=+e.target.value; renderFm();};
+document.getElementById('tabMap').onclick=()=>document.getElementById('mapScr').scrollIntoView({behavior:'smooth',block:'center'});
+document.getElementById('tabFm').onclick=()=>document.getElementById('fmScr').scrollIntoView({behavior:'smooth',block:'center'});
+
+document.getElementById('scrim').onclick=closeCard;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCard();});
+function _initApp(){ render(); renderBars(); renderMap(); }
+fetch('./index.html',{cache:'no-store'}).then(r=>r.text()).then(html=>{
+  const RD=_po(_ext(html,'const DATA','[',']'));
+  WKD=_po(_ext(html,'const WK','{','}'));
+  const fr=_ext(html,'const FACT','{','}'); if(fr){try{FACTD=_po(fr);}catch(e){}}
+  const lw=WKD.weeks.length-1;
+  DATA=RD.map(d=>{const p=WKD.pvz[d.code]||{ord:[]};
+    return {code:d.code, name:d.aka, city:d.city, seg:d.seg, comm:d.comm,
+      chk:+(((d.avgCheck||176000)/ADAPTfx)).toFixed(1),
+      opex:Math.round((d.rentSum+d.salarySum+(d.miscSum||0))/ADAPTfx+(d.uk||0)),
+      guar:Math.round((d.guarFull||0)/ADAPTfx),
+      ordJun:+(((p.ord&&p.ord[lw]!=null)?p.ord[lw]:(d.runRate||0))).toFixed(1),
+      ordMay:+(((p.ord&&p.ord.length>1)?p.ord[0]:0)).toFixed(1)};});
+  _initApp();
+}).catch(e=>{const m=document.querySelector('main.wrap'); if(m)m.insertAdjacentHTML('afterbegin','<div style="padding:24px;font-family:var(--ff-mono);color:var(--neg)">Не удалось загрузить живые данные: '+e+'. Открой через Railway (не как локальный файл).</div>');});
+</script>
+</body>
+</html>
