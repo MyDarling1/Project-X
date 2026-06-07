@@ -162,16 +162,14 @@ svg{display:block;width:100%;height:auto;overflow:visible}
     linear-gradient(to right, rgba(139,109,255,.22), rgba(139,109,255,0)) 0 0/16px 100% no-repeat scroll,
     linear-gradient(to left, rgba(139,109,255,.22), rgba(139,109,255,0)) 100% 0/16px 100% no-repeat scroll}
 table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
-th{text-align:right;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:600;cursor:pointer;white-space:nowrap;border-bottom:1px solid var(--line2);user-select:none}
+th{text-align:center;padding:9px 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:600;cursor:pointer;white-space:nowrap;border-bottom:1px solid var(--line2);user-select:none}
 th:first-child,td:first-child{text-align:left}
 th.lft{text-align:left}
 th:hover{color:var(--dim)}
 th.sorted{color:var(--violet)}
-td{padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{text-align:center;padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
 tr.prow{cursor:pointer;transition:background .14s}
 tr.prow:hover{background:rgba(139,109,255,.06)}
-#ovTbl th,#ovTbl td{text-align:center}
-#ovTbl th.lft,#ovTbl td:first-child{text-align:left}
 .chip{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;color:#0a0c11}
 .health{position:relative;width:96px;height:8px;background:var(--line2);border-radius:99px;overflow:hidden;display:inline-block;vertical-align:middle}
 .health i{position:absolute;left:0;top:0;height:100%;border-radius:99px;transition:width .5s cubic-bezier(.22,1,.36,1)}
@@ -875,14 +873,14 @@ function renderCosts(){
   arr.forEach(d=>{const opex=d.rentSum+d.salarySum, ukm=S.uk*S.fx, misc=d.miscSum||0, tot=opex+ukm+misc;
     sr+=d.rentSum;ss+=d.salarySum;su+=ukm;sm+=misc;
     h+=`<tr><td><b>${d.aka}</b><div style="color:var(--faint);font-size:11px">${d.city}</div></td>`+
-       `<td style="text-align:right"><span class="mono">${money(d.rentSum)}</span></td>`+
-       `<td style="text-align:right"><span class="mono">${money(d.salarySum)}</span></td>`+
-       `<td style="text-align:right"><span class="mono">${money(opex)}</span></td>`+
-       `<td style="text-align:right"><span class="mono">${money(ukm+misc)}</span></td>`+
-       `<td style="text-align:right"><span class="mono pos" style="color:var(--txt)">${money(tot)}</span></td></tr>`;});
+       `<td><span class="mono">${money(d.rentSum)}</span></td>`+
+       `<td><span class="mono">${money(d.salarySum)}</span></td>`+
+       `<td><span class="mono">${money(opex)}</span></td>`+
+       `<td><span class="mono">${money(ukm+misc)}</span></td>`+
+       `<td><span class="mono pos" style="color:var(--txt)">${money(tot)}</span></td></tr>`;});
   const n=DATA.length||1, rows=[sr,ss,sr+ss,su+sm,sr+ss+su+sm];
-  h+=`<tr><td style="color:var(--dim)">В среднем на ПВЗ</td>`+rows.map(v=>`<td style="text-align:right"><span class="mono" style="color:var(--dim)">${money(v/n)}</span></td>`).join('')+'</tr>';
-  h+=`<tr><td style="color:var(--dim);font-weight:700">Итого по сети</td>`+rows.map(v=>`<td style="text-align:right"><span class="mono"><b>${money(v)}</b></span></td>`).join('')+'</tr>';
+  h+=`<tr><td style="color:var(--dim)">В среднем на ПВЗ</td>`+rows.map(v=>`<td><span class="mono" style="color:var(--dim)">${money(v/n)}</span></td>`).join('')+'</tr>';
+  h+=`<tr><td style="color:var(--dim);font-weight:700">Итого по сети</td>`+rows.map(v=>`<td><span class="mono"><b>${money(v)}</b></span></td>`).join('')+'</tr>';
   const t=document.getElementById('costTbl');t.innerHTML=h+'</tbody>';
   t.querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.csk;if(S.costSortKey===k)S.costSortDir*=-1;else{S.costSortKey=k;S.costSortDir=-1;}renderCosts();});
 }
