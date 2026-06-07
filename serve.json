@@ -2,8 +2,11 @@
   "cleanUrls": false,
   "trailingSlash": false,
   "directoryListing": false,
+  "redirects": [
+    { "source": "/v2", "destination": "/", "type": 302 },
+    { "source": "/v2.html", "destination": "/", "type": 302 }
+  ],
   "rewrites": [
-    { "source": "/", "destination": "/index.html" },
-    { "source": "/v2", "destination": "/v2.html" }
+    { "source": "/", "destination": "/index.html" }
   ]
 }
