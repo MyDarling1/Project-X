@@ -776,13 +776,13 @@ function renderHistory(){
   const base=isVol?'var(--mint)':'var(--violet)';
   const ri=WK.runIdx??2;
   const codes=Object.keys(WK.pvz).sort((a,b)=>val(b)[ri]-val(a)[ri]);
-  let h='<thead><tr><th class="lft">Точка</th><th>Сег</th>'+show.map(i=>`<th>${WK.weeks[i]}${partial[i]?'*':''}</th>`).join('')+(isPnl?'':'<th>тренд</th>')+'</tr></thead><tbody>';
+  let h='<thead><tr><th class="lft">Точка</th><th>Сег</th>'+show.map(i=>`<th>${WK.weeks[i]}${partial[i]?'*':''}</th>`).join('')+(isPnl?'':'<th style="text-align:center;padding-left:24px">тренд</th>')+'</tr></thead><tbody>';
   codes.forEach(c=>{
     const p=WK.pvz[c], a=val(c), av=show.map(i=>a[i]);
     h+=`<tr><td><b>${p.aka}</b><div style="color:var(--faint);font-size:11px">${p.city}</div></td>`+
        `<td style="text-align:right"><span class="chip" style="background:${segHex[p.seg]}">${p.seg}</span></td>`+
        av.map((v,k)=>`<td style="text-align:right"><span class="mono" style="color:${isPnl?(v>=0?'var(--mint)':'var(--coral)'):(sp[k]?'var(--faint)':'var(--txt)')}">${fmtV(v)}</span></td>`).join('')+
-       (isPnl?'':`<td style="text-align:right">${sparkline(av,base,sp)}</td>`)+`</tr>`;
+       (isPnl?'':`<td style="text-align:center;padding-left:24px;white-space:nowrap">${sparkline(av,base,sp)}</td>`)+`</tr>`;
   });
   document.getElementById('histTbl').innerHTML=h+'</tbody>';
   renderCosts();
