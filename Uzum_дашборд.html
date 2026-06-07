@@ -128,6 +128,15 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .seg-toggle{display:flex;background:var(--bg);border:1px solid var(--line2);border-radius:11px;padding:3px;gap:3px}
 .seg-toggle button{flex:1;border:0;background:transparent;color:var(--dim);font-family:inherit;font-size:12px;font-weight:600;padding:8px 10px;border-radius:8px;cursor:pointer;transition:.18s;white-space:nowrap}
 .seg-toggle button.on{background:var(--violet);color:#0a0c11;box-shadow:0 4px 14px rgba(139,109,255,.35)}
+.perdd{position:relative}
+.perdd-btn{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line2);color:var(--txt);font-family:inherit;font-size:13px;font-weight:600;padding:9px 12px;border-radius:11px;cursor:pointer;white-space:nowrap}
+.perdd-btn:hover{border-color:var(--violet)}
+.perdd-car{color:var(--dim);font-size:10px}
+.perdd-menu{position:absolute;right:0;top:calc(100% + 6px);background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:6px;min-width:170px;box-shadow:0 16px 44px rgba(0,0,0,.55);z-index:40;display:none;max-height:300px;overflow-y:auto}
+.perdd-menu.open{display:block}
+.perdd-item{display:block;width:100%;text-align:left;background:transparent;border:0;color:var(--dim);font-family:inherit;font-size:13px;font-weight:600;padding:8px 10px;border-radius:8px;cursor:pointer;white-space:nowrap}
+.perdd-item:hover{background:var(--bg);color:var(--txt)}
+.perdd-item.on{color:var(--txt);background:rgba(139,109,255,.16)}
 
 .pills{display:flex;gap:7px;flex-wrap:wrap}
 .pill{font-size:12px;font-weight:600;border:1px solid var(--line2);background:var(--bg);color:var(--dim);padding:9px 14px;border-radius:99px;cursor:pointer;transition:.16s;display:flex;align-items:center;gap:6px}
@@ -270,13 +279,18 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 <div id="netCtl" style="margin-bottom:14px">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:9px">
     <h3 style="margin:0">Сеть · фактические показатели</h3>
-    <div class="seg-toggle" id="granTog">
-      <button data-g="month" class="on">По месяцам</button>
-      <button data-g="week">По неделям</button>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <div class="seg-toggle" id="granTog">
+        <button data-g="month" class="on">Месяц</button>
+        <button data-g="week">Неделя</button>
+      </div>
+      <div class="perdd" id="perdd">
+        <button class="perdd-btn" id="perddBtn"><span id="perddLabel">—</span><span class="perdd-car">▾</span></button>
+        <div class="perdd-menu" id="perddMenu"></div>
+      </div>
     </div>
   </div>
-  <div class="pills" id="periodChips"></div>
-  <div class="pills" id="pills" style="margin-top:8px">
+  <div class="pills" id="pills">
     <div class="pill all on" data-s="all">Все</div>
     <div class="pill s1" data-s="1"><span class="dot" style="background:var(--s1)"></span>Сег 1 · 6%</div>
     <div class="pill s2" data-s="2"><span class="dot" style="background:var(--s2)"></span>Сег 2 · 5%</div>
@@ -498,13 +512,13 @@ function currentPeriod(){   // единый выбор периода для в�
     return {idxs:m.weekIdxs, mode:m.hasFact?'fact':'model', monthDays:0, factKey:m.hasFact?m.key:null, perLabel:'за месяц', label:m.label, partial:!m.hasFact,
       prevSpec: pm?{idxs:pm.weekIdxs,mode:pm.hasFact?'fact':'model',md:0,factKey:pm.hasFact?pm.key:null}:null,
       desc: m.hasFact
-        ? `Полный месяц ${m.label} · деньги (доход/P&L) — из фактического отчёта Uzum; заказы и оборот — из управленческой отчётности.`
-        : `Текущий месяц ${m.label} — неполный · по управленческой отчётности; P&L модельный (факт. отчёт Uzum выходит после закрытия месяца).` };
+        ? `${m.label} · доход и P&L — факт Uzum; заказы и оборот — упр. отчётность.`
+        : `${m.label} — неполный · P&L модельный (факт Uzum — после закрытия месяца).` };
   }
   const i=S.weekIdx, wm=weekMonth(i), pwm=i>0?weekMonth(i-1):null, fa=!!(wm&&wm.hasFact);
   return {idxs:[i], mode:fa?'fact-alloc':'model', monthDays:monthDaysOf(wm), factKey:fa?wm.key:null, perLabel:'за неделю', label:WK.weeks[i], partial:wdays(i)<7,
     prevSpec: i>0?{idxs:[i-1],mode:(pwm&&pwm.hasFact)?'fact-alloc':'model',md:monthDaysOf(pwm),factKey:(pwm&&pwm.hasFact)?pwm.key:null}:null,
-    desc:`Неделя ${WK.weeks[i]}${wdays(i)<7?' (неполная, '+wdays(i)+' дн.)':''} · заказы и оборот — из управленческой отчётности; `+(fa?`P&L — доля месячного факта Uzum (${wm.label}) по дням недели.`:`P&L — модельный.`) };
+    desc:`Неделя ${WK.weeks[i]}${wdays(i)<7?' (неполная, '+wdays(i)+' дн.)':''} · `+(fa?`P&L — доля факта Uzum (${wm.label}) по дням.`:`P&L модельный.`) };
 }
 function periodFin(d, idxs, mode, monthDays, factKey){   // {income,cost,pnl} ПВЗ за период
   const cm=(d.rentSum+d.salarySum+(d.miscSum||0)+S.uk*S.fx);
@@ -555,15 +569,19 @@ function renderKPIs(){
 }
 function updateNetCtl(){
   document.querySelectorAll('#granTog button').forEach(b=>b.classList.toggle('on',b.dataset.g===S.gran));
-  const chips=document.getElementById('periodChips'); if(!chips) return;
+  const lbl=document.getElementById('perddLabel'), menu=document.getElementById('perddMenu'); if(!menu) return;
   if(S.gran==='month'){
-    chips.innerHTML=monthList.map(m=>`<div class="pill" data-k="${m.key}">${m.label}${m.hasFact?'':' *'}</div>`).join('');
-    chips.querySelectorAll('.pill').forEach(p=>{p.classList.toggle('on',p.dataset.k===S.monthKey); p.onclick=()=>{S.monthKey=p.dataset.k;renderAll();};});
+    const cur=monthList.find(m=>m.key===S.monthKey)||monthList[monthList.length-1];
+    lbl.textContent = cur ? cur.label+(cur.hasFact?'':' *') : '—';
+    menu.innerHTML=monthList.map(m=>`<button class="perdd-item ${m.key===S.monthKey?'on':''}" data-k="${m.key}">${m.label}${m.hasFact?'':' *'}</button>`).join('');
+    menu.querySelectorAll('.perdd-item').forEach(it=>it.onclick=()=>{S.monthKey=it.dataset.k;closePerdd();renderAll();});
   } else {
-    chips.innerHTML=WK.weeks.map((w,i)=>`<div class="pill" data-i="${i}">${w}${wdays(i)<7?' *':''}</div>`).join('');
-    chips.querySelectorAll('.pill').forEach(p=>{p.classList.toggle('on',+p.dataset.i===S.weekIdx); p.onclick=()=>{S.weekIdx=+p.dataset.i;renderAll();};});
+    lbl.textContent = WK.weeks[S.weekIdx] ? WK.weeks[S.weekIdx]+(wdays(S.weekIdx)<7?' *':'') : '—';
+    menu.innerHTML=WK.weeks.map((w,i)=>`<button class="perdd-item ${i===S.weekIdx?'on':''}" data-i="${i}">${w}${wdays(i)<7?' *':''}</button>`).join('');
+    menu.querySelectorAll('.perdd-item').forEach(it=>it.onclick=()=>{S.weekIdx=+it.dataset.i;closePerdd();renderAll();});
   }
 }
+function closePerdd(){const m=document.getElementById('perddMenu');if(m)m.classList.remove('open');}
 
 /* ---------- юнит-экономика ---------- */
 function renderUnit(){
@@ -1018,7 +1036,9 @@ document.querySelectorAll('#histTog button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#histTog button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
   S.histMetric=b.dataset.h;renderHistory();});
 document.querySelectorAll('#granTog button').forEach(b=>b.onclick=()=>{S.gran=b.dataset.g;renderAll();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
+document.getElementById('perddBtn').onclick=e=>{e.stopPropagation();document.getElementById('perddMenu').classList.toggle('open');};
+document.addEventListener('click',e=>{if(!e.target.closest('#perdd'))closePerdd();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();closePerdd();}});
 
 /* ---------- break-even button ---------- */
 function networkBreakevenBoost(){
