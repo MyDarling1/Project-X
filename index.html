@@ -777,9 +777,9 @@ function openFactDrawer(code){
   const H=padT+barH+padB;
   let spark=`<svg viewBox="0 0 ${n*slot} ${H}" style="width:100%">`;
   wk.forEach((v,i)=>{const bh=v/mx*barH, x=i*slot+(slot-bw)/2, y=padT+barH-bh;
-    spark+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="${sp[i]?'var(--line2)':'var(--violet)'}"/>`;
-    if(showVal) spark+=`<text x="${x+bw/2}" y="${y-5}" text-anchor="middle" class="blabel" style="font-size:9px">${fmt1(v)}</text>`;
-    spark+=`<text x="${x+bw/2}" y="${padT+barH+15}" text-anchor="middle" class="glabel" style="font-size:8px">${String(labels[i]).split('–')[0]}${sp[i]?'*':''}</text>`;});
+    spark+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="var(--violet)"/>`;
+    if(showVal) spark+=`<text x="${x+bw/2}" y="${y-5}" text-anchor="middle" class="blabel" style="font-size:9px">${fmt1(v)}${sp[i]?'*':''}</text>`;
+    spark+=`<text x="${x+bw/2}" y="${padT+barH+15}" text-anchor="middle" class="glabel" style="font-size:8px">${String(labels[i]).split('–')[0]}</text>`;});
   spark+='</svg>';
   const guarEnd=new Date(d.start);guarEnd.setMonth(guarEnd.getMonth()+6);
   const row=(k,v,cls)=>`<div class="stat"><span class="k">${k}</span><span class="v ${cls||''}">${v}</span></div>`;
@@ -787,7 +787,7 @@ function openFactDrawer(code){
     <button class="dx" onclick="closeDrawer()">×</button>
     <div class="code">${d.code} · Сегмент ${d.seg} · ${d.city}</div>
     <h2>${d.aka}</h2>
-    <div class="spark"><div class="hint">Заказы/день по неделям (неполные — серым, *)</div>${spark}</div>
+    <div class="spark"><div class="hint">Заказы/день по неделям (неполная неделя — со *)</div>${spark}</div>
     ${row('Период',P.label+(P.partial?' (неполный)':''))}
     ${row('Заказы/день',fmt1(o))}
     ${row('Оборот (GMV)/день',money(rev))}
@@ -810,19 +810,19 @@ function openFactDrawer(code){
 function wkBars(vals, fmtFn, base, hid, labels, partial){
   const n=vals.length, slot=88, padL=14, padR=14, H=190, padT=28, padB=36, gap=18;
   const W=padL+padR+n*slot, bw=slot-gap, max=Math.max(...vals,1);
-  let el=`<defs><pattern id="${hid}" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><rect width="7" height="7" fill="${base}" opacity="0.22"/><line x1="0" y1="0" x2="0" y2="7" stroke="${base}" stroke-width="3.5"/></pattern></defs>`;
+  let el='';
   vals.forEach((v,i)=>{
     const x=padL+i*slot+gap/2, bh=(v/max)*(H-padT-padB), y=H-padB-bh, pt=!!(partial&&partial[i]), cx=x+bw/2;
-    el+=`<rect class="wkbar" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="6" fill="${pt?`url(#${hid})`:base}"${pt?` stroke="${base}" stroke-width="1.5" stroke-dasharray="4 3"`:''}/>`;
-    el+=`<text x="${cx}" y="${y-7}" text-anchor="middle" class="blabel" style="font-size:11px;fill:${pt?'var(--dim)':'var(--txt)'}">${fmtFn(v)}</text>`;
-    el+=`<text x="${cx}" y="${H-9}" text-anchor="middle" class="glabel" style="font-weight:600;font-size:9px${pt?';fill:var(--faint)':''}">${labels[i]||''}${pt?'*':''}</text>`;
+    el+=`<rect class="wkbar" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="6" fill="${base}"/>`;
+    el+=`<text x="${cx}" y="${y-7}" text-anchor="middle" class="blabel" style="font-size:11px;fill:var(--txt)">${fmtFn(v)}${pt?'*':''}</text>`;
+    el+=`<text x="${cx}" y="${H-9}" text-anchor="middle" class="glabel" style="font-weight:600;font-size:9px">${labels[i]||''}</text>`;
   });
   return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;display:inline-block">${el}</svg>`;
 }
 function sparkline(vals,base,partial){
   const n=vals.length, W=Math.max(60,n*7), H=26, gap=2, bw=(W-gap*(n-1))/n, max=Math.max(...vals,1);
   let el='';
-  vals.forEach((v,i)=>{const bh=Math.max((v/max)*H,1.5),x=i*(bw+gap),y=H-bh;el+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="1" fill="${base}" opacity="${(partial&&partial[i])?0.35:1}"/>`;});
+  vals.forEach((v,i)=>{const bh=Math.max((v/max)*H,1.5),x=i*(bw+gap),y=H-bh;el+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="1" fill="${base}"/>`;});
   return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;vertical-align:middle">${el}</svg>`;
 }
 function wkBarsPnl(vals, labels, partial){
@@ -833,9 +833,9 @@ function wkBarsPnl(vals, labels, partial){
   vals.forEach((v,i)=>{
     const x=padL+i*slot+gap/2, bh=Math.abs(v)/max*half, pos=v>=0, y=pos?midY-bh:midY, cx=x+bw/2;
     const col=pos?'var(--mint)':'var(--coral)', pt=!!(partial&&partial[i]);
-    el+=`<rect class="wkbar" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="5" fill="${col}" opacity="${pt?0.5:0.92}"/>`;
-    el+=`<text x="${cx}" y="${pos?y-6:y+bh+15}" text-anchor="middle" class="blabel" style="font-size:10.5px;fill:${col}">${money(v)}</text>`;
-    el+=`<text x="${cx}" y="${H-9}" text-anchor="middle" class="glabel" style="font-weight:600;font-size:9px${pt?';fill:var(--faint)':''}">${labels[i]||''}${pt?'*':''}</text>`;
+    el+=`<rect class="wkbar" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="5" fill="${col}" opacity="0.92"/>`;
+    el+=`<text x="${cx}" y="${pos?y-6:y+bh+15}" text-anchor="middle" class="blabel" style="font-size:10.5px;fill:${col}">${money(v)}${pt?'*':''}</text>`;
+    el+=`<text x="${cx}" y="${H-9}" text-anchor="middle" class="glabel" style="font-weight:600;font-size:9px">${labels[i]||''}</text>`;
   });
   return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;display:inline-block">${el}</svg>`;
 }
