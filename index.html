@@ -487,7 +487,7 @@ const monthList = (()=>{ const seen={}, out=[];
     seen[key].weekIdxs.push(i); });
   return out; })();
 if(S.monthKey==null) S.monthKey = monthList.length?monthList[monthList.length-1].key:null;   // по умолчанию — самый свежий месяц
-if(S.weekIdx==null) S.weekIdx = WK.runIdx??(WK.weeks.length-1);
+if(S.weekIdx==null) S.weekIdx = WK.weeks.length?WK.weeks.length-1:0;   // по умолчанию — самая свежая (текущая) неделя
 const weekMonth = i => monthList.find(m=>m.weekIdxs.includes(i));
 const monthDaysOf = m => m? m.weekIdxs.reduce((a,j)=>a+wdays(j),0) : 0;
 function currentPeriod(){   // единый выбор периода для верхнего блока И юнит-экономики
