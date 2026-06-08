@@ -534,19 +534,20 @@ function netStats(idxs, mode, monthDays, factKey){
   let income=0,cost=0,pnl=0; r.forEach(d=>{const f=periodFin(d,idxs,mode,monthDays,factKey); income+=f.income;cost+=f.cost;pnl+=f.pnl;});
   return {ordPV,bePV,above,n,pnl,income,cost,gmv,netOrdDay};
 }
-function deltaStr(cur,prev){ if(prev==null||!isFinite(prev)||prev===0) return '';
+function deltaStr(cur,prev,lbl){ if(prev==null||!isFinite(prev)||prev===0) return '';
   const dp=(cur-prev)/Math.abs(prev)*100; if(Math.abs(dp)<0.5) return '';
-  const up=dp>=0; return ` · <span class="${up?'pos':'neg'}">${up?'▲':'▼'} ${Math.abs(dp).toFixed(0)}%</span>`; }
+  const up=dp>=0; return ` · <span class="${up?'pos':'neg'}">${up?'▲':'▼'} ${Math.abs(dp).toFixed(0)}%</span>${lbl?'<span style="color:var(--faint)"> '+lbl+'</span>':''}`; }
 
 /* ---------- KPIs (верхний блок «Сеть · факт») ---------- */
 function renderKPIs(){
   updateNetCtl();
   const P=currentPeriod(), perLabel=P.perLabel;
   const s=netStats(P.idxs,P.mode,P.monthDays,P.factKey), pnlPV=s.pnl/s.n;
-  let dOrd='',dPnl='',dGmv='';
-  if(P.prevSpec && !P.partial){ const ps=netStats(P.prevSpec.idxs,P.prevSpec.mode,P.prevSpec.md,P.prevSpec.factKey);
-    const cd=P.idxs.reduce((a,i)=>a+wdays(i),0)||1, pd=P.prevSpec.idxs.reduce((a,i)=>a+wdays(i),0)||1;   // дельты GMV/P&L — на ДЕНЬ: иначе разное число дней даёт ложный %
-    dOrd=deltaStr(s.netOrdDay,ps.netOrdDay); dGmv=deltaStr(s.gmv/cd,ps.gmv/pd); dPnl=deltaStr(s.pnl/cd,ps.pnl/pd); }
+  let dOrd='',dGmv='';
+  if(P.prevSpec){ const ps=netStats(P.prevSpec.idxs,P.prevSpec.mode,P.prevSpec.md,P.prevSpec.factKey);
+    const cd=P.idxs.reduce((a,i)=>a+wdays(i),0)||1, pd=P.prevSpec.idxs.reduce((a,i)=>a+wdays(i),0)||1;   // дельты НА ДЕНЬ → честны даже для неполного текущего периода
+    const dl=S.gran==='month'?'м/м':'нд/нд';
+    dOrd=deltaStr(s.netOrdDay,ps.netOrdDay,dl); dGmv=deltaStr(s.gmv/cd,ps.gmv/pd,dl); }          // только заказы и оборот (vs прошлый период); P&L-дельту не показываем — смешала бы модель и факт
   const ratio=s.bePV>0?s.ordPV/s.bePV:0, toBE=s.ordPV>0?s.bePV/s.ordPV:0;
   const col=ratio>=1?'var(--mint)':ratio>=.6?'var(--amber)':'var(--coral)';
   const pnlSrc = P.mode==='model'?'модель':'факт · Uzum';
@@ -557,7 +558,7 @@ function renderKPIs(){
     <div class="delta">${ratio>=1?'<span class="pos">безубыток достигнут</span>':'×'+toBE.toFixed(1)+' до безубытка'}${dOrd}</div></div>`;
   const cards=[
     {l:'Точек выше безубытка',v:s.above+' / '+s.n,cls:s.above>0?'pos':'neg',d:s.above==0?'все в минусе':perLabel},
-    {l:'P&L по сети',v:money(s.pnl),cls:s.pnl>=0?'pos':'neg',d:pnlSrc+dPnl},
+    {l:'P&L по сети',v:money(s.pnl),cls:s.pnl>=0?'pos':'neg',d:pnlSrc},
     {l:'Оборот (GMV) '+perLabel,v:money(s.gmv),d:(S.cur==='usd'?`≈ ${mln(s.gmv)} сум`:`≈ $${fmt(s.gmv/S.fx)}`)+dGmv},
     {l:'P&L на 1 ПВЗ',v:money(pnlPV),cls:pnlPV>=0?'pos':'neg',d:pnlSrc},
   ];
