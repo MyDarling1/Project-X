@@ -702,9 +702,32 @@ function renderTable(){
   t.querySelectorAll('.prow').forEach(tr=>tr.onclick=()=>openDrawer(tr.dataset.code));
 }
 
-/* ---------- drawer ---------- */
-function openDrawer(code){
-  const d=DATA.find(x=>x.code===code), c=simOf(d);
+/* ---------- drawer: общий каркас обеих карточек (факт + симулятор) ---------- */
+const DRW=(()=>{
+  const row=(k,v,cls)=>`<div class="stat"><span class="k">${k}</span><span class="v ${cls||''}">${v}</span></div>`;
+  const grp=t=>`<div class="dgrp">${t}</div>`;
+  const healthBar=h=>{const hp=Math.min(h,1.4), hc=h>=1?'var(--mint)':h>=.6?'var(--amber)':'var(--coral)';
+    return `<span class="health"><i style="width:${hp/1.4*100}%;background:${hc}"></i><span class="mark" style="left:${1/1.4*100}%"></span></span> <span class="mono" style="color:${hc}">${Math.round(h*100)}%</span>`;};
+  const contract=d=>{   // секция «Договор» — одинакова в обеих карточках
+    const startD=new Date(d.start), guarEnd=new Date(d.start); guarEnd.setMonth(guarEnd.getMonth()+6);
+    const ageWk=Math.max(0,Math.round((Date.now()-startD)/6048e5)), gAct=guarEnd>new Date();
+    const guarVal='<span style="color:'+(gAct?'var(--mint)':'var(--dim)')+'">'+(gAct?'активна до ':'истекла ')+guarEnd.toLocaleDateString('ru-RU')+'</span>';
+    return grp('Договор')+row('Старт',startD.toLocaleDateString('ru-RU'))+row('Возраст',ageWk+' нед.')+row('Гарантия',guarVal);};
+  const open=o=>{   // o = {d, hint, spark, body, foot}
+    document.getElementById('drawer').innerHTML=
+      '<button class="dx" onclick="closeDrawer()">×</button>'+
+      `<div class="code">${o.d.code} · Сегмент ${o.d.seg} · ${o.d.city}</div>`+
+      `<h2>${o.d.aka}</h2>`+
+      `<div class="spark"><div class="hint">${o.hint}</div>${o.spark}</div>`+
+      o.body+
+      `<div class="foot">${o.foot}</div>`;
+    document.getElementById('drawer').classList.add('open');
+    document.getElementById('scrim').classList.add('on');};
+  return {row,grp,healthBar,contract,open};
+})();
+function openDrawer(code){   // карточка симулятора (Финмодель · прогноз)
+  const d=DATA.find(x=>x.code===code); if(!d) return;
+  const c=simOf(d);
   const wk=[d.w1,d.w2,d.w3,d.w4];
   const mx=Math.max(...wk,d.fcMonth1,1);
   const bw=46,gap=14,h=82,padT=22;
@@ -717,40 +740,24 @@ function openDrawer(code){
   });
   const fcY=padT+h-d.fcMonth1/mx*h;
   spark+=`<line x1="0" y1="${fcY}" x2="${4*(bw+gap)-gap}" y2="${fcY}" stroke="var(--coral)" stroke-width="2" stroke-dasharray="4 3"/></svg>`;
-  const startD=new Date(d.start), guarEnd=new Date(d.start); guarEnd.setMonth(guarEnd.getMonth()+6);
-  const ageWk=Math.max(0,Math.round((Date.now()-startD)/6048e5)), gAct=guarEnd>new Date();
-  const hc=c.health>=1?'var(--mint)':c.health>=.6?'var(--amber)':'var(--coral)', hp=Math.min(c.health,1.4);
-  const healthBar=`<span class="health"><i style="width:${hp/1.4*100}%;background:${hc}"></i><span class="mark" style="left:${1/1.4*100}%"></span></span> <span class="mono" style="color:${hc}">${Math.round(c.health*100)}%</span>`;
+  const {row,grp,healthBar,contract}=DRW;
   const rewLbl=c.reward<=d.guarFull?'гарантия':'комиссия';
-  const guarVal='<span style="color:'+(gAct?'var(--mint)':'var(--dim)')+'">'+(gAct?'активна до ':'истекла ')+guarEnd.toLocaleDateString('ru-RU')+'</span>';
-  const row=(k,v,cls)=>`<div class="stat"><span class="k">${k}</span><span class="v ${cls||''}">${v}</span></div>`;
-  const grp=t=>`<div class="dgrp">${t}</div>`;
-  document.getElementById('drawer').innerHTML=`
-    <button class="dx" onclick="closeDrawer()">×</button>
-    <div class="code">${d.code} · Сегмент ${d.seg} · ${d.city}</div>
-    <h2>${d.aka}</h2>
-    <div class="spark"><div class="hint">Заказы/день по неделям (W3 в цвете, ⸺ план 1-го мес.)</div>${spark}</div>
-    ${grp('Операция · прогноз')}
-    ${row('Факт зак/день'+(S.boost!==1?' ×'+S.boost.toFixed(1):''),fmt1(c.orders))}
-    ${row('Оборот (GMV)/день',money(c.rev))}
-    ${row('Безубыток',fmt1(c.be)+' зак/день')}
-    ${row('Здоровье',healthBar)}
-    ${grp('Экономика · прогноз')}
-    ${row('Маржа с заказа',S.cur==='usd'?c.margin.toFixed(2)+' $':fmt(c.margin*S.fx)+' сум')}
-    ${row('Средний чек (факт)',money(d.avgCheck))}
-    ${row('Комиссия',Math.round(d.comm*100)+'%')}
-    ${row('Гарантия/мес',money(d.guarFull))}
-    ${row('Вознагр./мес',money(c.reward)+' <span style="color:var(--faint);font-weight:400">('+rewLbl+')</span>')}
-    ${row('Затраты/мес',money(c.cost))}
-    ${row('P&L/мес',money(c.pnl),c.pnl>=0?'pos':'neg')}
-    ${grp('Договор')}
-    ${row('Старт',startD.toLocaleDateString('ru-RU'))}
-    ${row('Возраст',ageWk+' нед.')}
-    ${row('Гарантия',guarVal)}
-    <div class="foot">Прогноз по заданным параметрам — не факт.</div>
-  `;
-  document.getElementById('drawer').classList.add('open');
-  document.getElementById('scrim').classList.add('on');
+  const body=
+    grp('Операция · прогноз')+
+    row('Факт зак/день'+(S.boost!==1?' ×'+S.boost.toFixed(1):''),fmt1(c.orders))+
+    row('Оборот (GMV)/день',money(c.rev))+
+    row('Безубыток',fmt1(c.be)+' зак/день')+
+    row('Здоровье',healthBar(c.health))+
+    grp('Экономика · прогноз')+
+    row('Маржа с заказа',S.cur==='usd'?c.margin.toFixed(2)+' $':fmt(c.margin*S.fx)+' сум')+
+    row('Средний чек (факт)',money(d.avgCheck))+
+    row('Комиссия',Math.round(d.comm*100)+'%')+
+    row('Гарантия/мес',money(d.guarFull))+
+    row('Вознагр./мес',money(c.reward)+' <span style="color:var(--faint);font-weight:400">('+rewLbl+')</span>')+
+    row('Затраты/мес',money(c.cost))+
+    row('P&L/мес',money(c.pnl),c.pnl>=0?'pos':'neg')+
+    contract(d);
+  DRW.open({d,hint:'Заказы/день по неделям (W3 в цвете, ⸺ план 1-го мес.)',spark,body,foot:'Прогноз по заданным параметрам — не факт.'});
 }
 function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('scrim').classList.remove('on');}
 document.getElementById('scrim').onclick=closeDrawer;
@@ -808,9 +815,6 @@ function openFactDrawer(code){
   if(prevRev!=null&&prevRev>0&&isFinite(prevRev)){const dp=(rev-prevRev)/Math.abs(prevRev)*100; if(Math.abs(dp)>=0.5){const up=dp>=0; revDelta=`<div class="mono" style="font-size:10.5px;margin-top:2px;color:${up?'var(--mint)':'var(--coral)'}">${up?'▲':'▼'} ${Math.abs(dp).toFixed(0)}% <span style="color:var(--faint)">${S.gran==='month'?'м/м':'нд/нд'}</span></div>`;}}
   // ранг и доля сети по обороту
   const allRev=DATA.map(x=>revOf(x)), netRev=allRev.reduce((a,b)=>a+b,0)||1, rank=1+allRev.filter(v=>v>rev).length, share=rev/netRev*100;
-  // здоровье — тот же 3-уровневый цвет и бар, что в таблице
-  const hp=Math.min(health,1.4), hc=health>=1?'var(--mint)':health>=.6?'var(--amber)':'var(--coral)';
-  const healthBar=`<span class="health"><i style="width:${hp/1.4*100}%;background:${hc}"></i><span class="mark" style="left:${1/1.4*100}%"></span></span> <span class="mono" style="color:${hc}">${Math.round(health*100)}%</span>`;
   // спарклайн заказов/день + пунктир безубытка
   const wk=show.map(i=>(WK.pvz[code]?(WK.pvz[code].ord[i]||0):0)), labels=show.map(i=>WK.weeks[i]);
   const n=wk.length, slot=44, bw=30, barH=82, padT=22, padB=20, mx=Math.max(...wk,be,1), showVal=n<=8;
@@ -822,42 +826,27 @@ function openFactDrawer(code){
     if(showVal||i%2===0) spark+=`<text x="${x+bw/2}" y="${padT+barH+15}" text-anchor="middle" class="glabel" style="font-size:9px">${String(labels[i]).split('–')[0]}</text>`;});
   if(be>0){const beY=padT+barH-Math.min(be,mx)/mx*barH; spark+=`<line x1="0" y1="${beY}" x2="${n*slot}" y2="${beY}" stroke="var(--coral)" stroke-width="1.4" stroke-dasharray="4 3"/>`;}
   spark+='</svg>';
-  // договор
-  const startD=new Date(d.start), guarEnd=new Date(d.start); guarEnd.setMonth(guarEnd.getMonth()+6);
-  const ageWk=Math.max(0,Math.round((Date.now()-startD)/6048e5)), gAct=guarEnd>new Date();
+  const {row,grp,healthBar,contract}=DRW;
   const periodVal=P.label+(P.partial?' <span style="color:var(--amber)">(неполный)</span>':'');
   const incVal=money(f.income)+'<div class="mono" style="font-size:10.5px;margin-top:2px;color:var(--faint)">'+src+'</div>';
   const rankVal=rank+' / '+DATA.length+' <span style="color:var(--faint);font-weight:400">· '+share.toFixed(1)+'%</span>';
-  const guarVal='<span style="color:'+(gAct?'var(--mint)':'var(--dim)')+'">'+(gAct?'активна до ':'истекла ')+guarEnd.toLocaleDateString('ru-RU')+'</span>';
-  const row=(k,v,cls)=>`<div class="stat"><span class="k">${k}</span><span class="v ${cls||''}">${v}</span></div>`;
-  const grp=t=>`<div class="dgrp">${t}</div>`;
-  document.getElementById('drawer').innerHTML=`
-    <button class="dx" onclick="closeDrawer()">×</button>
-    <div class="code">${d.code} · Сегмент ${d.seg} · ${d.city}</div>
-    <h2>${d.aka}</h2>
-    <div class="spark"><div class="hint">Заказы/день по неделям (⸺ безубыток; неполная неделя — со *)</div>${spark}</div>
-    ${grp('Операция')}
-    ${row('Период',periodVal)}
-    ${row('Заказы/день',fmt1(o))}
-    ${row('Оборот (GMV)/нед',money(rev*7)+revDelta)}
-    ${row('Безубыток',fmt1(be)+' зак/день')}
-    ${row('Здоровье',healthBar)}
-    ${row('Ранг по обороту',rankVal)}
-    ${grp('Экономика')}
-    ${row('Доход',incVal)}
-    ${row('Затраты',money(f.cost))}
-    ${row('P&L',money(f.pnl),f.pnl>=0?'pos':'neg')}
-    ${row('Комиссия',Math.round(d.comm*100)+'%')}
-    ${row('Средний чек (факт)',money(d.avgCheck))}
-    ${row('Гарантия/мес (порог)',money(d.guarFull))}
-    ${grp('Договор')}
-    ${row('Старт',startD.toLocaleDateString('ru-RU'))}
-    ${row('Возраст',ageWk+' нед.')}
-    ${row('Гарантия',guarVal)}
-    <div class="foot">Доход и P&L — ${src}; заказы и оборот — управленческая отчётность. Неполные недели (*) не экстраполируются.</div>
-  `;
-  document.getElementById('drawer').classList.add('open');
-  document.getElementById('scrim').classList.add('on');
+  const body=
+    grp('Операция')+
+    row('Период',periodVal)+
+    row('Заказы/день',fmt1(o))+
+    row('Оборот (GMV)/нед',money(rev*7)+revDelta)+
+    row('Безубыток',fmt1(be)+' зак/день')+
+    row('Здоровье',healthBar(health))+
+    row('Ранг по обороту',rankVal)+
+    grp('Экономика')+
+    row('Доход',incVal)+
+    row('Затраты',money(f.cost))+
+    row('P&L',money(f.pnl),f.pnl>=0?'pos':'neg')+
+    row('Комиссия',Math.round(d.comm*100)+'%')+
+    row('Средний чек (факт)',money(d.avgCheck))+
+    row('Гарантия/мес (порог)',money(d.guarFull))+
+    contract(d);
+  DRW.open({d,hint:'Заказы/день по неделям (⸺ безубыток; неполная неделя — со *)',spark,body,foot:'Доход и P&L — '+src+'; заказы и оборот — управленческая отчётность. Неполные недели (*) не экстраполируются.'});
 }
 
 /* ---------- weekly history ---------- */
