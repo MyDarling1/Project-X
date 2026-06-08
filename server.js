@@ -34,6 +34,7 @@ function cookieVal(req, name) {
 const authed = req => valid(cookieVal(req, COOKIE));
 
 const LOGIN = err => `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Вход · ПВЗ</title>
+<meta property="og:title" content="ПВЗ — интерактивный дашборд"><meta property="og:description" content="Факт, прогноз и точка безубыточности по 18 ПВЗ."><meta property="og:type" content="website"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="ПВЗ — интерактивный дашборд"><meta name="twitter:description" content="Факт, прогноз и точка безубыточности по 18 ПВЗ."><meta name="theme-color" content="#0a0c11">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
