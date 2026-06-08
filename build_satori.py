@@ -202,17 +202,15 @@ def main():
     def _mlabel(m):
         yy, mm = m.split('-'); return f'{MONTH_RU[int(mm)]} {yy}'
     FACT = {'latest': months[-1], 'months': {m: {'label': _mlabel(m), 'income': inc[m]} for m in months}}
-    html = open(HTML, encoding='utf-8').read()
-    js = 'const FACT = ' + json.dumps(FACT, ensure_ascii=False) + ';'
-    if re.search(r'const FACT = \{.*?\};', html, flags=re.S):
-        html = re.sub(r'const FACT = \{.*?\};', lambda _: js, html, count=1, flags=re.S)
-    elif re.search(r'const WK = \{.*?\};\n', html, flags=re.S):
-        html = re.sub(r'(const WK = \{.*?\};\n)', lambda mo: mo.group(1) + js + '\n', html, count=1, flags=re.S)
-    else:
-        raise SystemExit('index.html: не найден якорь для вставки FACT (нет «const FACT» и «const WK = {…};»)')
-    open(HTML, 'w', encoding='utf-8').write(html)
-    print(f'{HTML}: FACT вшит — месяцев {len(FACT["months"])} (последний {_mlabel(FACT["latest"])}).')
-    print('Готово. Синхронизируй копию, node --check, затем git commit & push.')
+    # ---- FACT теперь в data.json (рядом с HTML); DATA/WK/SAL сохраняем как есть ----
+    DJSON = os.path.join(os.path.dirname(os.path.abspath(HTML)) or '.', 'data.json')
+    try: bundle = json.load(open(DJSON, encoding='utf-8'))
+    except (OSError, ValueError): bundle = {}
+    if not isinstance(bundle, dict): bundle = {}
+    bundle['FACT'] = FACT
+    open(DJSON, 'w', encoding='utf-8').write(json.dumps(bundle, ensure_ascii=False))
+    print(f'{DJSON}: FACT записан — месяцев {len(FACT["months"])} (последний {_mlabel(FACT["latest"])}).')
+    print('Готово. Синхронизируй копию HTML, node --check, JSON.parse(data.json), затем git commit & push.')
 
 if __name__ == '__main__':
     main()

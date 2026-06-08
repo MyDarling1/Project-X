@@ -101,6 +101,14 @@ http.createServer((req, res) => {
       : send(res, 200, 'text/html; charset=utf-8', buf));
     return;
   }
+  // данные дашборда — только авторизованным; data.json (источник правды) отдаём как JS-обёртку с теми же const
+  if (p === '/data.js') {
+    fs.readFile(path.join(ROOT, 'data.json'), 'utf8', (e, txt) => e
+      ? send(res, 500, 'application/javascript; charset=utf-8', 'console.error("data.json missing")')
+      : send(res, 200, 'application/javascript; charset=utf-8',
+          'const __D=' + txt + ';const DATA=__D.DATA,WK=__D.WK,FACT=__D.FACT,SAL=__D.SAL;'));
+    return;
+  }
   // ВСЁ остальное (эталон, *.py, *.md, копии, выгрузки) НЕ отдаём
   send(res, 404, 'text/plain; charset=utf-8', 'Not found');
 }).listen(PORT, () => console.log('dashboard on :' + PORT + (process.env.DASH_PASS ? ' [DASH_PASS env]' : ' [default pass]')));

@@ -276,24 +276,24 @@ def main():
     net_rev=[sum(WKpvz[c]['rev'][i] for c in WKpvz) for i in range(len(weeks))]
     WK=dict(weeks=[wlabel(m) for m in weeks],years=[m.year for m in weeks],runIdx=full_runIdx,dayCounts=[dc[m] for m in weeks],
             net=dict(ord=net_ord,rev=net_rev),pvz=WKpvz)
-    html=open(HTML,encoding='utf-8').read()
-    html=re.sub(r'const DATA = \[.*?\];', lambda _: 'const DATA = '+json.dumps(DATA,ensure_ascii=False)+';', html,count=1,flags=re.S)
-    html=re.sub(r'const WK = \{.*?\};\n', lambda _: 'const WK = '+json.dumps(WK,ensure_ascii=False)+';\n', html,count=1,flags=re.S)
-    # ---- факт выплат зарплат (лист «выплаты ») → накопительный const SAL в дашборде ----
+    # ---- данные дашборда теперь в data.json (рядом с HTML); SAL накапливается, FACT сохраняем (его ведёт build_satori.py) ----
+    DJSON=os.path.join(os.path.dirname(os.path.abspath(HTML)) or '.','data.json')
+    try: bundle=json.load(open(DJSON,encoding='utf-8'))
+    except (OSError,ValueError): bundle={}
+    if not isinstance(bundle,dict): bundle={}
+    SAL=bundle.get('SAL') if isinstance(bundle.get('SAL'),dict) else {}
+    # ---- факт выплат зарплат (лист «выплаты ») → накопительный SAL ----
     pay=read_payouts(DAILY, weeks[-1].year)
-    mex=re.search(r'const SAL = (\{.*?\});', html, flags=re.S)
-    try: SAL=json.loads(mex.group(1)) if mex else {}
-    except ValueError: SAL={}
     if pay:
         key,sal=pay; SAL[key]=sal
-        print(f'{HTML}: факт зарплат {key} — ПВЗ={len(sal)}, итог={sum(sal.values()):,} сум')
+        print(f'{DJSON}: факт зарплат {key} — ПВЗ={len(sal)}, итог={sum(sal.values()):,} сум')
     else:
-        print(f'{HTML}: лист «выплаты » не найден в источнике — const SAL без изменений ({len(SAL)} мес.)')
-    js_sal='const SAL = '+json.dumps(SAL,ensure_ascii=False)+';'
-    if mex: html=re.sub(r'const SAL = \{.*?\};', lambda _: js_sal, html, count=1, flags=re.S)
-    else:   html=re.sub(r'(const WK = \{.*?\};\n)', lambda mo: mo.group(1)+js_sal+'\n', html, count=1, flags=re.S)
-    open(HTML,'w',encoding='utf-8').write(html)
-    print(f'{HTML}: история — все {len(weeks)} нед.; Обзор run-rate=неделя {wlabel(runM)}, дни {WK["dayCounts"]}')
-    print('Готово. Запусти recalc для эталона при желании, затем git commit & push.')
+        print(f'{DJSON}: лист «выплаты » не найден в источнике — SAL без изменений ({len(SAL)} мес.)')
+    bundle['DATA']=DATA; bundle['WK']=WK; bundle['SAL']=SAL
+    bundle.setdefault('FACT',{"latest":None,"months":{}})
+    open(DJSON,'w',encoding='utf-8').write(json.dumps(bundle,ensure_ascii=False))
+    print(f'{DJSON}: обновлён — ПВЗ {len(DATA)}, недель {len(WK["weeks"])}, SAL {len(SAL)} мес., FACT {len(bundle["FACT"].get("months",{}))} мес.')
+    print(f'история — все {len(weeks)} нед.; Обзор run-rate=неделя {wlabel(runM)}, дни {WK["dayCounts"]}')
+    print('Готово. git commit & push (Railway пересоберёт).')
 
 if __name__=='__main__': main()
