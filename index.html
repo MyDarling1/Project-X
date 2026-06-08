@@ -241,16 +241,6 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 </style>
 </head>
 <body>
-<div id="gate">
-  <div class="gbox">
-    <div class="glogo">U</div>
-    <h2>Uzum ПВЗ</h2>
-    <p>Введите пароль для доступа к дашборду</p>
-    <input type="password" id="gpw" placeholder="Пароль" autocomplete="off">
-    <button id="gbtn">Войти</button>
-    <div id="gerr"></div>
-  </div>
-</div>
 <div class="head">
   <div class="brand">
     <div class="logo">U</div>
@@ -1221,21 +1211,6 @@ document.getElementById('xfile').onchange=e=>{
 };
 document.getElementById('resetData').onclick=()=>{ restoreBackup(); document.getElementById('ustatus').innerHTML='<span class="pos">✓ Возвращены эталонные данные.</span>'; };
 
-/* ---------- парольный экран ---------- */
-const PW='uzum2026';
-const GATE_KEY='uzum_gate';
-function openApp(){document.getElementById('gate').style.display='none';}
-function tryUnlock(){
-  const v=document.getElementById('gpw').value;
-  if(v===PW){try{localStorage.setItem(GATE_KEY,PW);}catch(e){} openApp();}
-  else{document.getElementById('gerr').textContent='Неверный пароль';document.getElementById('gpw').value='';}
-}
-document.getElementById('gbtn').onclick=tryUnlock;
-document.getElementById('gpw').addEventListener('keydown',e=>{if(e.key==='Enter')tryUnlock();});
-/* запомненное устройство — пропускаем экран входа (отметка привязана к текущему паролю) */
-let gateRemembered=false;
-try{gateRemembered=localStorage.getItem(GATE_KEY)===PW;}catch(e){}
-if(gateRemembered){openApp();}
-else{window.addEventListener('load',()=>document.getElementById('gpw').focus());}
+/* доступ к дашборду — СЕРВЕРНАЯ авторизация (server.js, cookie-сессия). Клиентский гейт удалён: сервер не отдаёт index.html без входа. */
 </script></body>
 </html>
