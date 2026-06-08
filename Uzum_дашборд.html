@@ -896,19 +896,26 @@ function renderCosts(){
   if(S.costSortKey){const c=ccols.find(x=>x.k===S.costSortKey);
     if(c)arr.sort((a,b)=>{const x=c.v(a),y=c.v(b);return typeof x==='string'?S.costSortDir*x.localeCompare(y):S.costSortDir*(x-y);});}
   let h='<thead><tr>'+ccols.map(c=>`<th class="${c.lft?'lft':''} ${S.costSortKey===c.k?'sorted':''}" data-csk="${c.k}">${c.t}${S.costSortKey===c.k?(S.costSortDir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr></thead><tbody>';
-  let sr=0,ss=0,su=0,sm=0;
+  let sr=0,ss=0,su=0,sm=0,se=0;
   arr.forEach(d=>{const sal=salOf(d), opex=d.rentSum+sal, ukm=S.uk*S.fx, misc=d.miscSum||0, tot=opex+ukm+misc;
-    sr+=d.rentSum;ss+=sal;su+=ukm;sm+=misc;
-    const isF=!!(mkey&&salFact(d.code,mkey)!=null);
+    sr+=d.rentSum;ss+=sal;su+=ukm;sm+=misc;se+=d.salarySum;
+    const isF=!!(mkey&&salFact(d.code,mkey)!=null), dS=sal-d.salarySum, ok=dS<=0;   // дельта = факт − план (Справочник); ≤0 = сэкономили
+    const salTd = isF
+      ? `<span class="mono" style="color:var(--mint)" title="факт выплат · план (Справочник): ${money(d.salarySum)}">${money(sal)}</span>`
+        +`<div class="mono" style="font-size:10.5px;margin-top:2px;color:${ok?'var(--mint)':'var(--coral)'}">${ok?'−':'+'}${money(Math.abs(dS))} к плану</div>`
+      : `<span class="mono">${money(sal)}</span>`;
     h+=`<tr><td><b>${d.aka}</b><div style="color:var(--faint);font-size:11px">${d.city}</div></td>`+
        `<td><span class="mono">${money(d.rentSum)}</span></td>`+
-       `<td><span class="mono"${isF?' style="color:var(--mint)" title="факт выплат"':''}>${money(sal)}</span></td>`+
+       `<td>${salTd}</td>`+
        `<td><span class="mono">${money(opex)}</span></td>`+
        `<td><span class="mono">${money(ukm+misc)}</span></td>`+
        `<td><span class="mono pos" style="color:var(--txt)">${money(tot)}</span></td></tr>`;});
   const n=DATA.length||1, rows=[sr,ss,sr+ss,su+sm,sr+ss+su+sm];
-  h+=`<tr><td style="color:var(--dim)">В среднем на ПВЗ</td>`+rows.map(v=>`<td><span class="mono" style="color:var(--dim)">${money(v/n)}</span></td>`).join('')+'</tr>';
-  h+=`<tr><td style="color:var(--dim);font-weight:700">Итого по сети</td>`+rows.map(v=>`<td><span class="mono"><b>${money(v)}</b></span></td>`).join('')+'</tr>';
+  const dSal=ss-se, ok=dSal<=0, dCol=ok?'var(--mint)':'var(--coral)';   // сетевая дельта ЗП: факт − план
+  const dTot=anyFact?` <span class="mono" style="font-size:10px;color:${dCol}">(${ok?'−':'+'}${money(Math.abs(dSal))} к плану)</span>`:'';
+  const dAvg=anyFact?` <span class="mono" style="font-size:10px;color:${dCol}">(${ok?'−':'+'}${money(Math.abs(dSal/n))})</span>`:'';
+  h+=`<tr><td style="color:var(--dim)">В среднем на ПВЗ</td>`+rows.map((v,i)=>`<td><span class="mono" style="color:var(--dim)">${money(v/n)}</span>${i===1?dAvg:''}</td>`).join('')+'</tr>';
+  h+=`<tr><td style="color:var(--dim);font-weight:700">Итого по сети</td>`+rows.map((v,i)=>`<td><span class="mono"><b>${money(v)}</b></span>${i===1?dTot:''}</td>`).join('')+'</tr>';
   const t=document.getElementById('costTbl');t.innerHTML=h+'</tbody>';
   t.querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.csk;if(S.costSortKey===k)S.costSortDir*=-1;else{S.costSortKey=k;S.costSortDir=-1;}renderCosts();});
   const ch=document.getElementById('costHint');
