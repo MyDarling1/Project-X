@@ -31,10 +31,17 @@ thin=Side(style='thin',color='BFBFBF'); BD=Border(left=thin,right=thin,top=thin,
 def monday(d): return d - dt.timedelta(days=d.weekday())
 def wlabel(m): e=m+dt.timedelta(days=6); return f'{m.day:02d}.{m.month:02d}–{e.day:02d}.{e.month:02d}'
 
-def aggregate(path):
-    """Дневной файл -> {monday: {code: [ord_sum, rev_sum, days]}}, всё что есть в файле."""
+def aggregate(path, ref=None):
+    """Дневной файл -> {monday: {code: [ord_sum, rev_sum, days]}}, всё что есть в файле.
+    days = ДНИ РАБОТЫ ПВЗ (день >= даты старта из Справочника): в выгрузке точка присутствует
+    и до открытия (со строкой 0 заказов), такие дни в знаменатель не идут."""
     x=pd.read_excel(path, sheet_name=None)
     req={'Адрес','ПВЗ','Дата','Кол-во заказов','Общая сумма'}
+    starts={}
+    if ref:
+        for c,rr in ref.items():
+            try: starts[c]=dt.date.fromisoformat(str(rr.get('start'))[:10])
+            except (ValueError, TypeError): pass
     acc={}
     for name,df in x.items():
         try: day=dt.datetime.strptime(name.strip(),'%d.%m.%Y').date()
@@ -54,7 +61,9 @@ def aggregate(path):
             try: s=float(s) if pd.notna(s) else 0.0
             except (ValueError, TypeError): s=0.0
             d=acc.setdefault(m,{}).setdefault(code,[0.0,0.0,set()])
-            d[0]+=o; d[1]+=s; d[2].add(day)
+            d[0]+=o; d[1]+=s
+            st=starts.get(code)
+            if st is None or day>=st: d[2].add(day)   # день идёт в знаменатель только с даты старта ПВЗ
     if not acc: raise SystemExit('Не найдено листов с датой ДД.ММ.ГГГГ')
     return acc
 
@@ -215,7 +224,7 @@ def read_payouts(path, year):
 
 def main():
     ref=read_ref(REF)
-    acc=aggregate(DAILY)
+    acc=aggregate(DAILY, ref)
     wb=load_workbook(REF)
     # архивы
     aw,av,adc=read_archive(wb,'Заказы_по_неделям')
@@ -261,7 +270,7 @@ def main():
             fcMonth1=r['fcMonth1'],yandex=r['yandex'],revW3=revRun,
             revPeriod=round(tot_r/tot_d) if tot_d else 0,avgCheck=round(tot_r/tot_o) if tot_o else 0,
             gmvFc_usd=round(r['fcMonth1']*14),guarFull=r['guarFull'],start=r['start']))
-        WKpvz[code]=dict(aka=r['aka'],city=r['city'],seg=r['seg'],ord=ordFull,rev=revFull)
+        WKpvz[code]=dict(aka=r['aka'],city=r['city'],seg=r['seg'],ord=ordFull,rev=revFull,days=[pdays(code,m) for m in weeks])
     DATA.sort(key=lambda d:-d['revW3'])
     net_ord=[round(sum(WKpvz[c]['ord'][i] for c in WKpvz),1) for i in range(len(weeks))]
     net_rev=[sum(WKpvz[c]['rev'][i] for c in WKpvz) for i in range(len(weeks))]
