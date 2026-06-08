@@ -463,14 +463,14 @@ const money=v=>{ // v всегда в сумах; показывает в выб
   const a=Math.abs(v);return (a>=1e6?mln(v):fmt(v))+' сум';
 };
 
-function compute(d){
-  const orders = (S.flat!=null) ? S.flat : d.runRate * S.boost;   // заказы/день (×рост или фикс. цель)
+function compute(d){   // ТОЛЬКО для «Обзора» (факт/модель). Симулятор Финмодели (рост/цель/сценарий) живёт в simOf и СЮДА не протекает.
+  const orders = d.runRate;                         // базовый run-rate, без ×рост/цели Финмодели
   const margin = S.chk * d.comm;                    // маржа с заказа, $
   const cost = d.rentSum + d.salarySum + (d.miscSum||0) + S.uk*S.fx;  // затраты/мес, сум (аренда+ЗП+разное фикс.; УК в $)
   const be = (cost/S.fx) / margin / 30;             // точка безубытка, зак/день
   const rev = orders * S.chk * S.fx;                // оборот (GMV)/день, сум (единый чек $14)
   const commRev = orders * margin * 30 * S.fx;      // комиссия/мес, сум (= заказы×маржа$×30×курс)
-  const reward = S.scen==='guar' ? Math.max(d.guarFull, commRev) : commRev;
+  const reward = Math.max(d.guarFull, commRev);     // «Обзор» — всегда сценарий гарантии (не зависит от тумблера Финмодели)
   const pnl = reward - cost;
   return {orders,margin,be,rev,commRev,cost,reward,pnl,health:orders/be,gap:orders-be};
 }
@@ -496,11 +496,13 @@ const wkStartMonth = i => +String(WK.weeks[i]).split('–')[0].split('.')[1];
 const wdays = i => (WK.dayCounts&&WK.dayCounts[i])||0;
 const beOf = d => (d.rentSum+d.salarySum+(d.miscSum||0)+S.uk*S.fx)/S.fx/(S.chk*d.comm)/30;   // безубыток зак/день (модель)
 const NM_YEAR = hasFact ? +FACT.latest.split('-')[0] : 2026;
-const monthList = (()=>{ const seen={}, out=[];
-  WK.weeks.forEach((w,i)=>{ const m=wkStartMonth(i), key=NM_YEAR+'-'+String(m).padStart(2,'0');
-    if(!seen[key]){ seen[key]={key,mn:m,label:(MONTH_RU2[m]||'?')+' '+NM_YEAR,weekIdxs:[],hasFact:!!factMonths[key]}; out.push(seen[key]); }
+const wkYear = i => (WK.years && WK.years[i]!=null) ? WK.years[i] : NM_YEAR;   // реальный год недели из данных (если есть), иначе fallback — корректно на стыке годов
+function buildMonthList(){ const seen={}, out=[];
+  WK.weeks.forEach((w,i)=>{ const m=wkStartMonth(i), y=wkYear(i), key=y+'-'+String(m).padStart(2,'0');
+    if(!seen[key]){ seen[key]={key,mn:m,label:(MONTH_RU2[m]||'?')+' '+y,weekIdxs:[],hasFact:!!factMonths[key]}; out.push(seen[key]); }
     seen[key].weekIdxs.push(i); });
-  return out; })();
+  return out; }
+let monthList = buildMonthList();
 if(S.monthKey==null) S.monthKey = monthList.length?monthList[monthList.length-1].key:null;   // по умолчанию — самый свежий месяц
 if(S.weekIdx==null) S.weekIdx = WK.weeks.length?WK.weeks.length-1:0;   // по умолчанию — самая свежая (текущая) неделя
 const weekMonth = i => monthList.find(m=>m.weekIdxs.includes(i));
@@ -549,7 +551,8 @@ function renderKPIs(){
   const s=netStats(P.idxs,P.mode,P.monthDays,P.factKey), pnlPV=s.pnl/s.n;
   let dOrd='',dPnl='',dGmv='';
   if(P.prevSpec && !P.partial){ const ps=netStats(P.prevSpec.idxs,P.prevSpec.mode,P.prevSpec.md,P.prevSpec.factKey);
-    dOrd=deltaStr(s.netOrdDay,ps.netOrdDay); dGmv=deltaStr(s.gmv,ps.gmv); dPnl=deltaStr(s.pnl,ps.pnl); }
+    const cd=P.idxs.reduce((a,i)=>a+wdays(i),0)||1, pd=P.prevSpec.idxs.reduce((a,i)=>a+wdays(i),0)||1;   // дельты GMV/P&L — на ДЕНЬ: иначе разное число дней даёт ложный %
+    dOrd=deltaStr(s.netOrdDay,ps.netOrdDay); dGmv=deltaStr(s.gmv/cd,ps.gmv/pd); dPnl=deltaStr(s.pnl/cd,ps.pnl/pd); }
   const ratio=s.bePV>0?s.ordPV/s.bePV:0, toBE=s.ordPV>0?s.bePV/s.ordPV:0;
   const col=ratio>=1?'var(--mint)':ratio>=.6?'var(--amber)':'var(--coral)';
   const pnlSrc = P.mode==='model'?'модель':'факт · Uzum';
@@ -1136,7 +1139,7 @@ function aggregate(wb){
     pvz[r.code] ??= {os:Array(n).fill(0),rs:Array(n).fill(0),dd:Array.from({length:n},()=>new Set()),to:0,tr:0,td:new Set()};
     const p=pvz[r.code];
     if(r.hasData){ p.os[i]+=r.ord; p.dd[i].add(r.date); p.to+=r.ord; p.td.add(r.date); if(r.sum!=null){p.rs[i]+=r.sum;p.tr+=r.sum;} } }
-  const out={pvz:{},weeks:weeks.map(wLabel)};
+  const out={pvz:{},weeks:weeks.map(wLabel),years:weeks.map(ms=>new Date(ms).getFullYear())};
   for(const c in pvz){ const p=pvz[c];
     out.pvz[c]={ord:p.os.map((s,i)=>p.dd[i].size?+(s/p.dd[i].size).toFixed(2):0),
                 rev:p.rs.map((s,i)=>p.dd[i].size?Math.round(s/p.dd[i].size):0),
@@ -1156,15 +1159,20 @@ function applyAgg(agg){
     d.periodAvg=+(a.totOrd/a.totDays).toFixed(2);
     d.revW3=rv[agg.runIdx]??0; d.revPeriod=a.totDays?Math.round(a.totRev/a.totDays):0;
     d.avgCheck=a.totOrd?Math.round(a.totRev/a.totOrd):0; });
-  WK.weeks=agg.weeks; WK.runIdx=agg.runIdx; WK.dayCounts=agg.dayCounts; WK.net=agg.net;
+  WK.weeks=agg.weeks; WK.runIdx=agg.runIdx; WK.dayCounts=agg.dayCounts; WK.net=agg.net; WK.years=agg.years;
   Object.keys(WK.pvz).forEach(c=>{ if(agg.pvz[c]){WK.pvz[c].ord=agg.pvz[c].ord;WK.pvz[c].rev=agg.pvz[c].rev;} });
+  monthList=buildMonthList();                                          // период-логика синхронизируется с новыми неделями
+  S.weekIdx=Math.min(Math.max(S.weekIdx|0,0),WK.weeks.length-1);       // кламп выбранной недели в новый диапазон
+  if(!monthList.some(m=>m.key===S.monthKey)) S.monthKey=monthList.length?monthList[monthList.length-1].key:null;
   renderAll();
 }
 let BACKUP=null;
 function restoreBackup(){ if(!BACKUP)return; const b=JSON.parse(BACKUP);
   b.DATA.forEach((bd,i)=>Object.assign(DATA[i],bd));
-  WK.weeks=b.WK.weeks;WK.runIdx=b.WK.runIdx;WK.dayCounts=b.WK.dayCounts;WK.net=b.WK.net;
+  WK.weeks=b.WK.weeks;WK.runIdx=b.WK.runIdx;WK.dayCounts=b.WK.dayCounts;WK.net=b.WK.net;WK.years=b.WK.years;
   Object.keys(WK.pvz).forEach(c=>{ if(b.WK.pvz[c]){WK.pvz[c].ord=b.WK.pvz[c].ord;WK.pvz[c].rev=b.WK.pvz[c].rev;} });
+  monthList=buildMonthList(); S.weekIdx=Math.min(Math.max(S.weekIdx|0,0),WK.weeks.length-1);
+  if(!monthList.some(m=>m.key===S.monthKey)) S.monthKey=monthList.length?monthList[monthList.length-1].key:null;
   renderAll(); }
 const ADMIN_PW='admin-uzum-2026';
 document.getElementById('abtn').onclick=()=>{

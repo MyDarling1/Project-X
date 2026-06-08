@@ -48,9 +48,13 @@ def aggregate(path):
             if not code or code=='nan': continue
             o=r['Кол-во заказов']
             if pd.isna(o): continue
-            s=r['Общая сумма']; s=float(s) if pd.notna(s) else 0
+            try: o=float(o)
+            except (ValueError, TypeError): continue   # нечисловая ячейка заказов ('-', текст, мусор) — пропускаем, не валим всю сборку
+            s=r['Общая сумма']
+            try: s=float(s) if pd.notna(s) else 0.0
+            except (ValueError, TypeError): s=0.0
             d=acc.setdefault(m,{}).setdefault(code,[0.0,0.0,set()])
-            d[0]+=float(o); d[1]+=s; d[2].add(day)
+            d[0]+=o; d[1]+=s; d[2].add(day)
     if not acc: raise SystemExit('Не найдено листов с датой ДД.ММ.ГГГГ')
     return acc
 
@@ -116,11 +120,17 @@ def merge(arch_w, arch_v, arch_dc, new_acc, pick):
     vals={}; dc={}
     for m in weeks:
         in_arch = m in arch_dc
-        if in_arch and not (m==old_trailing and arch_dc[m]<7 and m in new_acc):
-            # зафиксированная неделя — берём архив
+        # последняя неполная неделя дотекает днями, но НЕ должна сжиматься: берём новое только если дней не меньше, чем уже накоплено
+        trailing_update = (m==old_trailing and in_arch and arch_dc[m]<7 and m in new_acc and new_dc.get(m,0)>=arch_dc[m])
+        if trailing_update:
+            vals[m]={code: pick(code,m) for code in new_acc[m]}; dc[m]=new_dc[m]
+        elif in_arch:
+            # зафиксированная полная неделя ИЛИ хвост, который иначе бы сжался (новый файл короче) — сохраняем архив
+            if m==old_trailing and arch_dc[m]<7 and m in new_acc and new_dc.get(m,0)<arch_dc[m]:
+                print(f'  [накопление] неделя {wlabel(m)}: новый файл короче ({new_dc.get(m,0)} дн.) архива ({arch_dc[m]} дн.) — оставляю накопленное', file=sys.stderr)
             vals[m]=dict(arch_v.get(m,{})); dc[m]=arch_dc[m]
         elif m in new_acc:
-            # новая неделя ИЛИ обновляемая последняя неполная — берём из нового файла
+            # совершенно новая неделя
             vals[m]={code: pick(code,m) for code in new_acc[m]}; dc[m]=new_dc[m]
         else:
             vals[m]=dict(arch_v.get(m,{})); dc[m]=arch_dc.get(m,0)
@@ -215,11 +225,11 @@ def main():
     DATA.sort(key=lambda d:-d['revW3'])
     net_ord=[round(sum(WKpvz[c]['ord'][i] for c in WKpvz),1) for i in range(len(weeks))]
     net_rev=[sum(WKpvz[c]['rev'][i] for c in WKpvz) for i in range(len(weeks))]
-    WK=dict(weeks=[wlabel(m) for m in weeks],runIdx=full_runIdx,dayCounts=[dc[m] for m in weeks],
+    WK=dict(weeks=[wlabel(m) for m in weeks],years=[m.year for m in weeks],runIdx=full_runIdx,dayCounts=[dc[m] for m in weeks],
             net=dict(ord=net_ord,rev=net_rev),pvz=WKpvz)
     html=open(HTML,encoding='utf-8').read()
-    html=re.sub(r'const DATA = \[.*?\];','const DATA = '+json.dumps(DATA,ensure_ascii=False)+';',html,count=1,flags=re.S)
-    html=re.sub(r'const WK = \{.*?\};\n','const WK = '+json.dumps(WK,ensure_ascii=False)+';\n',html,count=1,flags=re.S)
+    html=re.sub(r'const DATA = \[.*?\];', lambda _: 'const DATA = '+json.dumps(DATA,ensure_ascii=False)+';', html,count=1,flags=re.S)
+    html=re.sub(r'const WK = \{.*?\};\n', lambda _: 'const WK = '+json.dumps(WK,ensure_ascii=False)+';\n', html,count=1,flags=re.S)
     open(HTML,'w',encoding='utf-8').write(html)
     print(f'{HTML}: история — все {len(weeks)} нед.; Обзор run-rate=неделя {wlabel(runM)}, дни {WK["dayCounts"]}')
     print('Готово. Запусти recalc для эталона при желании, затем git commit & push.')
