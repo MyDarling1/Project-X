@@ -327,7 +327,7 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 
   <div class="card">
     <h3>Структура расходов (в месяц)</h3>
-    <div class="hint">OPEX = аренда + ЗП. Плюс затраты на УК и «разное». В выбранной валюте.</div>
+    <div class="hint" id="costHint">OPEX = аренда + ЗП. Плюс затраты на УК и «разное». В выбранной валюте.</div>
     <div class="tbl-scroll"><table id="costTbl"></table></div>
   </div>
 </div><!-- /viewMain -->
@@ -881,24 +881,28 @@ function renderHistory(){
   renderCosts();
 }
 function renderCosts(){
+  const mkey = S.gran==='month' ? S.monthKey : ((weekMonth(S.weekIdx)||{}).key||null);   // месяц выбранного периода
+  const salOf = d => { const s=mkey?salFact(d.code,mkey):null; return s!=null?s:d.salarySum; };   // ЗП: факт выплат за месяц, иначе оценка Справочника
+  const anyFact = !!(mkey && DATA.some(d=>salFact(d.code,mkey)!=null));
   const ccols=[
     {k:'aka',t:'Точка',lft:1,v:d=>d.aka},
     {k:'rent',t:'Аренда',v:d=>d.rentSum},
-    {k:'sal',t:'ЗП',v:d=>d.salarySum},
-    {k:'opex',t:'OPEX',v:d=>d.rentSum+d.salarySum},
+    {k:'sal',t:'ЗП',v:d=>salOf(d)},
+    {k:'opex',t:'OPEX',v:d=>d.rentSum+salOf(d)},
     {k:'ukm',t:'УК + разное',v:d=>S.uk*S.fx+(d.miscSum||0)},
-    {k:'tot',t:'Итого/мес',v:d=>d.rentSum+d.salarySum+S.uk*S.fx+(d.miscSum||0)},
+    {k:'tot',t:'Итого/мес',v:d=>d.rentSum+salOf(d)+S.uk*S.fx+(d.miscSum||0)},
   ];
   let arr=DATA.slice();
   if(S.costSortKey){const c=ccols.find(x=>x.k===S.costSortKey);
     if(c)arr.sort((a,b)=>{const x=c.v(a),y=c.v(b);return typeof x==='string'?S.costSortDir*x.localeCompare(y):S.costSortDir*(x-y);});}
   let h='<thead><tr>'+ccols.map(c=>`<th class="${c.lft?'lft':''} ${S.costSortKey===c.k?'sorted':''}" data-csk="${c.k}">${c.t}${S.costSortKey===c.k?(S.costSortDir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr></thead><tbody>';
   let sr=0,ss=0,su=0,sm=0;
-  arr.forEach(d=>{const opex=d.rentSum+d.salarySum, ukm=S.uk*S.fx, misc=d.miscSum||0, tot=opex+ukm+misc;
-    sr+=d.rentSum;ss+=d.salarySum;su+=ukm;sm+=misc;
+  arr.forEach(d=>{const sal=salOf(d), opex=d.rentSum+sal, ukm=S.uk*S.fx, misc=d.miscSum||0, tot=opex+ukm+misc;
+    sr+=d.rentSum;ss+=sal;su+=ukm;sm+=misc;
+    const isF=!!(mkey&&salFact(d.code,mkey)!=null);
     h+=`<tr><td><b>${d.aka}</b><div style="color:var(--faint);font-size:11px">${d.city}</div></td>`+
        `<td><span class="mono">${money(d.rentSum)}</span></td>`+
-       `<td><span class="mono">${money(d.salarySum)}</span></td>`+
+       `<td><span class="mono"${isF?' style="color:var(--mint)" title="факт выплат"':''}>${money(sal)}</span></td>`+
        `<td><span class="mono">${money(opex)}</span></td>`+
        `<td><span class="mono">${money(ukm+misc)}</span></td>`+
        `<td><span class="mono pos" style="color:var(--txt)">${money(tot)}</span></td></tr>`;});
@@ -907,6 +911,10 @@ function renderCosts(){
   h+=`<tr><td style="color:var(--dim);font-weight:700">Итого по сети</td>`+rows.map(v=>`<td><span class="mono"><b>${money(v)}</b></span></td>`).join('')+'</tr>';
   const t=document.getElementById('costTbl');t.innerHTML=h+'</tbody>';
   t.querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.csk;if(S.costSortKey===k)S.costSortDir*=-1;else{S.costSortKey=k;S.costSortDir=-1;}renderCosts();});
+  const ch=document.getElementById('costHint');
+  if(ch) ch.innerHTML = anyFact
+    ? `OPEX = аренда + ЗП. <b style="color:var(--mint)">ЗП — факт выплат (${(monthList.find(m=>m.key===mkey)||{}).label||mkey})</b>; аренда/УК/разное — план. В выбранной валюте.`
+    : 'OPEX = аренда + ЗП (оценка Справочника). Плюс УК и «разное». В выбранной валюте.';
 }
 
 /* ---------- карта сети ---------- */
