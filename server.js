@@ -33,7 +33,7 @@ function cookieVal(req, name) {
 }
 const authed = req => valid(cookieVal(req, COOKIE));
 
-const LOGIN = err => `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Вход · Uzum ПВЗ</title>
+const LOGIN = err => `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Вход · ПВЗ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
@@ -51,7 +51,7 @@ button:hover{transform:translateY(-1px)}
 </style></head><body>
 <form class="gbox" method="POST" action="/__auth">
   <div class="glogo">U</div>
-  <h2>Uzum ПВЗ</h2>
+  <h2>ПВЗ</h2>
   <p>Введите пароль для доступа к дашборду</p>
   <input type="password" name="pw" placeholder="Пароль" autocomplete="current-password" autofocus>
   <button type="submit">Войти</button>
