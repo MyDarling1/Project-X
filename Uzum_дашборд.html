@@ -756,21 +756,24 @@ function renderPointsFact(){
   const {P,idxs,ordOf,revOf,show,sp}=ovPeriodStats();
   let base=DATA.filter(d=>S.seg==='all'||d.seg==S.seg);
   if(S.ovq){const q=S.ovq.toLowerCase(); base=base.filter(d=>(d.aka+d.code+d.city).toLowerCase().includes(q));}
+  const pIdx=P.prevSpec?P.prevSpec.idxs:null;   // оборот/день прошлого периода — для дельты (per-day → честно)
+  const prevRevOf=pIdx?(d=>{const dd=pIdx.reduce((a,i)=>a+pvzDays(d.code,i),0)||1; return pIdx.reduce((a,i)=>a+((WK.pvz[d.code]?WK.pvz[d.code].rev[i]:0)*pvzDays(d.code,i)),0)/dd;}):null;
   let r=base.map(d=>{const o=ordOf(d), rev=revOf(d), be=beOf(d), f=periodFin(d,idxs,P.mode,P.monthDays,P.factKey);
-    return {d,o,rev,be,health:be>0?o/be:0,income:f.income,pnl:f.pnl,trend:show.map(i=>(WK.pvz[d.code]?(WK.pvz[d.code].ord[i]||0):0))};});
+    return {d,o,rev,be,prevRev:prevRevOf?prevRevOf(d):null,health:be>0?o/be:0,income:f.income,pnl:f.pnl,trend:show.map(i=>(WK.pvz[d.code]?(WK.pvz[d.code].ord[i]||0):0))};});
   const gv=x=>({aka:x.d.aka,seg:x.d.seg,o:x.o,be:x.be,health:x.health,rev:x.rev,income:x.income,pnl:x.pnl})[S.ovSortKey];
   r.sort((a,b)=>{let x=gv(a),y=gv(b); return typeof x==='string'?S.ovSortDir*x.localeCompare(y):S.ovSortDir*(x-y);});
-  const C=[{k:'aka',t:'Точка',lft:1},{k:'seg',t:'Сег'},{k:'o',t:'Зак/д'},{k:'be',t:'Безубыток'},{k:'health',t:'Здоровье'},{k:'rev',t:'Оборот/д'},{k:'income',t:'Доход'},{k:'pnl',t:'P&L'},{k:'trend',t:'тренд',ns:1}];
+  const C=[{k:'aka',t:'Точка',lft:1},{k:'seg',t:'Сег'},{k:'o',t:'Зак/д'},{k:'be',t:'Безубыток'},{k:'health',t:'Здоровье'},{k:'rev',t:'Оборот/нед'},{k:'income',t:'Доход'},{k:'pnl',t:'P&L'},{k:'trend',t:'тренд',ns:1}];
   let h='<thead><tr>'+C.map(c=>`<th class="${c.lft?'lft':''} ${S.ovSortKey===c.k?'sorted':''}"${c.ns?'':` data-k="${c.k}"`}>${c.t}${S.ovSortKey===c.k?(S.ovSortDir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr></thead><tbody>';
   r.forEach(x=>{
     const hp=Math.min(x.health,1.4), hc=x.health>=1?'var(--mint)':x.health>=.6?'var(--amber)':'var(--coral)';
+    let revD=''; if(x.prevRev!=null&&x.prevRev>0&&isFinite(x.prevRev)){const dp=(x.rev-x.prevRev)/Math.abs(x.prevRev)*100; if(Math.abs(dp)>=0.5){const up=dp>=0; revD=`<div class="mono" style="font-size:10.5px;margin-top:2px;color:${up?'var(--mint)':'var(--coral)'}">${up?'▲':'▼'} ${Math.abs(dp).toFixed(0)}% <span style="color:var(--faint)">${S.gran==='month'?'м/м':'нд/нд'}</span></div>`;}}
     h+=`<tr class="prow" data-code="${x.d.code}">`+
       `<td><b>${x.d.aka}</b><div style="color:var(--faint);font-size:11px">${x.d.city}</div></td>`+
       `<td><span class="chip" style="background:${segHex[x.d.seg]}">${x.d.seg}</span></td>`+
       `<td><span class="mono">${fmt1(x.o)}</span></td>`+
       `<td><span class="mono" style="color:var(--dim)">${fmt1(x.be)}</span></td>`+
       `<td><span class="health"><i style="width:${hp/1.4*100}%;background:${hc}"></i><span class="mark" style="left:${1/1.4*100}%"></span></span> <span class="mono" style="font-size:11px;color:${hc}">${Math.round(x.health*100)}%</span></td>`+
-      `<td><span class="mono">${money(x.rev)}</span></td>`+
+      `<td><span class="mono">${money(x.rev*7)}</span>${revD}</td>`+
       `<td><span class="mono">${money(x.income)}</span></td>`+
       `<td><span class="mono ${x.pnl>=0?'pos':'neg'}">${money(x.pnl)}</span></td>`+
       `<td style="white-space:nowrap">${sparkline(x.trend,'var(--violet)',sp)}</td>`+
