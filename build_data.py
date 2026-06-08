@@ -177,6 +177,42 @@ def write_archive(wb, sheet, title, weeks, vals, dc, codes, ref, fmt):
     for i in range(len(weeks)): sh.column_dimensions[get_column_letter(3+i)].width=13
     sh.freeze_panes='C6'
 
+def read_payouts(path, year):
+    """Лист «выплаты » (помесячный ФАКТ выплат зарплат по ПВЗ) -> (isoKey 'YYYY-MM', {code: сум}) или None.
+    Шапка может быть не в 1-й строке; над ней — метка периода вида 'DD-DD.MM'. Джойн по коду ПВЗ."""
+    wb=load_workbook(path, read_only=True, data_only=True)
+    target=None
+    for n in wb.sheetnames:
+        if str(n).strip().lower()=='выплаты': target=n; break
+    if not target: wb.close(); return None
+    rows=[list(r) for r in wb[target].iter_rows(values_only=True)]
+    wb.close()
+    hdr_i=None
+    for i,r in enumerate(rows):
+        cells=[str(c).strip() if c is not None else '' for c in r]
+        if 'ПВЗ' in cells and any(str(c).strip().startswith('Общая сумма') for c in cells): hdr_i=i; break
+    if hdr_i is None: return None
+    hdr=[str(c).strip() if c is not None else '' for c in rows[hdr_i]]
+    pvz_j=hdr.index('ПВЗ')
+    sum_j=next(j for j,c in enumerate(hdr) if c.startswith('Общая сумма'))
+    month=None
+    for i in range(hdr_i,-1,-1):
+        for c in rows[i]:
+            if c is None: continue
+            mm=re.search(r'(\d{1,2})\.(\d{1,2})\s*$', str(c).strip())
+            if mm: month=int(mm.group(2)); break
+        if month: break
+    if not month: return None
+    key=f'{year:04d}-{month:02d}'; sal={}
+    for r in rows[hdr_i+1:]:
+        if pvz_j>=len(r) or sum_j>=len(r): continue
+        code=r[pvz_j]; amt=r[sum_j]
+        if code is None or str(code).strip()=='' or str(code).strip().lower()=='nan': continue
+        try: amt=float(amt)
+        except (TypeError,ValueError): continue
+        sal[str(code).strip()]=round(amt)
+    return (key, sal) if sal else None
+
 def main():
     ref=read_ref(REF)
     acc=aggregate(DAILY)
@@ -187,12 +223,16 @@ def main():
     _,_,_ = (aw,av,adc)
     bw,bv,bdc=read_archive(wb,'Объём_по_неделям')
     _,vol_vals,_ = merge(bw,bv,bdc,acc, lambda c,m: acc[m][c][1])  # суммы объёма
+    cw,cv,cdc=read_archive(wb,'Дни_по_неделям')
+    weeks_d,day_vals,dc_d = merge(cw,cv,cdc,acc, lambda c,m: len(acc[m][c][2]))  # #5: дни с данными по каждому ПВЗ за неделю (накопительно)
+    def pdays(c,m): return day_vals[m].get(c,0) if m in day_vals else dc[m]       # дни этого ПВЗ за неделю; для недель без архива дней — союз дней недели (фолбэк)
     codes=[c for c in ref]  # порядок как в справочнике
     # отсортируем по последней неделе (заказы/день) убыв.
     last_m=weeks[-1]
     codes.sort(key=lambda c:-ord_vals[last_m].get(c,0))
     write_archive(wb,'Заказы_по_неделям','Средние заказы в день по неделям (накопительно)',weeks,ord_vals,dc,codes,ref,'0.0')
     write_archive(wb,'Объём_по_неделям','Сумма выручки (объём) по неделям, сум (накопительно)',weeks,vol_vals,dc,codes,ref,'#,##0')
+    write_archive(wb,'Дни_по_неделям','Дней с данными по каждому ПВЗ за неделю (накопительно)',weeks_d,day_vals,dc_d,codes,ref,'0')
     tmp_ref = REF + '.tmp'; wb.save(tmp_ref); os.replace(tmp_ref, REF)   # атомарная запись (без частичной порчи)
     print(f'{REF}: накоплено недель = {len(weeks)} ({wlabel(weeks[0])} … {wlabel(weeks[-1])}); дней посл. недели = {dc[weeks[-1]]}')
 
@@ -206,12 +246,12 @@ def main():
         if code not in ref: continue
         ordd=[round(ord_vals[m].get(code,0),2) for m in last4]          # последние 4 — для карточки точки
         ordFull=[round(ord_vals[m].get(code,0),2) for m in weeks]        # ВСЯ история — для страницы истории
-        revFull=[round(vol_vals[m].get(code,0)/max(dc[m],1)) for m in weeks]
+        revFull=[round(vol_vals[m].get(code,0)/max(pdays(code,m),1)) for m in weeks]   # #5: оборот/день делим на дни именно этого ПВЗ
         runRate=round(ord_vals[runM].get(code,0),2)
-        revRun=round(vol_vals[runM].get(code,0)/max(dc[runM],1))
-        tot_o=sum(ord_vals[m].get(code,0)*dc[m] for m in weeks)
+        revRun=round(vol_vals[runM].get(code,0)/max(pdays(code,runM),1))
+        tot_o=sum(ord_vals[m].get(code,0)*pdays(code,m) for m in weeks)                # истинные суммарные заказы (заказы/день × дни ПВЗ)
         tot_r=sum(vol_vals[m].get(code,0) for m in weeks)
-        tot_d=sum(dc[m] for m in weeks)
+        tot_d=sum(pdays(code,m) for m in weeks)                                        # суммарные активные дни именно этого ПВЗ
         r=ref[code]
         DATA.append(dict(code=code,aka=r['aka'],city=r['city'],seg=r['seg'],comm=r['comm'],
             rentSum=r['rentSum'],salarySum=r['salarySum'],miscSum=r['miscSum'],uk=r['uk'],
@@ -230,6 +270,19 @@ def main():
     html=open(HTML,encoding='utf-8').read()
     html=re.sub(r'const DATA = \[.*?\];', lambda _: 'const DATA = '+json.dumps(DATA,ensure_ascii=False)+';', html,count=1,flags=re.S)
     html=re.sub(r'const WK = \{.*?\};\n', lambda _: 'const WK = '+json.dumps(WK,ensure_ascii=False)+';\n', html,count=1,flags=re.S)
+    # ---- факт выплат зарплат (лист «выплаты ») → накопительный const SAL в дашборде ----
+    pay=read_payouts(DAILY, weeks[-1].year)
+    mex=re.search(r'const SAL = (\{.*?\});', html, flags=re.S)
+    try: SAL=json.loads(mex.group(1)) if mex else {}
+    except ValueError: SAL={}
+    if pay:
+        key,sal=pay; SAL[key]=sal
+        print(f'{HTML}: факт зарплат {key} — ПВЗ={len(sal)}, итог={sum(sal.values()):,} сум')
+    else:
+        print(f'{HTML}: лист «выплаты » не найден в источнике — const SAL без изменений ({len(SAL)} мес.)')
+    js_sal='const SAL = '+json.dumps(SAL,ensure_ascii=False)+';'
+    if mex: html=re.sub(r'const SAL = \{.*?\};', lambda _: js_sal, html, count=1, flags=re.S)
+    else:   html=re.sub(r'(const WK = \{.*?\};\n)', lambda mo: mo.group(1)+js_sal+'\n', html, count=1, flags=re.S)
     open(HTML,'w',encoding='utf-8').write(html)
     print(f'{HTML}: история — все {len(weeks)} нед.; Обзор run-rate=неделя {wlabel(runM)}, дни {WK["dayCounts"]}')
     print('Готово. Запусти recalc для эталона при желании, затем git commit & push.')
