@@ -187,12 +187,14 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 /* drawer */
 .drawer{position:fixed;top:0;right:0;height:100%;width:min(420px,92vw);background:var(--panel);border-left:1px solid var(--line2);box-shadow:-30px 0 80px rgba(0,0,0,.6);transform:translateX(105%);transition:transform .4s cubic-bezier(.22,1,.36,1);z-index:50;padding:26px;overflow-y:auto}
 .drawer.open{transform:translateX(0)}
-.dx{position:absolute;top:18px;right:20px;font-size:22px;color:var(--dim);cursor:pointer;background:none;border:0}
+.dx{position:absolute;top:12px;right:14px;font-size:22px;line-height:1;color:var(--dim);cursor:pointer;background:none;border:0;padding:6px 9px;border-radius:9px;transition:.14s}
+.dx:hover{color:var(--txt);background:rgba(139,109,255,.12)}
 .drawer h2{font-size:24px;font-weight:800}
 .drawer .code{font-family:'Spline Sans Mono';color:var(--violet);font-size:13px;margin-bottom:18px}
-.stat{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line)}
-.stat .k{color:var(--dim);font-size:13px}
-.stat .v{font-family:'Spline Sans Mono';font-weight:600;font-size:14px}
+.stat{display:flex;justify-content:space-between;gap:14px;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--line)}
+.stat .k{color:var(--dim);font-size:13px;flex:0 1 auto;min-width:0}
+.stat .v{font-family:'Spline Sans Mono';font-weight:600;font-size:14px;flex:0 0 auto;text-align:right;white-space:nowrap}
+.dgrp{color:var(--faint);font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin:18px 0 2px}
 .spark{margin:16px 0 6px}
 .foot{margin-top:26px;color:var(--faint);font-size:11.5px;line-height:1.6;text-align:center}
 .scrim{position:fixed;inset:0;background:rgba(5,7,11,.55);opacity:0;pointer-events:none;transition:.35s;z-index:40}
@@ -667,7 +669,7 @@ function renderChart(){
   svg.innerHTML=el;
   const L={
     be:[['var(--mint)','выше безубытка'],['var(--dim)','точка безубытка']],
-    fc:[['var(--mint)','план выполнен'],['#ff5c72','план 1-го мес.']],
+    fc:[['var(--mint)','план выполнен'],['var(--coral)','план 1-го мес.']],
     yx:[['var(--mint)','≥ Яндекс-пик'],['var(--s1)','Сег 1'],['var(--s2)','Сег 2'],['var(--s3)','Сег 3']],
     pnl:[['var(--mint)','прибыль'],['var(--coral)','убыток']]
   }[m];
@@ -715,27 +717,37 @@ function openDrawer(code){
   });
   const fcY=padT+h-d.fcMonth1/mx*h;
   spark+=`<line x1="0" y1="${fcY}" x2="${4*(bw+gap)-gap}" y2="${fcY}" stroke="var(--coral)" stroke-width="2" stroke-dasharray="4 3"/></svg>`;
-  const guarEnd=new Date(d.start);guarEnd.setMonth(guarEnd.getMonth()+6);
-  const row=(k,v)=>`<div class="stat"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+  const startD=new Date(d.start), guarEnd=new Date(d.start); guarEnd.setMonth(guarEnd.getMonth()+6);
+  const ageWk=Math.max(0,Math.round((Date.now()-startD)/6048e5)), gAct=guarEnd>new Date();
+  const hc=c.health>=1?'var(--mint)':c.health>=.6?'var(--amber)':'var(--coral)', hp=Math.min(c.health,1.4);
+  const healthBar=`<span class="health"><i style="width:${hp/1.4*100}%;background:${hc}"></i><span class="mark" style="left:${1/1.4*100}%"></span></span> <span class="mono" style="color:${hc}">${Math.round(c.health*100)}%</span>`;
+  const rewLbl=c.reward<=d.guarFull?'гарантия':'комиссия';
+  const guarVal='<span style="color:'+(gAct?'var(--mint)':'var(--dim)')+'">'+(gAct?'активна до ':'истекла ')+guarEnd.toLocaleDateString('ru-RU')+'</span>';
+  const row=(k,v,cls)=>`<div class="stat"><span class="k">${k}</span><span class="v ${cls||''}">${v}</span></div>`;
+  const grp=t=>`<div class="dgrp">${t}</div>`;
   document.getElementById('drawer').innerHTML=`
     <button class="dx" onclick="closeDrawer()">×</button>
     <div class="code">${d.code} · Сегмент ${d.seg} · ${d.city}</div>
     <h2>${d.aka}</h2>
     <div class="spark"><div class="hint">Заказы/день по неделям (W3 в цвете, ⸺ план 1-го мес.)</div>${spark}</div>
-    ${row('Факт зак/день (×'+S.boost.toFixed(1)+')',fmt1(c.orders))}
-    ${row('Точка безубытка',fmt1(c.be)+' зак/день')}
-    ${row('Здоровье',Math.round(c.health*100)+'%')}
-    ${row('Комиссия',Math.round(d.comm*100)+'%')}
+    ${grp('Операция · прогноз')}
+    ${row('Факт зак/день'+(S.boost!==1?' ×'+S.boost.toFixed(1):''),fmt1(c.orders))}
+    ${row('Оборот (GMV)/день',money(c.rev))}
+    ${row('Безубыток',fmt1(c.be)+' зак/день')}
+    ${row('Здоровье',healthBar)}
+    ${grp('Экономика · прогноз')}
     ${row('Маржа с заказа',S.cur==='usd'?c.margin.toFixed(2)+' $':fmt(c.margin*S.fx)+' сум')}
     ${row('Средний чек (факт)',money(d.avgCheck))}
-    ${row('Средний чек (модель)',money(S.chk*S.fx))}
-    ${row('Оборот (GMV)/день',money(c.rev))}
+    ${row('Комиссия',Math.round(d.comm*100)+'%')}
     ${row('Гарантия/мес',money(d.guarFull))}
-    ${row('Вознагр./мес ('+(S.scen==='guar'?'на гарантии':'комиссия')+')',money(c.reward))}
+    ${row('Вознагр./мес',money(c.reward)+' <span style="color:var(--faint);font-weight:400">('+rewLbl+')</span>')}
     ${row('Затраты/мес',money(c.cost))}
-    ${row('P&L/мес',money(c.pnl))}
-    ${row('Старт',new Date(d.start).toLocaleDateString('ru-RU'))}
-    ${row('Гарантия до',guarEnd.toLocaleDateString('ru-RU'))}
+    ${row('P&L/мес',money(c.pnl),c.pnl>=0?'pos':'neg')}
+    ${grp('Договор')}
+    ${row('Старт',startD.toLocaleDateString('ru-RU'))}
+    ${row('Возраст',ageWk+' нед.')}
+    ${row('Гарантия',guarVal)}
+    <div class="foot">Прогноз по заданным параметрам — не факт.</div>
   `;
   document.getElementById('drawer').classList.add('open');
   document.getElementById('scrim').classList.add('on');
@@ -789,35 +801,60 @@ function openFactDrawer(code){
   const {P,idxs,ordOf,revOf,show,sp}=ovPeriodStats();
   const o=ordOf(d), rev=revOf(d), be=beOf(d), health=be>0?o/be:0, f=periodFin(d,idxs,P.mode,P.monthDays,P.factKey);
   const src=P.mode==='model'?'модель':'факт · Uzum';
+  // дельта оборота к прошлому периоду (как в таблице «По точкам», на день — честно при разном числе дней)
+  const pIdx=P.prevSpec?P.prevSpec.idxs:null;
+  const prevRev=pIdx?(()=>{const dd=pIdx.reduce((a,i)=>a+pvzDays(d.code,i),0)||1; return pIdx.reduce((a,i)=>a+((WK.pvz[d.code]?WK.pvz[d.code].rev[i]:0)*pvzDays(d.code,i)),0)/dd;})():null;
+  let revDelta='';
+  if(prevRev!=null&&prevRev>0&&isFinite(prevRev)){const dp=(rev-prevRev)/Math.abs(prevRev)*100; if(Math.abs(dp)>=0.5){const up=dp>=0; revDelta=`<div class="mono" style="font-size:10.5px;margin-top:2px;color:${up?'var(--mint)':'var(--coral)'}">${up?'▲':'▼'} ${Math.abs(dp).toFixed(0)}% <span style="color:var(--faint)">${S.gran==='month'?'м/м':'нд/нд'}</span></div>`;}}
+  // ранг и доля сети по обороту
+  const allRev=DATA.map(x=>revOf(x)), netRev=allRev.reduce((a,b)=>a+b,0)||1, rank=1+allRev.filter(v=>v>rev).length, share=rev/netRev*100;
+  // здоровье — тот же 3-уровневый цвет и бар, что в таблице
+  const hp=Math.min(health,1.4), hc=health>=1?'var(--mint)':health>=.6?'var(--amber)':'var(--coral)';
+  const healthBar=`<span class="health"><i style="width:${hp/1.4*100}%;background:${hc}"></i><span class="mark" style="left:${1/1.4*100}%"></span></span> <span class="mono" style="color:${hc}">${Math.round(health*100)}%</span>`;
+  // спарклайн заказов/день + пунктир безубытка
   const wk=show.map(i=>(WK.pvz[code]?(WK.pvz[code].ord[i]||0):0)), labels=show.map(i=>WK.weeks[i]);
-  const n=wk.length, slot=44, bw=30, barH=82, padT=22, padB=20, mx=Math.max(...wk,1), showVal=n<=8;
+  const n=wk.length, slot=44, bw=30, barH=82, padT=22, padB=20, mx=Math.max(...wk,be,1), showVal=n<=8;
   const H=padT+barH+padB;
   let spark=`<svg viewBox="0 0 ${n*slot} ${H}" style="width:100%">`;
   wk.forEach((v,i)=>{const bh=v/mx*barH, x=i*slot+(slot-bw)/2, y=padT+barH-bh;
     spark+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="4" fill="var(--violet)"/>`;
     if(showVal) spark+=`<text x="${x+bw/2}" y="${y-5}" text-anchor="middle" class="blabel" style="font-size:9px">${fmt1(v)}${sp[i]?'*':''}</text>`;
-    spark+=`<text x="${x+bw/2}" y="${padT+barH+15}" text-anchor="middle" class="glabel" style="font-size:8px">${String(labels[i]).split('–')[0]}</text>`;});
+    if(showVal||i%2===0) spark+=`<text x="${x+bw/2}" y="${padT+barH+15}" text-anchor="middle" class="glabel" style="font-size:9px">${String(labels[i]).split('–')[0]}</text>`;});
+  if(be>0){const beY=padT+barH-Math.min(be,mx)/mx*barH; spark+=`<line x1="0" y1="${beY}" x2="${n*slot}" y2="${beY}" stroke="var(--coral)" stroke-width="1.4" stroke-dasharray="4 3"/>`;}
   spark+='</svg>';
-  const guarEnd=new Date(d.start);guarEnd.setMonth(guarEnd.getMonth()+6);
+  // договор
+  const startD=new Date(d.start), guarEnd=new Date(d.start); guarEnd.setMonth(guarEnd.getMonth()+6);
+  const ageWk=Math.max(0,Math.round((Date.now()-startD)/6048e5)), gAct=guarEnd>new Date();
+  const periodVal=P.label+(P.partial?' <span style="color:var(--amber)">(неполный)</span>':'');
+  const incVal=money(f.income)+'<div class="mono" style="font-size:10.5px;margin-top:2px;color:var(--faint)">'+src+'</div>';
+  const rankVal=rank+' / '+DATA.length+' <span style="color:var(--faint);font-weight:400">· '+share.toFixed(1)+'%</span>';
+  const guarVal='<span style="color:'+(gAct?'var(--mint)':'var(--dim)')+'">'+(gAct?'активна до ':'истекла ')+guarEnd.toLocaleDateString('ru-RU')+'</span>';
   const row=(k,v,cls)=>`<div class="stat"><span class="k">${k}</span><span class="v ${cls||''}">${v}</span></div>`;
+  const grp=t=>`<div class="dgrp">${t}</div>`;
   document.getElementById('drawer').innerHTML=`
     <button class="dx" onclick="closeDrawer()">×</button>
     <div class="code">${d.code} · Сегмент ${d.seg} · ${d.city}</div>
     <h2>${d.aka}</h2>
-    <div class="spark"><div class="hint">Заказы/день по неделям (неполная неделя — со *)</div>${spark}</div>
-    ${row('Период',P.label+(P.partial?' (неполный)':''))}
+    <div class="spark"><div class="hint">Заказы/день по неделям (⸺ безубыток; неполная неделя — со *)</div>${spark}</div>
+    ${grp('Операция')}
+    ${row('Период',periodVal)}
     ${row('Заказы/день',fmt1(o))}
-    ${row('Оборот (GMV)/день',money(rev))}
-    ${row('Точка безубытка',fmt1(be)+' зак/день')}
-    ${row('Здоровье',Math.round(health*100)+'%',health>=1?'pos':'neg')}
-    ${row('Доход ('+src+')',money(f.income))}
+    ${row('Оборот (GMV)/нед',money(rev*7)+revDelta)}
+    ${row('Безубыток',fmt1(be)+' зак/день')}
+    ${row('Здоровье',healthBar)}
+    ${row('Ранг по обороту',rankVal)}
+    ${grp('Экономика')}
+    ${row('Доход',incVal)}
     ${row('Затраты',money(f.cost))}
     ${row('P&L',money(f.pnl),f.pnl>=0?'pos':'neg')}
     ${row('Комиссия',Math.round(d.comm*100)+'%')}
     ${row('Средний чек (факт)',money(d.avgCheck))}
-    ${row('Гарантия/мес',money(d.guarFull))}
-    ${row('Старт',new Date(d.start).toLocaleDateString('ru-RU'))}
-    ${row('Гарантия до',guarEnd.toLocaleDateString('ru-RU'))}
+    ${row('Гарантия/мес (порог)',money(d.guarFull))}
+    ${grp('Договор')}
+    ${row('Старт',startD.toLocaleDateString('ru-RU'))}
+    ${row('Возраст',ageWk+' нед.')}
+    ${row('Гарантия',guarVal)}
+    <div class="foot">Доход и P&L — ${src}; заказы и оборот — управленческая отчётность. Неполные недели (*) не экстраполируются.</div>
   `;
   document.getElementById('drawer').classList.add('open');
   document.getElementById('scrim').classList.add('on');
