@@ -421,7 +421,7 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
 
     <div class="scen rv d2" id="scenBox"></div>
 
-    <div class="grid2 rv d3" style="margin-top:24px; grid-template-columns:1.25fr 1fr">
+    <div class="grid2 rv d3" style="margin-top:24px">
       <div class="card">
         <div class="ch-ttl"><h4>Накопленный кэш инвестору · база</h4><span class="note">$ на вложенные $100K · по годам</span></div>
         <svg class="chart" id="chCash" viewBox="0 0 800 330" preserveAspectRatio="none"></svg>
@@ -493,10 +493,13 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
 const DEAL = {"rate":12000,"asOf":"01–07 июня 2026","track":{"opened":72,"yandex":54,"uzum":18,"cities":8},"net":{"income":19633,"net":-5988,"rent":9092,"sal":10769,"uk":5760,"gmv":162783,"guar":23333,"avgChk":14.5},"guarSeg":{"s1":1450,"s2":1167,"s3":950},"seg":{"s1":9,"s2":8,"s3":1},"ordWeeks":["11–17.05","18–24.05","25–31.05","01–07.06","08–14.06"],"ord":[206.3,283.7,298.7,375.9,451],"ordFull":[true,true,true,true,false],"runIdx":3,"deal":{"capex":10000,"n":10,"check":100000,"entryPct":2,"adminPct":1,"carryPct":10,"rampMo":6,"mgmtMo":320},"scen":{"cons":{"net":450,"invMo":3967,"yield":48,"pb":32,"pbY":2.7,"yc":[23300,47600,47600,47600,47600],"cum3":116500,"cum5":211700},"base":{"net":550,"invMo":4867,"yield":58,"pb":28,"pbY":2.3,"yc":[28700,58400,58400,58400,58400],"cum3":143500,"cum5":260300},"bull":{"net":650,"invMo":5767,"yield":69,"pb":24,"pbY":2,"yc":[34100,69200,69200,69200,69200],"cum3":170500,"cum5":308900}},"pts":[{"aka":"Бабур","city":"Ташкент","seg":1,"orders":53,"fc":39,"income":1217,"net":-269,"chk":13.5},{"aka":"Буз-1","city":"Ташкент","seg":1,"orders":51.43,"fc":61,"income":1218,"net":-291,"chk":14.3},{"aka":"Спутник","city":"Ташкент","seg":1,"orders":35.57,"fc":38,"income":1216,"net":-103,"chk":15.5},{"aka":"Шастри","city":"Ташкент","seg":1,"orders":28.71,"fc":38,"income":1959,"net":-336,"chk":14.2},{"aka":"Кургантепа","city":"Ташкент","seg":1,"orders":26.57,"fc":61,"income":936,"net":-515,"chk":13.9},{"aka":"Афросиаб","city":"Ташкент","seg":1,"orders":24.86,"fc":58,"income":843,"net":-962,"chk":17.3},{"aka":"Янгиюнусабад","city":"Ташкент","seg":1,"orders":17.57,"fc":61,"income":1450,"net":-276,"chk":11.7},{"aka":"Алмалык Амир Т","city":"Алмалык","seg":2,"orders":17.14,"fc":38,"income":941,"net":-346,"chk":15.7},{"aka":"Бухара","city":"Бухара","seg":2,"orders":17,"fc":31,"income":1167,"net":-382,"chk":13.8},{"aka":"Газалкент","city":"Газалкент","seg":2,"orders":16.71,"fc":60,"income":1167,"net":80,"chk":13.7},{"aka":"Баку","city":"Ташкент","seg":1,"orders":14.86,"fc":35,"income":1217,"net":-310,"chk":14.9},{"aka":"Алмалык Мустакилик","city":"Алмалык","seg":2,"orders":14.14,"fc":36,"income":979,"net":-257,"chk":16.9},{"aka":"Бука","city":"Бука","seg":2,"orders":13.43,"fc":33,"income":1016,"net":-111,"chk":14.8},{"aka":"Рудаки","city":"Самарканд","seg":2,"orders":13.43,"fc":36,"income":1054,"net":-556,"chk":15.6},{"aka":"Пскент","city":"Пскент","seg":2,"orders":9.29,"fc":37,"income":452,"net":-477,"chk":18.3},{"aka":"Андижанская","city":"Самарканд","seg":2,"orders":8.43,"fc":24,"income":414,"net":-634,"chk":11.7},{"aka":"Крестик","city":"Ташкент","seg":1,"orders":7.86,"fc":60,"income":1958,"net":158,"chk":11.6},{"aka":"Маргилан","city":"Маргилан","seg":3,"orders":5.86,"fc":19,"income":429,"net":-401,"chk":13.7}]};
 
 // ── EDIT HERE ──
-const CO = "[Название компании]";          // ← название вашей компании
-const CONTACT = "punktividachi.com";        // ← телефон / e-mail / телеграм для связи
+const CO = "Satori";                                   // ← название компании
+const PHONE = "+998 91 004 24 70";                     // отображаемый телефон (WhatsApp/Telegram)
+const WHATSAPP = "https://wa.me/998910042470";         // ссылка кнопки «Обсудить участие»
+const EMAIL = "ilya.slavin@satorigroup.asia";          // почта
 
 const SEGCOL={1:'#5a2ea6',2:'#8e6bd9',3:'#b1842f'};
+const MOB=()=>matchMedia('(max-width:760px)').matches;
 const usd=n=>'$'+Math.round(n).toLocaleString('en-US');
 const usdK=n=>'$'+Math.round(n/1000)+'K';
 const r1=n=>n.toLocaleString('ru-RU',{minimumFractionDigits:1,maximumFractionDigits:1});
@@ -515,12 +518,12 @@ function heroBand(){
 
 /* line chart (orders) */
 function lineChart(id, vals, full){
-  const W=800,H=320,L=46,R=22,T=30,B=44, n=vals.length;
-  const max=Math.max(...vals)*1.13;
+  const m=MOB(), W=m?440:800, H=m?300:320, FS=m?1.5:1, L=m?38:46, R=22, T=m?34:30, B=m?40:44, n=vals.length;
+  const max=Math.max(...vals)*1.14;
   const x=i=>L+(W-L-R)*(i/(n-1)), y=v=>T+(H-T-B)*(1-v/max);
   let g=''; for(let s=0;s<=4;s++){const gv=max*s/4,gy=y(gv);
     g+=`<line x1="${L}" y1="${gy.toFixed(1)}" x2="${W-R}" y2="${gy.toFixed(1)}" stroke="#ddd2bd"/>`;
-    g+=`<text x="${L-10}" y="${(gy+4).toFixed(1)}" text-anchor="end" font-family="Spline Sans Mono" font-size="11" fill="#a99e8c">${Math.round(gv)}</text>`;}
+    g+=`<text x="${L-8}" y="${(gy+4).toFixed(1)}" text-anchor="end" font-family="Spline Sans Mono" font-size="${(11*FS).toFixed(1)}" fill="#a99e8c">${Math.round(gv)}</text>`;}
   const fe=full.lastIndexOf(true);
   let ap=[]; for(let i=0;i<=fe;i++)ap.push(`${x(i).toFixed(1)},${y(vals[i]).toFixed(1)}`);
   const area=`M${x(0).toFixed(1)},${y(0).toFixed(1)} L`+ap.join(' L')+` L${x(fe).toFixed(1)},${y(0).toFixed(1)} Z`;
@@ -528,23 +531,33 @@ function lineChart(id, vals, full){
   let dp=fe<n-1?`M${x(fe).toFixed(1)},${y(vals[fe]).toFixed(1)} L${x(n-1).toFixed(1)},${y(vals[n-1]).toFixed(1)}`:'';
   let dots='',labs='',xl='';
   for(let i=0;i<n;i++){const pa=!full[i];
-    dots+=`<circle class="dot" cx="${x(i).toFixed(1)}" cy="${y(vals[i]).toFixed(1)}" r="4.5" fill="${pa?'#F8F4EC':'#5a2ea6'}" stroke="#5a2ea6" stroke-width="2"/>`;
-    labs+=`<text class="vlab" x="${x(i).toFixed(1)}" y="${(y(vals[i])-14).toFixed(1)}" text-anchor="middle" font-family="Fraunces" font-size="16" font-weight="500" fill="${pa?'#a99e8c':'#181410'}">${r1(vals[i])}</text>`;
-    xl+=`<text x="${x(i).toFixed(1)}" y="${H-14}" text-anchor="middle" font-family="Spline Sans Mono" font-size="10" fill="#766c5d">${DEAL.ordWeeks[i]}${pa?'*':''}</text>`;}
-  document.getElementById(id).innerHTML=`<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a2ea6" stop-opacity=".18"/><stop offset="1" stop-color="#5a2ea6" stop-opacity="0"/></linearGradient></defs>${g}<path class="area" d="${area}" fill="url(#ag)" opacity="0"/><path class="line" d="${lp}" fill="none" stroke="#5a2ea6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path class="line dash" d="${dp}" fill="none" stroke="#8e6bd9" stroke-width="2.4" stroke-dasharray="6 6" stroke-linecap="round"/>${dots}${labs}${xl}`;
+    dots+=`<circle class="dot" cx="${x(i).toFixed(1)}" cy="${y(vals[i]).toFixed(1)}" r="${(4.5*FS).toFixed(1)}" fill="${pa?'#F8F4EC':'#5a2ea6'}" stroke="#5a2ea6" stroke-width="2"/>`;
+    labs+=`<text class="vlab" x="${x(i).toFixed(1)}" y="${(y(vals[i])-12*FS).toFixed(1)}" text-anchor="middle" font-family="Fraunces" font-size="${(16*FS).toFixed(1)}" font-weight="500" fill="${pa?'#a99e8c':'#181410'}">${r1(vals[i])}</text>`;
+    xl+=`<text x="${x(i).toFixed(1)}" y="${(H-13).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono" font-size="${(10*FS).toFixed(1)}" fill="#766c5d">${(m?DEAL.ordWeeks[i].replace(/^.*?[–-]/,''):DEAL.ordWeeks[i])+(pa?'*':'')}</text>`;}
+  const el=document.getElementById(id); el.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  el.innerHTML=`<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a2ea6" stop-opacity=".18"/><stop offset="1" stop-color="#5a2ea6" stop-opacity="0"/></linearGradient></defs>${g}<path class="area" d="${area}" fill="url(#ag)" opacity="0"/><path class="line" d="${lp}" fill="none" stroke="#5a2ea6" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path class="line dash" d="${dp}" fill="none" stroke="#8e6bd9" stroke-width="2.4" stroke-dasharray="6 6" stroke-linecap="round"/>${dots}${labs}${xl}`;
 }
 
-/* horizontal leader bars */
+/* leader bars — desktop: row(name|chip|bar|value); mobile: name+value over full-width bar */
 function leaderBars(id){
-  const top=DEAL.pts.slice(0,6);
-  const W=800,H=320,L=8,R=70,T=10, n=top.length, rh=(H-T)/n, max=Math.max(...top.map(p=>p.orders));
-  let out='';
-  top.forEach((p,i)=>{const by=T+rh*i+rh*.18, bh=rh*.42, bw=(W-220-R)*(p.orders/max);
-    out+=`<text x="${L}" y="${(by+bh/2+5).toFixed(1)}" font-family="Hanken Grotesk" font-size="15" font-weight="600" fill="#181410">${p.aka}</text>`;
-    out+=`<text x="${L+158}" y="${(by+bh/2+4).toFixed(1)}" text-anchor="end" font-family="Spline Sans Mono" font-size="10.5" fill="#a99e8c">С${p.seg}</text>`;
-    out+=`<rect class="lbar" x="172" y="${by.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="5" fill="${SEGCOL[p.seg]}"/>`;
-    out+=`<text x="${(172+bw+10).toFixed(1)}" y="${(by+bh/2+5).toFixed(1)}" font-family="Spline Sans Mono" font-size="14" font-weight="600" fill="#181410">${r1(p.orders)}</text>`;});
-  document.getElementById(id).innerHTML=out;
+  const top=DEAL.pts.slice(0,6), m=MOB(), max=Math.max(...top.map(p=>p.orders));
+  let out='', W, H;
+  if(m){
+    W=440; H=476; const T=6, rh=(H-T)/top.length;
+    top.forEach((p,i)=>{const ry=T+rh*i, bw=(W-12)*(p.orders/max);
+      out+=`<text x="6" y="${(ry+24).toFixed(1)}" font-family="Hanken Grotesk" font-size="22" font-weight="600" fill="#181410">${p.aka} <tspan font-family="Spline Sans Mono" font-size="15" fill="#a99e8c">С${p.seg}</tspan></text>`;
+      out+=`<text x="${W-6}" y="${(ry+24).toFixed(1)}" text-anchor="end" font-family="Spline Sans Mono" font-size="22" font-weight="600" fill="#181410">${r1(p.orders)}</text>`;
+      out+=`<rect x="6" y="${(ry+34).toFixed(1)}" width="${(W-12).toFixed(1)}" height="15" rx="7.5" fill="#eadfcb"/>`;
+      out+=`<rect class="lbar" x="6" y="${(ry+34).toFixed(1)}" width="${bw.toFixed(1)}" height="15" rx="7.5" fill="${SEGCOL[p.seg]}"/>`;});
+  } else {
+    W=800; H=320; const L=8,R=70,T=10, rh=(H-T)/top.length;
+    top.forEach((p,i)=>{const by=T+rh*i+rh*.18, bh=rh*.42, bw=(W-220-R)*(p.orders/max);
+      out+=`<text x="${L}" y="${(by+bh/2+5).toFixed(1)}" font-family="Hanken Grotesk" font-size="15" font-weight="600" fill="#181410">${p.aka}</text>`;
+      out+=`<text x="${L+158}" y="${(by+bh/2+4).toFixed(1)}" text-anchor="end" font-family="Spline Sans Mono" font-size="10.5" fill="#a99e8c">С${p.seg}</text>`;
+      out+=`<rect class="lbar" x="172" y="${by.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="5" fill="${SEGCOL[p.seg]}"/>`;
+      out+=`<text x="${(172+bw+10).toFixed(1)}" y="${(by+bh/2+5).toFixed(1)}" font-family="Spline Sans Mono" font-size="14" font-weight="600" fill="#181410">${r1(p.orders)}</text>`;});
+  }
+  const el=document.getElementById(id); el.setAttribute('viewBox',`0 0 ${W} ${H}`); el.innerHTML=out;
 }
 
 /* P&L stack */
@@ -598,20 +611,21 @@ function scenBox(){
 function cashChart(){
   const yc=DEAL.scen.base.yc, entry=DEAL.deal.check*DEAL.deal.entryPct/100;
   let cum=[], c=-entry; yc.forEach(v=>{c+=v; cum.push(Math.round(c));});
-  const W=800,H=330,L=52,R=20,T=26,B=46, n=cum.length, check=DEAL.deal.check;
-  const max=Math.max(cum[n-1],check)*1.12, gap=(W-L-R)/n;
-  const y=v=>T+(H-T-B)*(1-v/max), bw=gap*0.5;
+  const m=MOB(), W=m?440:800, H=m?320:330, FS=m?1.5:1, L=m?44:52, R=20, T=26, B=m?42:46, n=cum.length, check=DEAL.deal.check;
+  const max=Math.max(cum[n-1],check)*1.14, gap=(W-L-R)/n;
+  const y=v=>T+(H-T-B)*(1-v/max), bw=gap*(m?0.46:0.5);
   let g=''; for(let s=0;s<=4;s++){const gv=max*s/4,gy=y(gv);
     g+=`<line x1="${L}" y1="${gy.toFixed(1)}" x2="${W-R}" y2="${gy.toFixed(1)}" stroke="#ddd2bd"/>`;
-    g+=`<text x="${L-10}" y="${(gy+4).toFixed(1)}" text-anchor="end" font-family="Spline Sans Mono" font-size="10.5" fill="#a99e8c">$${Math.round(gv/1000)}K</text>`;}
+    g+=`<text x="${L-8}" y="${(gy+4).toFixed(1)}" text-anchor="end" font-family="Spline Sans Mono" font-size="${(10.5*FS).toFixed(1)}" fill="#a99e8c">$${Math.round(gv/1000)}K</text>`;}
   // invested line
   const iy=y(check);
   let bars='',labs='',xl='';
   for(let i=0;i<n;i++){const cx=L+gap*i+gap/2, by=y(cum[i]), bh=(H-B)-by, paid=cum[i]>=check;
     bars+=`<rect class="bar" x="${(cx-bw/2).toFixed(1)}" y="${by.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="5" fill="${paid?'#1d7a4f':'#5a2ea6'}"/>`;
-    labs+=`<text x="${cx.toFixed(1)}" y="${(by-11).toFixed(1)}" text-anchor="middle" font-family="Fraunces" font-size="15" font-weight="500" fill="#181410">$${Math.round(cum[i]/1000)}K</text>`;
-    xl+=`<text x="${cx.toFixed(1)}" y="${H-14}" text-anchor="middle" font-family="Spline Sans Mono" font-size="10.5" fill="#766c5d">Год ${i+1}</text>`;}
-  document.getElementById('chCash').innerHTML=`${g}<line x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}" stroke="#c9bca2"/>${bars}<line x1="${L}" y1="${iy.toFixed(1)}" x2="${W-R}" y2="${iy.toFixed(1)}" stroke="#b0492f" stroke-width="1.5" stroke-dasharray="5 5"/><text x="${W-R}" y="${(iy-7).toFixed(1)}" text-anchor="end" font-family="Spline Sans Mono" font-size="10.5" fill="#b0492f">вложено $100K</text>${labs}${xl}`;
+    labs+=`<text x="${cx.toFixed(1)}" y="${(by-10).toFixed(1)}" text-anchor="middle" font-family="Fraunces" font-size="${(15*FS).toFixed(1)}" font-weight="500" fill="#181410">$${Math.round(cum[i]/1000)}K</text>`;
+    xl+=`<text x="${cx.toFixed(1)}" y="${(H-13).toFixed(1)}" text-anchor="middle" font-family="Spline Sans Mono" font-size="${(10.5*FS).toFixed(1)}" fill="#766c5d">Год ${i+1}</text>`;}
+  const el=document.getElementById('chCash'); el.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  el.innerHTML=`${g}<line x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}" stroke="#c9bca2"/>${bars}<line x1="${L}" y1="${iy.toFixed(1)}" x2="${W-R}" y2="${iy.toFixed(1)}" stroke="#b0492f" stroke-width="1.5" stroke-dasharray="5 5"/><text x="${(W-R).toFixed(1)}" y="${(iy-7).toFixed(1)}" text-anchor="end" font-family="Spline Sans Mono" font-size="${(10.5*FS).toFixed(1)}" fill="#b0492f">вложено $100K</text>${labs}${xl}`;
 }
 
 /* assumptions */
@@ -649,16 +663,15 @@ function fillText(){
   document.getElementById('c-chk').innerHTML='$'+DEAL.net.avgChk;
   document.getElementById('c-cities').innerHTML=DEAL.track.cities;
   document.getElementById('asof').textContent='Данные сети на неделю '+DEAL.asOf;
-  document.getElementById('ctaSub').innerHTML='Чек от '+usd(DEAL.deal.check)+' · '+DEAL.deal.n+' ПВЗ · '+CONTACT;
-  const cl=document.getElementById('ctaLink');
-  if(/@/.test(CONTACT)) cl.href='mailto:'+CONTACT; else if(/^https?:|\./.test(CONTACT)) cl.href=(/^https?:/.test(CONTACT)?'':'https://')+CONTACT;
+  document.getElementById('ctaSub').innerHTML='Чек от '+usd(DEAL.deal.check)+' · '+DEAL.deal.n+' ПВЗ &nbsp;·&nbsp; '+PHONE+' (WhatsApp / Telegram) &nbsp;·&nbsp; <a href="mailto:'+EMAIL+'" style="color:var(--violet);text-decoration:none">'+EMAIL+'</a>';
+  document.getElementById('ctaLink').href=WHATSAPP;
 }
 
 /* build */
 heroBand(); fillText(); plBox(); uofBox(); scenBox(); assumList(); recap();
-lineChart('chOrders', DEAL.ord, DEAL.ordFull);
-leaderBars('chTop');
-cashChart();
+function drawCharts(){ lineChart('chOrders', DEAL.ord, DEAL.ordFull); leaderBars('chTop'); cashChart(); }
+drawCharts();
+let _rsz; addEventListener('resize',()=>{clearTimeout(_rsz); _rsz=setTimeout(drawCharts,200);});
 cmpBars('cmpGuar', [
   {t:'Сегмент 1 · Ташкент', disp:usd(DEAL.guarSeg.s1), v:DEAL.guarSeg.s1, color:'var(--violet)'},
   {t:'Сегмент 2 · регионы', disp:usd(DEAL.guarSeg.s2), v:DEAL.guarSeg.s2, color:'var(--violet2)'},
