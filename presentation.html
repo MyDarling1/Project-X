@@ -672,6 +672,8 @@ heroBand(); fillText(); plBox(); uofBox(); scenBox(); assumList(); recap();
 function drawCharts(){ lineChart('chOrders', DEAL.ord, DEAL.ordFull); leaderBars('chTop'); cashChart(); }
 drawCharts();
 let _rsz; addEventListener('resize',()=>{clearTimeout(_rsz); _rsz=setTimeout(drawCharts,200);});
+// надёжный триггер при пересечении мобильного брейкпоинта (resize не всегда долетает)
+try{ matchMedia('(max-width:760px)').addEventListener('change', drawCharts); }catch(e){}
 cmpBars('cmpGuar', [
   {t:'Сегмент 1 · Ташкент', disp:usd(DEAL.guarSeg.s1), v:DEAL.guarSeg.s1, color:'var(--violet)'},
   {t:'Сегмент 2 · регионы', disp:usd(DEAL.guarSeg.s2), v:DEAL.guarSeg.s2, color:'var(--violet2)'},
