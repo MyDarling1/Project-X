@@ -936,13 +936,11 @@ function renderHistory(){
   const m=S.histMetric;
   const HMAX=13, allI=WK.weeks.map((_,i)=>i), show=allI.slice(-HMAX), moreN=allI.length-show.length;
   const sl=show.map(i=>WK.weeks[i]), sp=show.map(i=>partial[i]);
-  if(m==='pnl'){
-    document.getElementById('histNet').innerHTML=`<div class="card" style="grid-column:1/-1"><h3 style="margin-bottom:2px">Сеть · P&L по неделям</h3><div class="hint">P&L по неделям: доля месячного факта Uzum по дням (для закрытых месяцев) или модель (для текущих). Согласовано с блоком «Обзор».</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${wkBarsPnl(show.map(i=>netPnl[i]),sl,sp)}</div></div>`;
-  } else {
-    document.getElementById('histNet').innerHTML=
-      `<div class="card"><h3 style="margin-bottom:2px">Сеть · заказы/день</h3><div class="hint">сумма по сети, по неделям</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${wkBars(show.map(i=>WK.net.ord[i]),fmt1,'var(--violet)','hist-ho',sl,sp)}</div></div>`+
-      `<div class="card"><h3 style="margin-bottom:2px">Сеть · объём/день</h3><div class="hint">сумма по сети, по неделям</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${wkBars(show.map(i=>WK.net.rev[i]),money,'var(--mint)','hist-hv',sl,sp)}</div></div>`;
-  }
+  const card=(ttl,hint,svg)=>`<div class="card" style="grid-column:1/-1"><h3 style="margin-bottom:2px">${ttl}</h3><div class="hint">${hint}</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${svg}</div></div>`;
+  document.getElementById('histNet').innerHTML =
+      m==='pnl'    ? card('Сеть · P&L по неделям','P&L по неделям: доля месячного факта Uzum по дням (для закрытых месяцев) или модель (для текущих). Согласовано с блоком «Обзор».', wkBarsPnl(show.map(i=>netPnl[i]),sl,sp))
+    : m==='volume' ? card('Сеть · объём (GMV)/день','сумма по сети, по неделям', wkBars(show.map(i=>WK.net.rev[i]),money,'var(--mint)','hist-hv',sl,sp))
+    :                card('Сеть · заказы/день','сумма по сети, по неделям', wkBars(show.map(i=>WK.net.ord[i]),fmt1,'var(--violet)','hist-ho',sl,sp));
   renderCosts();
 }
 function renderCosts(){
