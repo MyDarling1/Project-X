@@ -961,8 +961,8 @@ const MAPEAST=["Ташкент","Алмалык","Бука","Пскент","Га
 function renderNetMap(){
   const nm=document.getElementById('netmap'); if(!nm)return;
   const tip=document.getElementById('maptip'), wrap=nm.parentElement;
-  const G={}; DATA.forEach(d=>{(G[d.city]=G[d.city]||[]).push({aka:d.aka,city:d.city,seg:d.seg,ord:d.runRate,rev:d.revW3});});
-  const at=p=>`data-name="${p.aka}" data-city="${p.city}" data-seg="${p.seg}" data-ord="${p.ord}" data-rev="${p.rev}"`;
+  const G={}; DATA.forEach(d=>{(G[d.city]=G[d.city]||[]).push({code:d.code,aka:d.aka,city:d.city,seg:d.seg,ord:d.runRate,rev:d.revW3});});
+  const at=p=>`data-code="${p.code}" data-name="${p.aka}" data-city="${p.city}" data-seg="${p.seg}" data-ord="${p.ord}" data-rev="${p.rev}"`;
   const lab=(x,y,t,anchor,cls)=>`<text x="${x}" y="${y}" text-anchor="${anchor||'middle'}" class="${cls||'clab'}">${t}</text>`;
   const fan=(b,arr,R,rfn)=>{let s='';const n=arr.length;
     if(n>1)s+=`<circle class="hub" cx="${b.x}" cy="${b.y}" r="2"/>`;
@@ -991,11 +991,12 @@ function renderNetMap(){
     s+=fan(b,G[city],cfg.R,o=>3+o*0.22);
     s+=lab(cfg.L[0],cfg.L[1],city+(n>1?' · '+n:''),'middle','clab');});
   nm.setAttribute('viewBox',`0 0 ${MAPGEO.width} ${MAPGEO.height}`); nm.innerHTML=s;
-  const hint=document.getElementById('nmHint'); if(hint) hint.textContent=`Среднее по последней полной неделе (${WK.weeks[WK.runIdx]}). Цвет — сегмент, размер — заказы/день. Наведи на точку — детали.`;
+  const hint=document.getElementById('nmHint'); if(hint) hint.textContent=`Среднее по последней полной неделе (${WK.weeks[WK.runIdx]}). Цвет — сегмент, размер — заказы/день. Наведи — детали, клик — карточка точки.`;
   const pos=e=>{const r=wrap.getBoundingClientRect();let x=e.clientX-r.left+14,y=e.clientY-r.top+14;x=Math.min(x,r.width-tip.offsetWidth-6);return[x,y];};
-  nm.querySelectorAll('.mk[data-name]').forEach(el=>{
-    el.addEventListener('mousemove',e=>{const d=el.dataset;tip.innerHTML=`<h4>${d.name}</h4><div class="r"><span>${d.city} · Сег ${d.seg}</span></div><div class="r"><span>Заказы/день</span><b>${fmt1(+d.ord)}</b></div><div class="r"><span>Оборот/день</span><b>${money(+d.rev)}</b></div>`;const[x,y]=pos(e);tip.style.left=x+'px';tip.style.top=y+'px';tip.style.opacity=1;});
+  nm.querySelectorAll('.mk[data-code]').forEach(el=>{
+    el.addEventListener('mousemove',e=>{const d=el.dataset;tip.innerHTML=`<h4>${d.name}</h4><div class="r"><span>${d.city} · Сег ${d.seg}</span></div><div class="r"><span>Заказы/день</span><b>${fmt1(+d.ord)}</b></div><div class="r"><span>Оборот/день</span><b>${money(+d.rev)}</b></div><div class="r" style="margin-top:4px;color:var(--faint)"><span>Клик — карточка точки</span></div>`;const[x,y]=pos(e);tip.style.left=x+'px';tip.style.top=y+'px';tip.style.opacity=1;});
     el.addEventListener('mouseleave',()=>tip.style.opacity=0);
+    el.addEventListener('click',()=>{tip.style.opacity=0;openFactDrawer(el.dataset.code);});
   });
 }
 
