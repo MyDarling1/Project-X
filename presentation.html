@@ -337,17 +337,37 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
         <div class="td">Действующая растущая сеть. Готовы к следующим 10.</div>
       </div>
     </div>
+
+    <p class="body-lg rv d3" style="margin-top:48px">За проектом стоит <b>SATORI IT</b> — управляющая компания и резидент IT Park Узбекистана. Команда из <b>7 человек</b> с кадровым резервом под масштабирование; ранее — <b>крупнейший партнёр Яндекса</b> в стране, прошедший все стадии запуска, роста и оптимизации сети ПВЗ.</p>
+    <div class="tiles three rv d3" style="margin-top:24px">
+      <div class="tile"><div class="tv" style="font-size:22px">Илья Славин</div><div class="tl">управляющий партнёр · стратегия и партнёрства</div></div>
+      <div class="tile"><div class="tv" style="font-size:22px">Андрей Андреев</div><div class="tl">исполнительный директор · операционное управление</div></div>
+      <div class="tile"><div class="tv" style="font-size:22px">Варсения Степанян</div><div class="tl">руководитель ТУ · локации, команда, KPI</div></div>
+    </div>
   </section>
 
   <!-- ── §02 РЫНОК ── -->
   <section class="blk" data-crumb="02 · Рынок">
     <div class="seghead rv"><span class="no">§ 02</span><span class="ttl">Возможность</span><span class="rule"></span></div>
-    <h2 class="big wide disp rv">Маркетплейс растёт — а каждый заказ нужно где-то выдать.</h2>
-    <p class="body-lg rv d1">Uzum — лидер e-commerce Узбекистана, и пункт выдачи — обязательная инфраструктура последней мили. Это не ставка на тренд, а зарабатывающий актив под него: точка получает агентское вознаграждение с каждого заказа, а в регионах ещё много незанятых локаций.</p>
-    <div class="pillars rv d2">
-      <div class="pillar"><div class="pno">01</div><h3>Структурный рост</h3><p>Проникновение e-commerce в Узбекистане низкое и быстро растёт. Поток заказов — попутный ветер для каждой точки.</p></div>
-      <div class="pillar"><div class="pno">02</div><h3>Инфраструктура, не спекуляция</h3><p>ПВЗ нужен маркетплейсу физически. Доход привязан к реальным заказам и обороту, а не к рыночной конъюнктуре.</p></div>
-      <div class="pillar"><div class="pno">03</div><h3>Региональный whitespace</h3><p>В областях плотность пунктов низкая. Мы знаем, какие локации работают, и заходим первыми.</p></div>
+    <h2 class="big wide disp rv">E-commerce Узбекистана — на старте <em>взрывного роста.</em></h2>
+    <p class="body-lg rv d1">Рынок перешёл отметку <b>$1 млрд</b> в 2025-м и вырос на <b>+40%</b> за год; KPMG прогнозирует <b>$2,5 млрд к 2028-му</b>. При этом e-commerce — лишь <b>4% розницы</b> против 17–47% у соседей. Пункт выдачи — обязательная инфраструктура последней мили под этот сдвиг, а не ставка на тренд.</p>
+
+    <div class="tiles rv d2">
+      <div class="tile"><div class="tv">$1<span class="u"> млрд+</span></div><div class="tl">объём e-com рынка · 2025</div></div>
+      <div class="tile"><div class="tv"><span class="pos">+40</span><span class="u">%</span></div><div class="tl">рост рынка за 2025 год</div></div>
+      <div class="tile"><div class="tv">$2,5<span class="u"> млрд</span></div><div class="tl">прогноз к 2028 · KPMG</div></div>
+      <div class="tile"><div class="tv">~1 200</div><div class="tl">ПВЗ в стране · ~200 000 в РФ</div></div>
+    </div>
+
+    <div class="card rv d3" style="margin-top:24px">
+      <div class="ch-ttl"><h4>Доля e-commerce в рознице</h4><span class="note">% · Узбекистан подсвечен · KPMG, Statista</span></div>
+      <svg class="chart" id="chMarket" viewBox="0 0 800 300" preserveAspectRatio="none"></svg>
+    </div>
+
+    <div class="pillars rv d3">
+      <div class="pillar"><div class="pno">01</div><h3>Молодая страна онлайн</h3><p>36 млн населения (60% моложе 30), интернет — 80%. Но 90% покупок пока на базарах: весь сдвиг в онлайн ещё впереди.</p></div>
+      <div class="pillar"><div class="pno">02</div><h3>Деньги уходят в цифру</h3><p>Безналичные платежи — лишь 34% против 75–82% у соседей. Государство активно подталкивает цифровизацию и безнал.</p></div>
+      <div class="pillar"><div class="pno">03</div><h3>Инфраструктура отстаёт</h3><p>~1 200 ПВЗ на страну против ~200 000 в России. В регионах — почти чистое поле, и мы знаем, где открывать.</p></div>
     </div>
   </section>
 
@@ -500,6 +520,7 @@ const EMAIL = "ilya.slavin@satorigroup.asia";          // почта
 
 const SEGCOL={1:'#5a2ea6',2:'#8e6bd9',3:'#b1842f'};
 const MOB=()=>matchMedia('(max-width:760px)').matches;
+const MKT=[{c:'Южная Корея',v:44},{c:'Китай',v:31},{c:'США',v:26},{c:'Россия',v:20},{c:'Казахстан',v:17},{c:'Узбекистан · 2024',v:4,hl:1},{c:'Узбекистан · 2028п',v:8,fc:1}];
 const usd=n=>'$'+Math.round(n).toLocaleString('en-US');
 const usdK=n=>'$'+Math.round(n/1000)+'K';
 const r1=n=>n.toLocaleString('ru-RU',{minimumFractionDigits:1,maximumFractionDigits:1});
@@ -556,6 +577,27 @@ function leaderBars(id){
       out+=`<text x="${L+158}" y="${(by+bh/2+4).toFixed(1)}" text-anchor="end" font-family="Spline Sans Mono" font-size="10.5" fill="#a99e8c">С${p.seg}</text>`;
       out+=`<rect class="lbar" x="172" y="${by.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="5" fill="${SEGCOL[p.seg]}"/>`;
       out+=`<text x="${(172+bw+10).toFixed(1)}" y="${(by+bh/2+5).toFixed(1)}" font-family="Spline Sans Mono" font-size="14" font-weight="600" fill="#181410">${r1(p.orders)}</text>`;});
+  }
+  const el=document.getElementById(id); el.setAttribute('viewBox',`0 0 ${W} ${H}`); el.innerHTML=out;
+}
+
+/* market: e-com share by country — desktop horizontal, mobile stacked */
+function marketBars(id){
+  const m=MOB(), max=44, col=p=>p.fc?'#1d7a4f':p.hl?'#5a2ea6':'#bcb09a';
+  let out='', W, H;
+  if(m){
+    W=440; H=MKT.length*76+6; const T=6, rh=(H-T)/MKT.length;
+    MKT.forEach((p,i)=>{const ry=T+rh*i, bw=(W-12)*(p.v/max);
+      out+=`<text x="6" y="${(ry+24).toFixed(1)}" font-family="Hanken Grotesk" font-size="21" font-weight="600" fill="${p.hl||p.fc?'#181410':'#5b5142'}">${p.c}</text>`;
+      out+=`<text x="${W-6}" y="${(ry+24).toFixed(1)}" text-anchor="end" font-family="Spline Sans Mono" font-size="21" font-weight="600" fill="#181410">${p.v}%</text>`;
+      out+=`<rect x="6" y="${(ry+34).toFixed(1)}" width="${(W-12).toFixed(1)}" height="15" rx="7.5" fill="#eadfcb"/>`;
+      out+=`<rect class="lbar" x="6" y="${(ry+34).toFixed(1)}" width="${bw.toFixed(1)}" height="15" rx="7.5" fill="${col(p)}"/>`;});
+  } else {
+    W=800; H=300; const L=8,R=52,T=6, rh=(H-T)/MKT.length;
+    MKT.forEach((p,i)=>{const by=T+rh*i+rh*.20, bh=rh*.40, bw=(W-230-R)*(p.v/max);
+      out+=`<text x="${L}" y="${(by+bh/2+5).toFixed(1)}" font-family="Hanken Grotesk" font-size="15" font-weight="600" fill="${p.hl||p.fc?'#181410':'#5b5142'}">${p.c}</text>`;
+      out+=`<rect class="lbar" x="224" y="${by.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="5" fill="${col(p)}"/>`;
+      out+=`<text x="${(224+bw+10).toFixed(1)}" y="${(by+bh/2+5).toFixed(1)}" font-family="Spline Sans Mono" font-size="14" font-weight="600" fill="#181410">${p.v}%</text>`;});
   }
   const el=document.getElementById(id); el.setAttribute('viewBox',`0 0 ${W} ${H}`); el.innerHTML=out;
 }
@@ -669,7 +711,7 @@ function fillText(){
 
 /* build */
 heroBand(); fillText(); plBox(); uofBox(); scenBox(); assumList(); recap();
-function drawCharts(){ lineChart('chOrders', DEAL.ord, DEAL.ordFull); leaderBars('chTop'); cashChart(); }
+function drawCharts(){ marketBars('chMarket'); lineChart('chOrders', DEAL.ord, DEAL.ordFull); leaderBars('chTop'); cashChart(); }
 drawCharts();
 let _rsz; addEventListener('resize',()=>{clearTimeout(_rsz); _rsz=setTimeout(drawCharts,200);});
 // надёжный триггер при пересечении мобильного брейкпоинта (resize не всегда долетает)
