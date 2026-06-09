@@ -86,6 +86,10 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--panel2);border:1px solid var(--mint);color:var(--txt);padding:13px 22px;border-radius:13px;font-size:13.5px;font-weight:600;box-shadow:0 14px 44px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:.35s;z-index:60;max-width:90vw;text-align:center}
 #tip{position:fixed;z-index:80;max-width:250px;background:var(--panel2);border:1px solid var(--line2);color:var(--txt);padding:8px 11px;border-radius:10px;font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:500;line-height:1.4;box-shadow:0 12px 30px rgba(0,0,0,.5);pointer-events:none;opacity:0;transform:translateY(3px);transition:opacity .1s ease,transform .1s ease}
 #tip.on{opacity:1;transform:none}
+.fwd-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pitchlink{font-size:12px;color:var(--violet);text-decoration:none;font-weight:600;white-space:nowrap}
+.pitchlink:hover{text-decoration:underline}
+@media(max-width:720px){.fwd-grid{grid-template-columns:1fr}}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .brow{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:9px}
 .brow .blab{font-size:12.5px;color:var(--dim);font-weight:600;line-height:1.15}
@@ -258,8 +262,14 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
       <button data-c="usd" class="on">$ USD</button>
       <button data-c="uzs">Сум</button>
     </div>
+    <a href="/pitch" class="pitchlink">Презентация ↗</a>
     <div class="tag" id="scenTag" style="display:none">Сценарий: на гарантии</div>
   </div>
+</div>
+
+<div id="dataErr" style="display:none;margin:48px auto;max-width:440px;text-align:center;background:var(--panel);border:1px solid var(--line2);border-radius:16px;padding:30px 26px">
+  <div style="font-family:'Bricolage Grotesque';font-size:19px;font-weight:800;margin-bottom:6px">Не удалось загрузить данные</div>
+  <div class="hint" style="margin:0">Обновите страницу. Если не помогает — войдите заново.</div>
 </div>
 
 <div class="viewnav" id="viewnav">
@@ -298,6 +308,18 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
   <h3 style="margin-bottom:12px">Юнит-экономика · среднее на 1 ПВЗ</h3>
   <div class="kpis" id="unitEcon" style="margin:0"></div>
 </div>
+
+<div id="fwdCard" style="margin-bottom:22px">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+    <h3 style="margin:0">Прогноз сети</h3>
+    <span class="tag">ПРОГНОЗ — НЕ ФАКТ</span>
+  </div>
+  <div class="fwd-grid">
+    <div class="card" id="fcCard"></div>
+    <div class="card" id="grCard"></div>
+  </div>
+</div>
+
 <div class="card" style="margin-bottom:18px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
       <div><h3>Фактические результаты</h3><div class="hint" style="margin:0">Факт по неделям. <b style="color:var(--dim)">Недели с * — неполные</b> (&lt; 7 дней с данными): показаны как есть, не для экстраполяции. Объём и P&L — в выбранной валюте.</div></div>
@@ -445,6 +467,7 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 
 <script src="/data.js"></script>
 <script>
+if(typeof DATA==='undefined'||!Array.isArray(DATA)||!DATA.length){['viewnav','viewMain','viewMap','viewSim','viewUpload'].forEach(id=>{var el=document.getElementById(id);if(el)el.style.display='none';});var de=document.getElementById('dataErr');if(de)de.style.display='';throw new Error('data unavailable');}
 const S={fx:12000,chk:14,uk:320,boost:1,flat:null,scen:'guar',seg:'all',metric:'be',cur:'usd',view:'main',histMetric:'orders',sortKey:'revW3',sortDir:-1,q:'',costSortKey:null,costSortDir:-1,ovSortKey:'o',ovSortDir:-1,ovq:'',gran:'week',monthKey:null,weekIdx:null};
 /* эталон: run-rate = последняя полная неделя; недели/дни задаются данными или дефолтом */
 DATA.forEach(d=>{if(d.runRate==null)d.runRate=d.w3;});
@@ -1016,7 +1039,7 @@ function renderNetMap(){
 /* ---------- render all ---------- */
 function setLabels(){
   const span=(WK.weeks&&WK.weeks.length)?(String(WK.weeks[0]).split('–')[0]+'–'+(String(WK.weeks[WK.weeks.length-1]).split('–')[1]||WK.weeks[WK.weeks.length-1])+(hasFact?'.'+FACT.latest.split('-')[0]:'')):'—';
-  const sub=document.getElementById('subLab'); if(sub) sub.textContent=`${DATA.length} пунктов выдачи · данные ${span}`;
+  const sub=document.getElementById('subLab'); if(sub){ const upd=(typeof UPD!=='undefined'&&UPD)?relTime(UPD):''; sub.textContent=`${DATA.length} пунктов выдачи · данные ${span}`+(upd?' · обновлено '+upd:''); }
   const bh=document.getElementById('boostHint'); if(bh) bh.textContent=`Масштабирует текущий поток (${(WK.weeks&&WK.weeks[WK.runIdx])||'тек. неделя'}) по всем точкам.`;
 }
 /* ---------- Финмодель: база = самый свежий месяц (run-rate); при ×1.0 = факт, если месяц закрыт отчётом Сатори, иначе доход по модели ---------- */
@@ -1066,7 +1089,103 @@ function renderSimKPIs(){
   html+=cards.map(x=>`<div class="kpi"><div class="lab">${x.l}</div><div class="val ${x.cls||''}">${x.v}</div><div class="delta">${x.d||''}</div></div>`).join('');
   el.innerHTML=html;
 }
-function renderAll(){setLabels();renderKPIs();renderUnit();renderSimKPIs();renderChart();renderTable();renderHistory();renderPointsFact();if(S.view==='map')renderNetMap();}
+/* ---------- свежесть данных ---------- */
+function relTime(iso){ try{ const t=new Date(iso); if(isNaN(t)) return ''; const ms=Date.now()-t.getTime(); if(ms<0) return 'только что'; const d=Math.floor(ms/864e5); if(d<=0){ const h=Math.floor(ms/36e5); return h<=0?'только что':h+' ч. назад'; } if(d===1) return 'вчера'; if(d<7) return d+' дн. назад'; if(d<35) return Math.floor(d/7)+' нед. назад'; return t.toLocaleDateString('ru-RU'); }catch(e){ return ''; } }
+/* ---------- прогноз сети (фиксированные допущения, не зависят от ползунков Финмодели) ---------- */
+const FXF=12000, CHKF=14, UKF=320;
+const beFix=d=>(d.rentSum+d.salarySum+(d.miscSum||0)+UKF*FXF)/FXF/(CHKF*d.comm)/30;   // комиссионный безубыток, зак/день
+function netGrowth(){   // геом. среднее недельного роста по сети за ПОЛНЫЕ недели
+  const f=[]; (WK.weeks||[]).forEach((w,i)=>{ if((WK.dayCounts&&WK.dayCounts[i])>=7 && WK.net && WK.net.ord[i]>0) f.push(WK.net.ord[i]); });
+  if(f.length<2) return null;
+  let p=1,n=0; for(let i=1;i<f.length;i++){ if(f[i-1]>0){ p*=f[i]/f[i-1]; n++; } }
+  return n?Math.pow(p,1/n):null;
+}
+function fcChart(series, be, crossW){
+  const n=series.length, W=380, H=118, padL=8, padR=8, padT=14, padB=8;
+  const max=Math.max(Math.max(...series), be)*1.06||1;
+  const X=i=>padL+i*(W-padL-padR)/Math.max(n-1,1), Y=v=>padT+(1-v/max)*(H-padT-padB);
+  let path=''; series.forEach((v,i)=>{ path+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' '; });
+  const beY=Y(be);
+  let s='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;margin-top:10px;height:auto">';
+  s+='<line x1="'+padL+'" y1="'+beY.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+beY.toFixed(1)+'" stroke="var(--coral)" stroke-width="1.2" stroke-dasharray="4 3"/>';
+  s+='<text x="'+(W-padR)+'" y="'+(beY-4).toFixed(1)+'" text-anchor="end" class="glabel" style="fill:var(--coral)">безубыток</text>';
+  s+='<path d="'+path.trim()+'" fill="none" stroke="var(--violet)" stroke-width="2.4" stroke-linejoin="round"/>';
+  if(crossW!=null && crossW>=0 && crossW<=n-1){ s+='<circle cx="'+X(crossW).toFixed(1)+'" cy="'+beY.toFixed(1)+'" r="4.5" fill="var(--mint)" stroke="#0a0c11" stroke-width="1.5"/>'; }
+  s+='</svg>';
+  return s;
+}
+function renderForecast(){
+  const fc=document.getElementById('fcCard');
+  if(fc){
+    const netNow=DATA.reduce((a,d)=>a+(d.runRate||0),0);
+    const netBE=DATA.reduce((a,d)=>a+beFix(d),0);
+    const g=netGrowth();
+    const gc=(g!=null)?Math.min(g,1.12):null;   // для проекции ограничим темп сверху (12%/нед)
+    let head='—', cap='', chart='', weeks=null;
+    if(netNow>=netBE){ head='<span class="pos">достигнут</span>'; cap='Сеть уже на уровне, где комиссия покрывает затраты.'; }
+    else if(gc==null||gc<=1){ cap='Пока недостаточно полных недель с ростом, чтобы оценить срок. Нужно ×'+(netBE/netNow).toFixed(1)+' к текущему потоку заказов.'; }
+    else {
+      weeks=Math.log(netBE/netNow)/Math.log(gc);
+      const dt=new Date(Date.now()+weeks*6048e5);
+      head='≈ '+dt.toLocaleDateString('ru-RU',{month:'long',year:'numeric'});
+      cap='При сохранении темпа ≈+'+Math.round((gc-1)*100)+'%/нед сеть выходит на самоокупаемость (комиссия ≥ затраты) примерно за '+Math.ceil(weeks)+' нед. Иллюстративно, не гарантия.';
+      const K=Math.min(Math.ceil(weeks)+2,30), series=[]; for(let k=0;k<=K;k++) series.push(netNow*Math.pow(gc,k));
+      chart=fcChart(series, netBE, weeks);
+    }
+    fc.innerHTML='<h3 style="margin-bottom:2px">Путь к самоокупаемости</h3>'
+      +'<div class="hint" style="margin:0 0 8px">когда комиссия начнёт покрывать затраты сети</div>'
+      +'<div style="font-family:\'Bricolage Grotesque\';font-size:30px;font-weight:800;line-height:1.05">'+head+'</div>'
+      +chart
+      +'<div class="hint" style="margin-top:8px">'+cap+'</div>';
+  }
+  const gr=document.getElementById('grCard');
+  if(gr){
+    const {ordOf}=ovPeriodStats();   // та же база, что у KPI «точек выше безубытка»
+    const now=Date.now(); let minW=Infinity, ends=[], ready=0;
+    DATA.forEach(d=>{ const e=new Date(d.start); e.setMonth(e.getMonth()+6); if(e>now) minW=Math.min(minW,(e-now)/6048e5); ends.push(e.getTime()); if(ordOf(d)>=beOf(d)) ready++; });
+    ends.sort((a,b)=>a-b); const lastEnd=new Date(ends[ends.length-1]);
+    const weeksLeft=isFinite(minW)?Math.max(0,Math.round(minW)):0, pct=Math.round(ready/DATA.length*100);
+    gr.innerHTML='<h3 style="margin-bottom:2px">Гарантийная подушка</h3>'
+      +'<div class="hint" style="margin:0 0 8px">гарантия Uzum действует 6 мес от старта точки</div>'
+      +'<div style="font-family:\'Bricolage Grotesque\';font-size:30px;font-weight:800;line-height:1.05">ещё ≈'+weeksLeft+' нед.</div>'
+      +'<div class="hint" style="margin:2px 0 14px">до ~'+lastEnd.toLocaleDateString('ru-RU',{month:'long',year:'numeric'})+'</div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-bottom:6px"><span>Уже на комиссионной окупаемости</span><span class="mono" style="color:'+(ready>0?'var(--mint)':'var(--coral)')+'">'+ready+' / '+DATA.length+'</span></div>'
+      +'<div class="health" style="width:100%;height:8px"><i style="width:'+pct+'%;background:var(--mint)"></i></div>'
+      +'<div class="hint" style="margin-top:12px">'+(ready>0?ready+' из '+DATA.length+' точек зарабатывают на комиссии больше затрат уже сейчас; остальных держит гарантия, пока они набирают объём.':'Пока все точки опираются на гарантию — она держит P&L, пока сеть набирает заказы.')+'</div>';
+  }
+}
+/* ---------- deep-linking: вид/период/валюта/сегмент в URL ---------- */
+function parseURL(){ try{
+  const p=new URLSearchParams(location.search);
+  const v=p.get('view'); if(['main','map','sim','upload'].includes(v)) S.view=v;
+  if(p.get('g')==='month'||p.has('m')) S.gran='month';
+  if(p.has('w')){ S.gran='week'; const w=+p.get('w'); if(Number.isInteger(w)&&w>=0&&w<WK.weeks.length) S.weekIdx=w; }
+  if(p.has('m')){ const m=p.get('m'); if(monthList.some(x=>x.key===m)) S.monthKey=m; }
+  const c=p.get('cur'); if(c==='uzs'||c==='usd') S.cur=c;
+  const s=p.get('seg'); if(['all','1','2','3'].includes(s)) S.seg=s;
+}catch(e){} }
+function syncURL(){ try{
+  const p=new URLSearchParams();
+  if(S.view&&S.view!=='main') p.set('view',S.view);
+  if(S.gran==='month'){ p.set('g','month'); const last=monthList.length?monthList[monthList.length-1].key:null; if(S.monthKey&&S.monthKey!==last) p.set('m',S.monthKey); }
+  else { const last=(WK.weeks?WK.weeks.length:1)-1; if(S.weekIdx!=null&&S.weekIdx!==last) p.set('w',S.weekIdx); }
+  if(S.cur&&S.cur!=='usd') p.set('cur',S.cur);
+  if(S.seg&&S.seg!=='all') p.set('seg',S.seg);
+  const qs=p.toString();
+  history.replaceState(null,'',qs?('?'+qs):location.pathname);
+}catch(e){} }
+function setView(v){
+  S.view=v;
+  document.querySelectorAll('#viewnav button').forEach(x=>x.classList.toggle('on',x.dataset.v===v));
+  const vm=document.getElementById('viewMain'); if(vm) vm.style.display=v==='main'?'':'none';
+  const mp=document.getElementById('viewMap'); if(mp) mp.style.display=v==='map'?'':'none';
+  const sm=document.getElementById('viewSim'); if(sm) sm.style.display=v==='sim'?'':'none';
+  const up=document.getElementById('viewUpload'); if(up) up.style.display=v==='upload'?'':'none';
+  if(v==='map')renderNetMap();
+  if(v==='sim'){renderSimKPIs();renderChart();renderTable();}
+  renderHistory(); syncURL();
+}
+function renderAll(){setLabels();renderKPIs();renderUnit();renderForecast();renderSimKPIs();renderChart();renderTable();renderHistory();renderPointsFact();if(S.view==='map')renderNetMap();syncURL();}
 
 /* ---------- bindings ---------- */
 const bind=(id,key,disp)=>{const e=document.getElementById(id);e.oninput=()=>{S[key]=parseFloat(e.value);if(key==='boost')S.flat=null;document.getElementById(disp).textContent=
@@ -1089,16 +1208,7 @@ document.getElementById('ovSearch').oninput=e=>{S.ovq=e.target.value;renderPoint
 document.querySelectorAll('#curTog button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#curTog button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
   S.cur=b.dataset.c;renderAll();});
-document.querySelectorAll('#viewnav button').forEach(b=>b.onclick=()=>{
-  document.querySelectorAll('#viewnav button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
-  S.view=b.dataset.v;
-  document.getElementById('viewMain').style.display=S.view==='main'?'':'none';
-  document.getElementById('viewMap').style.display=S.view==='map'?'':'none';
-  document.getElementById('viewSim').style.display=S.view==='sim'?'':'none';
-  document.getElementById('viewUpload').style.display=S.view==='upload'?'':'none';
-  if(S.view==='map')renderNetMap();
-  if(S.view==='sim'){renderSimKPIs();renderChart();renderTable();}
-  renderHistory();});
+document.querySelectorAll('#viewnav button').forEach(b=>b.onclick=()=>setView(b.dataset.v));
 document.querySelectorAll('#histTog button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#histTog button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
   S.histMetric=b.dataset.h;renderHistory();});
@@ -1160,7 +1270,11 @@ document.getElementById('beBtn').onclick=()=>{
     : `Безубыток: <b style="color:var(--mint)">≈${avgBe} заказов/день</b> на каждом ПВЗ — рост ×${mult} (после гарантии, P&L≈0)`);
 };
 
+parseURL();
+document.querySelectorAll('#pills .pill').forEach(x=>x.classList.toggle('on',x.dataset.s===S.seg));
+document.querySelectorAll('#curTog button').forEach(x=>x.classList.toggle('on',x.dataset.c===S.cur));
 renderAll();
+setView(S.view);
 
 /* ---------- кнопка «150 заказов/день на 1 ПВЗ» ---------- */
 document.getElementById('t150Btn').onclick=()=>{

@@ -50,13 +50,19 @@ em{font-family:'Fraunces',serif; font-style:italic; font-weight:430; color:var(-
 
 /* progress + topbar */
 .progress{position:fixed; top:0; left:0; height:3px; width:0; background:linear-gradient(90deg,var(--violet),var(--violet2)); z-index:60; transition:width .1s linear}
-.topbar{position:fixed; top:0; left:0; right:0; z-index:50; display:flex; align-items:center; justify-content:space-between;
+.topbar{position:fixed; top:0; left:0; right:0; z-index:50; display:flex; align-items:center; justify-content:flex-start; gap:24px;
   padding:14px 40px; backdrop-filter:saturate(1.2) blur(7px); background:rgba(243,237,225,.72);
   border-bottom:1px solid transparent; transition:border-color .4s, background .4s; opacity:0; transform:translateY(-100%); transition:opacity .5s, transform .5s, border-color .4s}
 .topbar.show{opacity:1; transform:none; border-color:var(--line)}
 .topbar .brand{font-family:'Spline Sans Mono',monospace; font-weight:600; font-size:13px; letter-spacing:.14em; color:var(--ink); text-transform:uppercase}
 .topbar .brand b{color:var(--violet)}
 .topbar .crumb{font-family:'Spline Sans Mono',monospace; font-size:11.5px; letter-spacing:.1em; color:var(--dim); text-transform:uppercase}
+.pageacts{position:fixed; top:13px; right:22px; z-index:61; display:flex; gap:9px; align-items:center}
+.pageacts a{color:var(--dim); text-decoration:none; font-family:'Spline Sans Mono',monospace; font-size:12px; letter-spacing:.04em; padding:8px 11px; border-radius:10px; border:1px solid var(--line2); background:rgba(243,237,225,.74); backdrop-filter:blur(6px)}
+.pageacts a:hover{color:var(--ink); border-color:var(--violet)}
+.pageacts button{font-family:'Spline Sans Mono',monospace; font-size:12px; font-weight:600; letter-spacing:.04em; color:#fff; background:var(--violet); border:0; border-radius:10px; padding:9px 15px; cursor:pointer; box-shadow:0 10px 24px -12px rgba(90,46,166,.7)}
+.pageacts button:hover{background:var(--violet2)}
+@media print{.pageacts{display:none!important}}
 
 /* ── COVER ── */
 .cover{min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:120px 0 80px; position:relative}
@@ -218,6 +224,10 @@ footer{border-top:1px solid var(--line); padding:36px 0 60px; font-family:'Splin
 </head>
 <body>
 <div class="progress" id="prog"></div>
+<div class="pageacts noprint">
+  <a href="/">← Дашборд</a>
+  <button onclick="window.print()">Скачать PDF</button>
+</div>
 <div class="topbar" id="topbar">
   <div class="brand">ПВЗ · <b>UZUM</b></div>
   <div class="crumb" id="crumb">Инвестиционный обзор</div>

@@ -291,6 +291,7 @@ def main():
         print(f'{DJSON}: лист «выплаты » не найден в источнике — SAL без изменений ({len(SAL)} мес.)')
     bundle['DATA']=DATA; bundle['WK']=WK; bundle['SAL']=SAL
     bundle.setdefault('FACT',{"latest":None,"months":{}})
+    bundle['updatedAt']=dt.datetime.now().isoformat(timespec='seconds')   # метка свежести данных (бейдж в дашборде)
     open(DJSON,'w',encoding='utf-8').write(json.dumps(bundle,ensure_ascii=False))
     print(f'{DJSON}: обновлён — ПВЗ {len(DATA)}, недель {len(WK["weeks"])}, SAL {len(SAL)} мес., FACT {len(bundle["FACT"].get("months",{}))} мес.')
     print(f'история — все {len(weeks)} нед.; Обзор run-rate=неделя {wlabel(runM)}, дни {WK["dayCounts"]}')

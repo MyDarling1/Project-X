@@ -208,6 +208,7 @@ def main():
     except (OSError, ValueError): bundle = {}
     if not isinstance(bundle, dict): bundle = {}
     bundle['FACT'] = FACT
+    bundle['updatedAt'] = dt.datetime.now().isoformat(timespec='seconds')   # метка свежести данных
     open(DJSON, 'w', encoding='utf-8').write(json.dumps(bundle, ensure_ascii=False))
     print(f'{DJSON}: FACT записан — месяцев {len(FACT["months"])} (последний {_mlabel(FACT["latest"])}).')
     print('Готово. Синхронизируй копию HTML, node --check, JSON.parse(data.json), затем git commit & push.')
