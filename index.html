@@ -311,7 +311,7 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 
   <div class="card tbl-card" style="margin-bottom:18px">
     <div class="tbl-top">
-      <div><h3 id="ovTblTitle">По точкам</h3><div class="hint" style="margin:0">Факт за выбранный период. Клик по строке — карточка точки; по заголовку — сортировка.</div></div>
+      <div><h3 id="ovTblTitle">По точкам</h3><div class="hint" style="margin:0">Факт за выбранный период. P&L = доход − затраты (текущий месяц — модель на гарантии; закрытый — факт Uzum). Клик по строке — карточка; по заголовку — сортировка.</div></div>
       <input class="search" id="ovSearch" placeholder="Поиск точки…">
     </div>
     <div class="tbl-scroll"><table id="ovTbl"></table></div>
@@ -453,8 +453,8 @@ const money=v=>{ // v всегда в сумах; показывает в выб
   const a=Math.abs(v);return (a>=1e6?mln(v):fmt(v))+' сум';
 };
 
-function compute(d){   // ТОЛЬКО для «Обзора» (факт/модель). Симулятор Финмодели (рост/цель/сценарий) живёт в simOf и СЮДА не протекает.
-  const orders = d.runRate;                         // базовый run-rate, без ×рост/цели Финмодели
+function compute(d, ordersOverride){   // ТОЛЬКО для «Обзора» (факт/модель). Симулятор Финмодели (рост/цель/сценарий) живёт в simOf и СЮДА не протекает.
+  const orders = (ordersOverride!=null) ? ordersOverride : d.runRate;   // заказы выбранного периода, иначе run-rate; без ×рост/цели Финмодели
   const margin = S.chk * d.comm;                    // маржа с заказа, $
   const cost = d.rentSum + d.salarySum + (d.miscSum||0) + S.uk*S.fx;  // затраты/мес, сум (аренда+ЗП+разное фикс.; УК в $)
   const be = (cost/S.fx) / margin / 30;             // точка безубытка, зак/день
@@ -520,7 +520,10 @@ function periodFin(d, idxs, mode, monthDays, factKey){   // {income,cost,pnl} П
     const sal=salFact(d.code,factKey);                                               // зарплата: факт (как выплачено), иначе оценка из Справочника
     const monthCost=d.rentSum+(d.miscSum||0)+S.uk*S.fx+(sal!=null?sal:d.salarySum);   // закрытый месяц (вариант B): ПОЛНЫЕ аренда/УК/разное + зарплата-факт, без прорейчивания по дням
     const income=fm.income[d.code]*sh, cost=monthCost*sh; return {income,cost,pnl:income-cost}; }
-  const c=compute(d), D=idxs.reduce((a,i)=>a+wdays(i),0)/30; return {income:c.reward*D, cost:c.cost*D, pnl:c.pnl*D};  // модель, прорейчено по дням
+  const dd=idxs.reduce((a,i)=>a+pvzDays(d.code,i),0)||1;   // заказы/день за ВЫБРАННЫЙ период (как «Зак/д»/«Здоровье»), а не run-rate
+  const ordP=idxs.reduce((a,i)=>a+((WK.pvz[d.code]?WK.pvz[d.code].ord[i]:0)*pvzDays(d.code,i)),0)/dd;
+  const c=compute(d,ordP), D=idxs.reduce((a,i)=>a+wdays(i),0)/30;
+  return {income:c.reward*D, cost:c.cost*D, pnl:c.pnl*D};  // модель: доход=max(гарантия; комиссия×заказы периода), прорейчено по дням
 }
 function netStats(idxs, mode, monthDays, factKey){
   const r=rows(), n=r.length||1, tot=idxs.reduce((a,i)=>a+wdays(i),0)||1;
@@ -778,8 +781,14 @@ function renderPointsFact(){
     return {d,o,rev,be,prevRev:prevRevOf?prevRevOf(d):null,health:be>0?o/be:0,income:f.income,pnl:f.pnl,trend:show.map(i=>(WK.pvz[d.code]?(WK.pvz[d.code].ord[i]||0):0))};});
   const gv=x=>({aka:x.d.aka,seg:x.d.seg,o:x.o,be:x.be,health:x.health,rev:x.rev,income:x.income,pnl:x.pnl})[S.ovSortKey];
   r.sort((a,b)=>{let x=gv(a),y=gv(b); return typeof x==='string'?S.ovSortDir*x.localeCompare(y):S.ovSortDir*(x-y);});
-  const C=[{k:'aka',t:'Точка',lft:1},{k:'seg',t:'Сег'},{k:'o',t:'Зак/д'},{k:'be',t:'Безубыток'},{k:'health',t:'Здоровье'},{k:'rev',t:'Оборот/нед'},{k:'income',t:'Доход'},{k:'pnl',t:'P&L'},{k:'trend',t:'тренд',ns:1}];
-  let h='<thead><tr>'+C.map(c=>`<th class="${c.lft?'lft':''} ${S.ovSortKey===c.k?'sorted':''}"${c.ns?'':` data-k="${c.k}"`}>${c.t}${S.ovSortKey===c.k?(S.ovSortDir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr></thead><tbody>';
+  const C=[{k:'aka',t:'Точка',lft:1},{k:'seg',t:'Сег'},{k:'o',t:'Зак/д'},
+    {k:'be',t:'Безубыток',tip:'Заказов/день, при которых комиссия покрывает затраты — порог окупаемости на комиссии (после гарантии).'},
+    {k:'health',t:'Здоровье',tip:'Заказы периода ÷ безубыток. Выше 100% — заказы выше порога окупаемости на комиссии.'},
+    {k:'rev',t:'Оборот/нед'},
+    {k:'income',t:'Доход',tip:'Доход за период: закрытый месяц — факт Uzum; текущий — модель max(гарантия; комиссия×заказы периода).'},
+    {k:'pnl',t:'P&L',tip:'Доход − затраты за период. Текущий месяц — модель (на гарантии доход = max(гарантия; комиссия×заказы)); закрытый — факт Uzum.'},
+    {k:'trend',t:'тренд',ns:1}];
+  let h='<thead><tr>'+C.map(c=>`<th class="${c.lft?'lft':''} ${S.ovSortKey===c.k?'sorted':''}"${c.ns?'':` data-k="${c.k}"`}${c.tip?` title="${c.tip}"`:''}>${c.t}${S.ovSortKey===c.k?(S.ovSortDir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr></thead><tbody>';
   r.forEach(x=>{
     const hp=Math.min(x.health,1.4), hc=x.health>=1?'var(--mint)':x.health>=.6?'var(--amber)':'var(--coral)';
     let revD=''; if(x.prevRev!=null&&x.prevRev>0&&isFinite(x.prevRev)){const dp=(x.rev-x.prevRev)/Math.abs(x.prevRev)*100; if(Math.abs(dp)>=0.5){const up=dp>=0; revD=`<div class="mono" style="font-size:10.5px;margin-top:2px;color:${up?'var(--mint)':'var(--coral)'}">${up?'▲':'▼'} ${Math.abs(dp).toFixed(0)}% <span style="color:var(--faint)">${S.gran==='month'?'м/м':'нд/нд'}</span></div>`;}}
@@ -1026,7 +1035,8 @@ function renderSimKPIs(){
   const col=ratio>=1?'var(--mint)':ratio>=.6?'var(--amber)':'var(--coral)';
   const mode = S.flat!=null?`цель ${S.flat}/ПВЗ`:(S.boost===1?'текущий ×1.0':`рост ×${S.boost.toFixed(1)}`);
   const scen = S.scen==='guar'?'на гарантии':'после гарантии';
-  let html=`<div class="kpi hero"><div class="lab">Заказы / безубыток · зак/д на ПВЗ</div>
+  const baseM = monthList.length?monthList[monthList.length-1].label:'';   // база Финмодели — самый свежий месяц
+  let html=`<div class="kpi hero"><div class="lab">Заказы / безубыток · зак/д на ПВЗ${baseM?' · база: '+baseM:''}</div>
     <div class="val">${fmt1(ordPV)} <span style="color:var(--faint);font-weight:400;font-size:18px">/ ${fmt(bePV)}</span></div>
     <div class="health" style="width:100%;margin-top:9px"><i style="width:${Math.min(ratio,1.4)/1.4*100}%;background:${col}"></i><span class="mark" style="left:${1/1.4*100}%"></span></div>
     <div class="delta">${ratio>=1?'<span class="pos">безубыток достигнут</span>':'×'+toBE.toFixed(1)+' до безубытка'} · ${mode}</div></div>`;
