@@ -275,8 +275,8 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
     <h3 style="margin:0">Сеть · фактические показатели</h3>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <div class="seg-toggle gran-tog">
-        <button data-g="month" class="on">Месяц</button>
-        <button data-g="week">Неделя</button>
+        <button data-g="month">Месяц</button>
+        <button data-g="week" class="on">Неделя</button>
       </div>
       <div class="perdd">
         <button class="perdd-btn"><span class="perdd-label">—</span><span class="perdd-car">▾</span></button>
@@ -419,7 +419,7 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px">
       <h3 style="margin:0">География сети · 18 ПВЗ</h3>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <div class="seg-toggle gran-tog"><button data-g="month" class="on">Месяц</button><button data-g="week">Неделя</button></div>
+        <div class="seg-toggle gran-tog"><button data-g="month">Месяц</button><button data-g="week" class="on">Неделя</button></div>
         <div class="perdd"><button class="perdd-btn"><span class="perdd-label">—</span><span class="perdd-car">▾</span></button><div class="perdd-menu"></div></div>
       </div>
     </div>
@@ -445,7 +445,7 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 
 <script src="/data.js"></script>
 <script>
-const S={fx:12000,chk:14,uk:320,boost:1,flat:null,scen:'guar',seg:'all',metric:'be',cur:'usd',view:'main',histMetric:'orders',sortKey:'revW3',sortDir:-1,q:'',costSortKey:null,costSortDir:-1,ovSortKey:'o',ovSortDir:-1,ovq:'',gran:'month',monthKey:null,weekIdx:null};
+const S={fx:12000,chk:14,uk:320,boost:1,flat:null,scen:'guar',seg:'all',metric:'be',cur:'usd',view:'main',histMetric:'orders',sortKey:'revW3',sortDir:-1,q:'',costSortKey:null,costSortDir:-1,ovSortKey:'o',ovSortDir:-1,ovq:'',gran:'week',monthKey:null,weekIdx:null};
 /* эталон: run-rate = последняя полная неделя; недели/дни задаются данными или дефолтом */
 DATA.forEach(d=>{if(d.runRate==null)d.runRate=d.w3;});
 if(WK.runIdx==null)WK.runIdx=2;
