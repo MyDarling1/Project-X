@@ -84,6 +84,8 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .bebtn:hover{transform:translateY(-1px);box-shadow:0 11px 28px rgba(139,109,255,.5)}
 .bebtn:active{transform:translateY(0)}
 #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--panel2);border:1px solid var(--mint);color:var(--txt);padding:13px 22px;border-radius:13px;font-size:13.5px;font-weight:600;box-shadow:0 14px 44px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:.35s;z-index:60;max-width:90vw;text-align:center}
+#tip{position:fixed;z-index:80;max-width:250px;background:var(--panel2);border:1px solid var(--line2);color:var(--txt);padding:8px 11px;border-radius:10px;font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:500;line-height:1.4;box-shadow:0 12px 30px rgba(0,0,0,.5);pointer-events:none;opacity:0;transform:translateY(3px);transition:opacity .1s ease,transform .1s ease}
+#tip.on{opacity:1;transform:none}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .brow{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:9px}
 .brow .blab{font-size:12.5px;color:var(--dim);font-weight:600;line-height:1.15}
@@ -429,6 +431,7 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 <div id="toast"></div>
 <div class="scrim" id="scrim"></div>
 <div class="drawer" id="drawer"></div>
+<div id="tip"></div>
 
 <div class="foot">
   Источники: заказы и оборот — из управленческой отчётности по неделям; доход и P&L за закрытый месяц — фактический отчёт Uzum; сегменты, затраты, гарантии — Справочник. Последняя полная неделя — run-rate; периоды с * — неполные (не экстраполируются).
@@ -782,13 +785,13 @@ function renderPointsFact(){
   const gv=x=>({aka:x.d.aka,seg:x.d.seg,o:x.o,be:x.be,health:x.health,rev:x.rev,income:x.income,pnl:x.pnl})[S.ovSortKey];
   r.sort((a,b)=>{let x=gv(a),y=gv(b); return typeof x==='string'?S.ovSortDir*x.localeCompare(y):S.ovSortDir*(x-y);});
   const C=[{k:'aka',t:'Точка',lft:1},{k:'seg',t:'Сег'},{k:'o',t:'Зак/д'},
-    {k:'be',t:'Безубыток',tip:'Заказов/день, при которых комиссия покрывает затраты — порог окупаемости на комиссии (после гарантии).'},
-    {k:'health',t:'Здоровье',tip:'Заказы периода ÷ безубыток. Выше 100% — заказы выше порога окупаемости на комиссии.'},
+    {k:'be',t:'Безубыток',tip:'Сколько заказов в день нужно точке, чтобы выйти в ноль.'},
+    {k:'health',t:'Здоровье',tip:'Насколько точка близка к окупаемости: 100% — вышла в ноль, выше — уже прибыльна.'},
     {k:'rev',t:'Оборот/нед'},
-    {k:'income',t:'Доход',tip:'Доход за период: закрытый месяц — факт Uzum; текущий — модель max(гарантия; комиссия×заказы периода).'},
-    {k:'pnl',t:'P&L',tip:'Доход − затраты за период. Текущий месяц — модель (на гарантии доход = max(гарантия; комиссия×заказы)); закрытый — факт Uzum.'},
+    {k:'income',t:'Доход',tip:'Наш заработок на точке за период — вознаграждение от Uzum.'},
+    {k:'pnl',t:'P&L',tip:'Прибыль точки за период: доход за вычетом всех расходов.'},
     {k:'trend',t:'тренд',ns:1}];
-  let h='<thead><tr>'+C.map(c=>`<th class="${c.lft?'lft':''} ${S.ovSortKey===c.k?'sorted':''}"${c.ns?'':` data-k="${c.k}"`}${c.tip?` title="${c.tip}"`:''}>${c.t}${S.ovSortKey===c.k?(S.ovSortDir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr></thead><tbody>';
+  let h='<thead><tr>'+C.map(c=>`<th class="${c.lft?'lft':''} ${S.ovSortKey===c.k?'sorted':''}"${c.ns?'':` data-k="${c.k}"`}${c.tip?` data-tip="${c.tip}"`:''}>${c.t}${S.ovSortKey===c.k?(S.ovSortDir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr></thead><tbody>';
   r.forEach(x=>{
     const hp=Math.min(x.health,1.4), hc=x.health>=1?'var(--mint)':x.health>=.6?'var(--amber)':'var(--coral)';
     let revD=''; if(x.prevRev!=null&&x.prevRev>0&&isFinite(x.prevRev)){const dp=(x.rev-x.prevRev)/Math.abs(x.prevRev)*100; if(Math.abs(dp)>=0.5){const up=dp>=0; revD=`<div class="mono" style="font-size:10.5px;margin-top:2px;color:${up?'var(--mint)':'var(--coral)'}">${up?'▲':'▼'} ${Math.abs(dp).toFixed(0)}% <span style="color:var(--faint)">${S.gran==='month'?'м/м':'нд/нд'}</span></div>`;}}
@@ -1089,6 +1092,24 @@ document.querySelectorAll('#granTog button').forEach(b=>b.onclick=()=>{S.gran=b.
 document.getElementById('perddBtn').onclick=e=>{e.stopPropagation();document.getElementById('perddMenu').classList.toggle('open');};
 document.addEventListener('click',e=>{if(!e.target.closest('#perdd'))closePerdd();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();closePerdd();}});
+
+/* ---------- подсказки: свой тёмный тултип (мгновенный, в стиле дашборда) ---------- */
+(function(){
+  const tip=document.getElementById('tip'); if(!tip) return;
+  let cur=null;
+  function place(el){
+    const t=el.getAttribute('data-tip'); if(!t){hide();return;}
+    tip.textContent=t;
+    const r=el.getBoundingClientRect(), w=tip.offsetWidth, h=tip.offsetHeight;
+    let left=Math.max(8,Math.min(r.left+r.width/2-w/2, innerWidth-w-8));
+    let top=r.top-h-8; if(top<8) top=r.bottom+8;
+    tip.style.left=left+'px'; tip.style.top=top+'px'; tip.classList.add('on');
+  }
+  function hide(){ cur=null; tip.classList.remove('on'); }
+  document.addEventListener('mouseover',e=>{const el=e.target.closest('[data-tip]'); if(el&&el!==cur){cur=el; place(el);}});
+  document.addEventListener('mouseout',e=>{const el=e.target.closest('[data-tip]'); if(el&&el===cur&&!el.contains(e.relatedTarget)) hide();});
+  window.addEventListener('scroll',()=>{if(cur)hide();},true);
+})();
 
 /* ---------- break-even button ---------- */
 function networkBreakevenBoost(){
