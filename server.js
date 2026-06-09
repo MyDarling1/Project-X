@@ -101,6 +101,13 @@ http.createServer((req, res) => {
       : send(res, 200, 'text/html; charset=utf-8', buf));
     return;
   }
+  // инвесторская презентация — за тем же паролем (данные вшиты в файл)
+  if (p === '/pitch' || p === '/pitch.html' || p === '/presentation' || p === '/presentation.html') {
+    fs.readFile(path.join(ROOT, 'presentation.html'), (e, buf) => e
+      ? send(res, 500, 'text/plain; charset=utf-8', 'presentation.html missing')
+      : send(res, 200, 'text/html; charset=utf-8', buf));
+    return;
+  }
   // данные дашборда — только авторизованным; data.json (источник правды) отдаём как JS-обёртку с теми же const
   if (p === '/data.js') {
     fs.readFile(path.join(ROOT, 'data.json'), 'utf8', (e, txt) => e
