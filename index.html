@@ -904,7 +904,7 @@ function wkBars(vals, fmtFn, base, hid, labels, partial){
     el+=`<text x="${cx}" y="${y-7}" text-anchor="middle" class="blabel" style="font-size:11px;fill:var(--txt)">${fmtFn(v)}${pt?'*':''}</text>`;
     el+=`<text x="${cx}" y="${H-9}" text-anchor="middle" class="glabel" style="font-weight:600;font-size:9px">${labels[i]||''}</text>`;
   });
-  return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;display:inline-block">${el}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;height:auto;display:inline-block">${el}</svg>`;
 }
 function sparkline(vals,base,partial){
   const n=vals.length, W=Math.max(60,n*7), H=26, gap=2, bw=(W-gap*(n-1))/n, max=Math.max(...vals,1);
@@ -924,7 +924,7 @@ function wkBarsPnl(vals, labels, partial){
     el+=`<text x="${cx}" y="${pos?y-6:y+bh+15}" text-anchor="middle" class="blabel" style="font-size:10.5px;fill:${col}">${money(v)}${pt?'*':''}</text>`;
     el+=`<text x="${cx}" y="${H-9}" text-anchor="middle" class="glabel" style="font-weight:600;font-size:9px">${labels[i]||''}</text>`;
   });
-  return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;display:inline-block">${el}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;height:auto;display:inline-block">${el}</svg>`;
 }
 function renderHistory(){
   const partial=(WK.dayCounts||[]).map(c=>c<7);
