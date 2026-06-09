@@ -76,6 +76,7 @@ em{font-family:'Fraunces',serif; font-style:italic; font-weight:430; color:var(-
 .lede b{color:var(--ink); font-weight:600}
 .heroband{display:grid; grid-template-columns:repeat(4,1fr); gap:0; margin-top:60px; border-top:1px solid var(--line2)}
 .hstat{padding:26px 26px 24px 0; border-right:1px solid var(--line); position:relative}
+.hstat:not(:first-child){padding-left:26px}
 .hstat:last-child{border-right:0}
 .hstat .v{font-family:'Fraunces',serif; font-weight:480; font-size:clamp(30px,4vw,46px); color:var(--ink); line-height:1; letter-spacing:-.02em}
 .hstat .v .u{font-family:'Spline Sans Mono',monospace; font-size:14px; color:var(--violet); font-weight:500; letter-spacing:0}
@@ -105,6 +106,7 @@ h2.big.wide{max-width:20ch}
 .pillars{display:grid; grid-template-columns:repeat(3,1fr); gap:0; margin-top:50px; border-top:1px solid var(--line2)}
 .pillars.four{grid-template-columns:repeat(4,1fr)}
 .pillar{padding:28px 28px 26px 0; border-right:1px solid var(--line)}
+.pillar:not(:first-child){padding-left:28px}
 .pillar:last-child{border-right:0; padding-right:0}
 .pillar .pno{font-family:'Spline Sans Mono',monospace; font-size:12px; color:var(--violet); letter-spacing:.1em}
 .pillar h3{font-family:'Fraunces',serif; font-weight:500; font-size:22px; color:var(--ink); margin:13px 0 9px; line-height:1.14}
@@ -240,17 +242,18 @@ td .num{font-family:'Spline Sans Mono',monospace; font-weight:500; color:var(--i
 .closing .pull{max-width:22ch; font-size:clamp(30px,4.4vw,56px); margin-bottom:38px}
 .recap{display:flex; gap:0; border-top:1px solid var(--line2); border-bottom:1px solid var(--line2); margin:44px 0}
 .recap .r{flex:1; padding:24px 24px 22px 0; border-right:1px solid var(--line)}
+.recap .r:not(:first-child){padding-left:24px}
 .recap .r:last-child{border-right:0}
 .recap .rv{font-family:'Fraunces',serif; font-size:clamp(26px,3vw,36px); color:var(--ink); font-weight:500; letter-spacing:-.02em}
 .recap .rv .pos{color:var(--green)} .recap .rv .u{font-family:'Spline Sans Mono',monospace;font-size:13px;color:var(--violet)}
 .recap .rl{font-family:'Spline Sans Mono',monospace; font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(--dim); margin-top:10px}
 .cta{margin-top:46px}
-.cta a{display:inline-flex; align-items:center; gap:12px; background:var(--violet); color:#fff; text-decoration:none;
+.cta>a{display:inline-flex; align-items:center; gap:12px; background:var(--violet); color:#fff; text-decoration:none;
   font-family:'Spline Sans Mono',monospace; font-weight:600; font-size:14px; letter-spacing:.05em; padding:16px 26px; border-radius:13px;
   transition:transform .18s, box-shadow .18s; box-shadow:0 14px 30px -14px rgba(90,46,166,.7)}
-.cta a:hover{transform:translateY(-2px); box-shadow:0 20px 40px -16px rgba(90,46,166,.8)}
-.cta a .arr{transition:transform .18s}
-.cta a:hover .arr{transform:translateX(4px)}
+.cta>a:hover{transform:translateY(-2px); box-shadow:0 20px 40px -16px rgba(90,46,166,.8)}
+.cta>a .arr{transition:transform .18s}
+.cta>a:hover .arr{transform:translateX(4px)}
 .cta .sub{font-family:'Spline Sans Mono',monospace; font-size:12px; color:var(--dim); margin-top:18px; letter-spacing:.04em; line-height:1.6}
 
 footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Spline Sans Mono',monospace; font-size:11.5px; color:var(--faint);
@@ -267,6 +270,7 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
   .heroband,.tiles,.tiles.three,.pillars,.pillars.four,.feegrid,.scen,.timeline{grid-template-columns:1fr 1fr}
   .timeline::before{display:none}
   .pillar,.hstat{border-right:0; border-bottom:1px solid var(--line); padding-right:0}
+  .hstat:not(:first-child),.pillar:not(:first-child),.recap .r:not(:first-child){padding-left:0}
   .grid2,.grid2.even,.riskrow,.assum ul,.uoflegend{grid-template-columns:1fr}
   .riskrow .rk{border-right:0; border-bottom:1px solid var(--line)}
   .recap{flex-wrap:wrap}.recap .r{flex:1 1 45%; border-right:0; border-bottom:1px solid var(--line)}
@@ -278,9 +282,17 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
   .coverhead{font-size:10px}
 }
 @media print{
-  body{background:#fff} body::before,body::after,.topbar,.progress,.scrollcue{display:none}
+  @page{margin:12mm}
+  body{background:#fff}
+  body::before,body::after,.topbar,.progress,.scrollcue,.pageacts{display:none!important}
   .rv{opacity:1!important;transform:none!important}
-  section.blk,.cover{page-break-inside:avoid}
+  .cover{min-height:auto!important; padding:6px 0 20px!important; page-break-after:always}
+  section.blk{padding:24px 0!important}
+  .seghead,h2.big,.pull,.ch-ttl,.body-lg{page-break-after:avoid}
+  .card,.grid2,.grid2.even,.tiles,.pillars,.timeline,.scen,.feegrid,.risk,.tbl-wrap,.calls,.pl,.fee,.scard,.tile,.riskrow,.cmprow,.segc{page-break-inside:avoid; break-inside:avoid}
+  svg.chart{page-break-inside:avoid; break-inside:avoid}
+  svg .area{opacity:1!important} svg .line{stroke-dashoffset:0!important}
+  tr,.uofbar{page-break-inside:avoid}
 }
 </style>
 </head>
