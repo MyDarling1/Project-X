@@ -274,13 +274,13 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
   <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:9px">
     <h3 style="margin:0">Сеть · фактические показатели</h3>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <div class="seg-toggle" id="granTog">
+      <div class="seg-toggle gran-tog">
         <button data-g="month" class="on">Месяц</button>
         <button data-g="week">Неделя</button>
       </div>
-      <div class="perdd" id="perdd">
-        <button class="perdd-btn" id="perddBtn"><span id="perddLabel">—</span><span class="perdd-car">▾</span></button>
-        <div class="perdd-menu" id="perddMenu"></div>
+      <div class="perdd">
+        <button class="perdd-btn"><span class="perdd-label">—</span><span class="perdd-car">▾</span></button>
+        <div class="perdd-menu"></div>
       </div>
     </div>
   </div>
@@ -416,7 +416,13 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 
 <div id="viewMap" style="display:none">
   <div class="card">
-    <h3>География сети · 18 ПВЗ</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px">
+      <h3 style="margin:0">География сети · 18 ПВЗ</h3>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div class="seg-toggle gran-tog"><button data-g="month" class="on">Месяц</button><button data-g="week">Неделя</button></div>
+        <div class="perdd"><button class="perdd-btn"><span class="perdd-label">—</span><span class="perdd-car">▾</span></button><div class="perdd-menu"></div></div>
+      </div>
+    </div>
     <div class="hint" id="nmHint"></div>
     <div class="mapwrap"><svg id="netmap"></svg><div class="tip" id="maptip"></div></div>
     <div class="maplegend">
@@ -571,20 +577,26 @@ function renderKPIs(){
   document.getElementById('kpis').innerHTML=html;
 }
 function updateNetCtl(){
-  document.querySelectorAll('#granTog button').forEach(b=>b.classList.toggle('on',b.dataset.g===S.gran));
-  const lbl=document.getElementById('perddLabel'), menu=document.getElementById('perddMenu'); if(!menu) return;
+  document.querySelectorAll('.gran-tog button').forEach(b=>b.classList.toggle('on',b.dataset.g===S.gran));
+  let label='—', items='';
   if(S.gran==='month'){
     const cur=monthList.find(m=>m.key===S.monthKey)||monthList[monthList.length-1];
-    lbl.textContent = cur ? cur.label+(cur.hasFact?'':' *') : '—';
-    menu.innerHTML=monthList.map(m=>`<button class="perdd-item ${m.key===S.monthKey?'on':''}" data-k="${m.key}">${m.label}${m.hasFact?'':' *'}</button>`).join('');
-    menu.querySelectorAll('.perdd-item').forEach(it=>it.onclick=()=>{S.monthKey=it.dataset.k;closePerdd();renderAll();});
+    label = cur ? cur.label+(cur.hasFact?'':' *') : '—';
+    items = monthList.map(m=>`<button class="perdd-item ${m.key===S.monthKey?'on':''}" data-k="${m.key}">${m.label}${m.hasFact?'':' *'}</button>`).join('');
   } else {
-    lbl.textContent = WK.weeks[S.weekIdx] ? WK.weeks[S.weekIdx]+(wdays(S.weekIdx)<7?' *':'') : '—';
-    menu.innerHTML=WK.weeks.map((w,i)=>`<button class="perdd-item ${i===S.weekIdx?'on':''}" data-i="${i}">${w}${wdays(i)<7?' *':''}</button>`).join('');
-    menu.querySelectorAll('.perdd-item').forEach(it=>it.onclick=()=>{S.weekIdx=+it.dataset.i;closePerdd();renderAll();});
+    label = WK.weeks[S.weekIdx] ? WK.weeks[S.weekIdx]+(wdays(S.weekIdx)<7?' *':'') : '—';
+    items = WK.weeks.map((w,i)=>`<button class="perdd-item ${i===S.weekIdx?'on':''}" data-i="${i}">${w}${wdays(i)<7?' *':''}</button>`).join('');
   }
+  document.querySelectorAll('.perdd-label').forEach(l=>l.textContent=label);
+  document.querySelectorAll('.perdd-menu').forEach(menu=>{
+    menu.innerHTML=items;
+    menu.querySelectorAll('.perdd-item').forEach(it=>it.onclick=()=>{
+      if(it.dataset.k!=null) S.monthKey=it.dataset.k; else S.weekIdx=+it.dataset.i;
+      closePerdd(); renderAll();
+    });
+  });
 }
-function closePerdd(){const m=document.getElementById('perddMenu');if(m)m.classList.remove('open');}
+function closePerdd(){document.querySelectorAll('.perdd-menu').forEach(m=>m.classList.remove('open'));}
 
 /* ---------- юнит-экономика ---------- */
 function renderUnit(){
@@ -1090,9 +1102,9 @@ document.querySelectorAll('#viewnav button').forEach(b=>b.onclick=()=>{
 document.querySelectorAll('#histTog button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#histTog button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
   S.histMetric=b.dataset.h;renderHistory();});
-document.querySelectorAll('#granTog button').forEach(b=>b.onclick=()=>{S.gran=b.dataset.g;renderAll();});
-document.getElementById('perddBtn').onclick=e=>{e.stopPropagation();document.getElementById('perddMenu').classList.toggle('open');};
-document.addEventListener('click',e=>{if(!e.target.closest('#perdd'))closePerdd();});
+document.querySelectorAll('.gran-tog button').forEach(b=>b.onclick=()=>{S.gran=b.dataset.g;renderAll();});
+document.querySelectorAll('.perdd-btn').forEach(btn=>btn.onclick=e=>{e.stopPropagation();const menu=btn.parentElement.querySelector('.perdd-menu');const open=menu.classList.contains('open');closePerdd();if(!open)menu.classList.add('open');});
+document.addEventListener('click',e=>{if(!e.target.closest('.perdd'))closePerdd();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();closePerdd();}});
 
 /* ---------- подсказки: свой тёмный тултип (мгновенный, в стиле дашборда) ---------- */
