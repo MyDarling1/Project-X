@@ -1133,7 +1133,7 @@ function renderForecast(){
     const netNow=DATA.reduce((a,d)=>a+(d.runRate||0),0);
     const netBE=DATA.reduce((a,d)=>a+beFix(d),0);
     const g=netGrowth();
-    const gc=(g!=null)?Math.min(g,1.12):null;   // для проекции ограничим темп сверху (12%/нед)
+    const gc=g;   // реальный измеренный темп роста (геом. среднее по полным неделям), без потолка
     let head='—', cap='', chart='', weeks=null;
     if(netNow>=netBE){ head='<span class="pos">достигнут</span>'; cap='Сеть уже на уровне, где комиссия покрывает затраты.'; }
     else if(gc==null||gc<=1){ cap='Пока недостаточно полных недель с ростом, чтобы оценить срок. Нужно ×'+(netBE/netNow).toFixed(1)+' к текущему потоку заказов.'; }
