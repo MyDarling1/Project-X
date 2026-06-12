@@ -310,14 +310,8 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 </div>
 
 <div id="fwdCard" style="margin-bottom:22px">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-    <h3 style="margin:0">Прогноз сети</h3>
-    <span class="tag">ПРОГНОЗ — НЕ ФАКТ</span>
-  </div>
-  <div class="fwd-grid">
-    <div class="card" id="fcCard"></div>
-    <div class="card" id="grCard"></div>
-  </div>
+  <h3 style="margin:0 0 12px">Прогноз сети</h3>
+  <div class="card" id="fcMerged"></div>
 </div>
 
 <div class="card" style="margin-bottom:18px">
@@ -1098,74 +1092,89 @@ function netGrowth(){   // геом. среднее недельного рос�
   let p=1,n=0; for(let i=1;i<f.length;i++){ if(f[i-1]>0){ p*=f[i]/f[i-1]; n++; } }
   return n?Math.pow(p,1/n):null;
 }
-function fcChart(series, be, crossW, crossLabel){
-  const n=series.length, W=460, H=184, padL=14, padR=14, padT=24, padB=26;
-  const max=Math.max(Math.max(...series), be)*1.12||1;
-  const X=i=>padL+i*(W-padL-padR)/Math.max(n-1,1), Y=v=>padT+(1-v/max)*(H-padT-padB);
-  const baseY=H-padB, pts=series.map((v,i)=>[X(i),Y(v)]);
-  // плавная кривая (квадратичное сглаживание по средним точкам)
-  let line='M'+pts[0][0].toFixed(1)+' '+pts[0][1].toFixed(1);
-  for(let i=1;i<n;i++){ const mx=(pts[i-1][0]+pts[i][0])/2, my=(pts[i-1][1]+pts[i][1])/2; line+=' Q'+pts[i-1][0].toFixed(1)+' '+pts[i-1][1].toFixed(1)+' '+mx.toFixed(1)+' '+my.toFixed(1); }
-  line+=' L'+pts[n-1][0].toFixed(1)+' '+pts[n-1][1].toFixed(1);
-  const area=line+' L'+pts[n-1][0].toFixed(1)+' '+baseY+' L'+pts[0][0].toFixed(1)+' '+baseY+' Z';
-  const beY=Y(be), gl='font-family:Spline Sans Mono,monospace';
-  let s='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;margin-top:12px;display:block">';
-  s+='<defs><linearGradient id="fcg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--violet)" stop-opacity="0.30"/><stop offset="0.9" stop-color="var(--violet)" stop-opacity="0"/></linearGradient></defs>';
-  for(let k=1;k<=3;k++){ const gy=(padT+(baseY-padT)*k/4).toFixed(1); s+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="var(--line)" stroke-width="1"/>'; }
-  s+='<line x1="'+padL+'" y1="'+baseY+'" x2="'+(W-padR)+'" y2="'+baseY+'" stroke="var(--line2)" stroke-width="1"/>';
-  s+='<line x1="'+padL+'" y1="'+beY.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+beY.toFixed(1)+'" stroke="var(--coral)" stroke-width="1.4" stroke-dasharray="5 4"/>';
-  s+='<text x="'+padL+'" y="'+(beY-7).toFixed(1)+'" text-anchor="start" style="fill:var(--coral);font-size:10px;'+gl+'">безубыток</text>';
-  s+='<path d="'+area+'" fill="url(#fcg)"/>';
+function fcTimeline(netNow, netBE, gc, beW, guarW, guarWlast, beLabel, guarLabel){
+  const W=720, H=210, padL=18, padR=18, padT=34;
+  const plotW=W-padL-padR, gl='font-family:Spline Sans Mono,monospace';
+  const spanW=Math.max(Math.ceil(guarWlast)+1, Math.ceil(beW)+4, 1);
+  const X=w=>padL+(Math.max(0,Math.min(w,spanW))/spanW)*plotW;
+  const yTop=34, yBot=150, barY=168, barH=12, axisY=196;
+  const kEnd=Math.min(Math.ceil(beW)+3, spanW);
+  const vMax=netNow*Math.pow(gc,kEnd+2)||netBE*1.5;
+  const Y=v=>Math.max(yTop,Math.min(yBot, yBot-(Math.min(v,vMax)/vMax)*(yBot-yTop)));
+  const yBE=Y(netBE), xCross=X(beW), xGuar=X(guarW), xGuarLast=X(guarWlast);
+  // плавная кривая роста (квадратичное сглаживание, как в остальных графиках)
+  let pts=[]; for(let k=0;k<=kEnd;k+=0.5) pts.push([X(k),Y(netNow*Math.pow(gc,k))]);
+  const smooth=p=>{ let d='M'+p[0][0].toFixed(1)+' '+p[0][1].toFixed(1); for(let i=1;i<p.length;i++){ const mx=(p[i-1][0]+p[i][0])/2,my=(p[i-1][1]+p[i][1])/2; d+=' Q'+p[i-1][0].toFixed(1)+' '+p[i-1][1].toFixed(1)+' '+mx.toFixed(1)+' '+my.toFixed(1);} return d+' L'+p[p.length-1][0].toFixed(1)+' '+p[p.length-1][1].toFixed(1); };
+  const line=smooth(pts);
+  const sp=pts.filter((_,i)=>i*0.5<=beW);
+  const short=(sp.length?smooth(sp):('M'+X(0).toFixed(1)+' '+Y(netNow).toFixed(1)))+' L'+xCross.toFixed(1)+' '+yBE.toFixed(1)+' L'+X(0).toFixed(1)+' '+yBE.toFixed(1)+' Z';
+  let s='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;margin-top:14px;display:block" role="img" aria-label="Прогноз: кривая роста пересекает безубыток раньше, чем заканчивается гарантия">';
+  if(xGuar>xCross) s+='<rect x="'+xCross.toFixed(1)+'" y="'+yTop+'" width="'+(xGuar-xCross).toFixed(1)+'" height="'+(barY+barH-yTop).toFixed(1)+'" fill="var(--mint)" opacity="0.05"/>';
+  s+='<path d="'+short+'" fill="var(--amber)" opacity="0.10"/>';
+  s+='<line x1="'+padL+'" y1="'+yBE.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yBE.toFixed(1)+'" stroke="var(--coral)" stroke-width="1.4" stroke-dasharray="6 4" opacity="0.6"/>';
+  s+='<text x="'+(padL+2)+'" y="'+(yBE-7).toFixed(1)+'" style="fill:var(--coral);font-size:10.5px;'+gl+'">безубыток</text>';
   s+='<path d="'+line+'" fill="none" stroke="var(--violet)" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>';
-  s+='<circle cx="'+pts[0][0].toFixed(1)+'" cy="'+pts[0][1].toFixed(1)+'" r="3.6" fill="var(--panel)" stroke="var(--violet)" stroke-width="2"/>';
-  s+='<text x="'+pts[0][0].toFixed(1)+'" y="'+(baseY+16)+'" text-anchor="start" style="fill:var(--faint);font-size:9.5px;'+gl+'">сейчас</text>';
-  if(crossW!=null && crossW>=0 && crossW<=n-1){ const cx=X(crossW);
-    s+='<line x1="'+cx.toFixed(1)+'" y1="'+beY.toFixed(1)+'" x2="'+cx.toFixed(1)+'" y2="'+baseY+'" stroke="var(--mint)" stroke-width="1" stroke-dasharray="3 3" opacity="0.5"/>';
-    s+='<circle cx="'+cx.toFixed(1)+'" cy="'+beY.toFixed(1)+'" r="5.5" fill="var(--mint)" stroke="#0a0c11" stroke-width="2"/>';
-    if(crossLabel) s+='<text x="'+cx.toFixed(1)+'" y="'+(baseY+16)+'" text-anchor="middle" style="fill:var(--mint);font-size:9.5px;font-weight:600;'+gl+'">'+crossLabel+'</text>';
+  if(pts.length>1){ const a=pts[pts.length-2],b=pts[pts.length-1]; const L=Math.hypot(b[0]-a[0],b[1]-a[1])||1; const ex=Math.min(W-padR,b[0]+(b[0]-a[0])/L*44), ey=Math.max(yTop,b[1]+(b[1]-a[1])/L*44); s+='<path d="M'+b[0].toFixed(1)+' '+b[1].toFixed(1)+' L'+ex.toFixed(1)+' '+ey.toFixed(1)+'" fill="none" stroke="var(--violet)" stroke-width="2.4" stroke-dasharray="5 5" stroke-linecap="round" opacity="0.5"/>'; }
+  s+='<circle cx="'+X(0).toFixed(1)+'" cy="'+Y(netNow).toFixed(1)+'" r="4" fill="var(--panel)" stroke="var(--violet)" stroke-width="2"/>';
+  if(beW<=spanW){
+    s+='<line x1="'+xCross.toFixed(1)+'" y1="'+yBE.toFixed(1)+'" x2="'+xCross.toFixed(1)+'" y2="'+(barY-3).toFixed(1)+'" stroke="var(--mint)" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>';
+    s+='<circle cx="'+xCross.toFixed(1)+'" cy="'+yBE.toFixed(1)+'" r="10" fill="none" stroke="var(--mint)" stroke-width="1" opacity="0.4"/>';
+    s+='<circle cx="'+xCross.toFixed(1)+'" cy="'+yBE.toFixed(1)+'" r="6" fill="var(--mint)" stroke="#0a0c11" stroke-width="2"/>';
+    const mW=Math.max(0,Math.round(guarW)-Math.ceil(beW));
+    if(mW>0 && xGuar>xCross) s+='<text x="'+((xCross+xGuar)/2).toFixed(1)+'" y="'+(barY-10).toFixed(1)+'" text-anchor="middle" style="fill:var(--mint);font-size:11px;font-weight:600;'+gl+'">≈'+mW+' нед запаса</text>';
   }
+  s+='<rect x="'+padL+'" y="'+barY+'" width="'+Math.max(0,xGuar-padL).toFixed(1)+'" height="'+barH+'" rx="6" fill="var(--amber)" fill-opacity="0.16" stroke="var(--amber)" stroke-opacity="0.5" stroke-width="1"/>';
+  if(xGuarLast>xGuar) s+='<rect x="'+xGuar.toFixed(1)+'" y="'+barY+'" width="'+(xGuarLast-xGuar).toFixed(1)+'" height="'+barH+'" rx="6" fill="var(--amber)" fill-opacity="0.07"/>';
+  s+='<text x="'+(padL+10)+'" y="'+(barY+9).toFixed(1)+'" style="fill:var(--amber);font-size:10px;'+gl+'">гарантия Uzum</text>';
+  s+='<text x="'+padL+'" y="'+axisY+'" style="fill:var(--faint);font-size:10px;'+gl+'">сейчас</text>';
+  s+='<text x="'+xCross.toFixed(1)+'" y="'+axisY+'" text-anchor="middle" style="fill:var(--mint);font-size:10px;font-weight:600;'+gl+'">'+beLabel+'</text>';
+  s+='<text x="'+(W-padR)+'" y="'+axisY+'" text-anchor="end" style="fill:var(--faint);font-size:10px;'+gl+'">'+guarLabel+'</text>';
   s+='</svg>';
   return s;
 }
 function renderForecast(){
-  const fc=document.getElementById('fcCard');
-  if(fc){
-    const netNow=DATA.reduce((a,d)=>a+(d.runRate||0),0);
-    const netBE=DATA.reduce((a,d)=>a+beFix(d),0);
-    const g=netGrowth();
-    const gc=g;   // реальный измеренный темп роста (геом. среднее по полным неделям), без потолка
-    let head='—', cap='', chart='', weeks=null;
-    if(netNow>=netBE){ head='<span class="pos">достигнут</span>'; cap='Сеть уже на уровне, где комиссия покрывает затраты.'; }
-    else if(gc==null||gc<=1){ cap='Пока недостаточно полных недель с ростом, чтобы оценить срок. Нужно ×'+(netBE/netNow).toFixed(1)+' к текущему потоку заказов.'; }
-    else {
-      weeks=Math.log(netBE/netNow)/Math.log(gc);
-      const dt=new Date(Date.now()+weeks*6048e5);
-      head='≈ '+dt.toLocaleDateString('ru-RU',{month:'long',year:'numeric'});
-      cap='При сохранении темпа ≈+'+Math.round((gc-1)*100)+'%/нед сеть выходит на самоокупаемость (комиссия ≥ затраты) примерно за '+Math.ceil(weeks)+' нед. Иллюстративно, не гарантия.';
-      const K=Math.min(Math.ceil(weeks)+2,30), series=[]; for(let k=0;k<=K;k++) series.push(netNow*Math.pow(gc,k));
-      chart=fcChart(series, netBE, weeks, '≈'+Math.ceil(weeks)+' нед');
-    }
-    fc.innerHTML='<h3 style="margin-bottom:2px">Путь к самоокупаемости</h3>'
-      +'<div class="hint" style="margin:0 0 8px">когда комиссия начнёт покрывать затраты сети</div>'
-      +'<div style="font-family:\'Bricolage Grotesque\';font-size:30px;font-weight:800;line-height:1.05">'+head+'</div>'
-      +chart
-      +'<div class="hint" style="margin-top:8px">'+cap+'</div>';
-  }
-  const gr=document.getElementById('grCard');
-  if(gr){
-    const {ordOf}=ovPeriodStats();   // та же база, что у KPI «точек выше безубытка»
-    const now=Date.now(); let minW=Infinity, ends=[], ready=0;
-    DATA.forEach(d=>{ const e=new Date(d.start); e.setMonth(e.getMonth()+6); if(e>now) minW=Math.min(minW,(e-now)/6048e5); ends.push(e.getTime()); if(ordOf(d)>=beOf(d)) ready++; });
-    ends.sort((a,b)=>a-b); const lastEnd=new Date(ends[ends.length-1]);
-    const weeksLeft=isFinite(minW)?Math.max(0,Math.round(minW)):0, pct=Math.round(ready/DATA.length*100);
-    gr.innerHTML='<h3 style="margin-bottom:2px">Гарантийная подушка</h3>'
-      +'<div class="hint" style="margin:0 0 8px">гарантия Uzum действует 6 мес от старта точки</div>'
-      +'<div style="font-family:\'Bricolage Grotesque\';font-size:30px;font-weight:800;line-height:1.05">ещё ≈'+weeksLeft+' нед.</div>'
-      +'<div class="hint" style="margin:2px 0 14px">до ~'+lastEnd.toLocaleDateString('ru-RU',{month:'long',year:'numeric'})+'</div>'
-      +'<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-bottom:6px"><span>Уже на комиссионной окупаемости</span><span class="mono" style="color:'+(ready>0?'var(--mint)':'var(--coral)')+'">'+ready+' / '+DATA.length+'</span></div>'
-      +'<div class="health" style="width:100%;height:8px"><i style="width:'+pct+'%;background:var(--mint)"></i></div>'
-      +'<div class="hint" style="margin-top:12px">'+(ready>0?ready+' из '+DATA.length+' точек зарабатывают на комиссии больше затрат уже сейчас; остальных держит гарантия, пока они набирают объём.':'Пока все точки опираются на гарантию — она держит P&L, пока сеть набирает заказы.')+'</div>';
-  }
+  const el=document.getElementById('fcMerged');
+  if(!el) return;
+  const MON=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  const mlabel=ms=>{const d=new Date(ms);return '≈ '+MON[d.getMonth()]+' '+d.getFullYear();};
+  const netNow=DATA.reduce((a,d)=>a+(d.runRate||0),0);
+  const netBE=DATA.reduce((a,d)=>a+beFix(d),0);
+  const gc=netGrowth();   // реальный измеренный темп (геом. среднее по полным неделям), без потолка
+  // гарантия: 6 мес от старта каждой точки (даты у точек разные)
+  const {ordOf}=ovPeriodStats();
+  const now=Date.now(); let minW=Infinity, ends=[], fut=[], ready=0;
+  DATA.forEach(d=>{ const e=new Date(d.start); e.setMonth(e.getMonth()+6); const t=e.getTime(); ends.push(t); if(t>now){minW=Math.min(minW,(t-now)/6048e5);fut.push(t);} if(ordOf(d)>=beOf(d)) ready++; });
+  ends.sort((a,b)=>a-b); fut.sort((a,b)=>a-b);
+  const guarW=isFinite(minW)?Math.max(0,minW):0;
+  const guarWlast=Math.max(0,(ends[ends.length-1]-now)/6048e5);
+  const nearTs=fut.length?fut[0]:ends[ends.length-1];
+  const reached=netNow>=netBE;
+  let beW=null, beHero='—';
+  if(reached){ beHero='<span class="pos">сейчас</span>'; }
+  else if(gc!=null&&gc>1){ beW=Math.log(netBE/netNow)/Math.log(gc); beHero=mlabel(now+beW*6048e5); }
+  const guarHero=mlabel(nearTs);
+  const marginW=(beW!=null&&isFinite(guarW))?Math.max(0,Math.round(guarW)-Math.ceil(beW)):null;
+  const growthPct=(gc!=null&&gc>1)?Math.round((gc-1)*100):null;
+  let chart;
+  if(beW!=null) chart=fcTimeline(netNow,netBE,gc,beW,guarW,guarWlast,'≈'+Math.ceil(beW)+' нед',guarHero);
+  else if(reached) chart='<div class="hint" style="margin:14px 0 4px"><span class="pos">Комиссия уже покрывает затраты сети.</span></div>';
+  else chart='<div class="hint" style="margin:14px 0 4px">Пока недостаточно полных недель с ростом, чтобы оценить срок (нужно ×'+(netBE/netNow).toFixed(1)+' к текущему потоку).</div>';
+  const states=DATA.map(d=>ordOf(d)>=beOf(d)).sort((a,b)=>(b?1:0)-(a?1:0));
+  let pips=''; states.forEach(on=>{ pips+='<span style="width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--'+(on?'mint':'amber')+');opacity:'+(on?'1':'.55')+'"></span>'; });
+  el.innerHTML=
+    '<div class="hint" style="margin-bottom:16px">Когда сеть выйдет на самоокупаемость — и насколько её страхует гарантия Uzum.</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">'
+    +'<div><div class="disp" style="font-size:clamp(17px,3.4vw,25px);font-weight:800;color:var(--mint);line-height:1.05">'+beHero+'</div><div class="hint" style="color:var(--dim)">выход на самоокупаемость</div></div>'
+    +'<div style="text-align:center"><div class="disp" style="font-size:clamp(17px,3.4vw,25px);font-weight:800;color:var(--mint);line-height:1.05">'+(marginW!=null?'≈'+marginW+' нед':'—')+'</div><div class="hint" style="color:var(--dim)">запас до конца гарантии</div></div>'
+    +'<div style="text-align:right"><div class="disp" style="font-size:clamp(17px,3.4vw,25px);font-weight:800;color:var(--amber);line-height:1.05">'+guarHero+'</div><div class="hint" style="color:var(--dim)">истекает гарантия</div></div>'
+    +'</div>'
+    +chart
+    +(beW!=null&&growthPct!=null?'<div class="hint" style="margin-top:6px">При текущем темпе ≈+'+growthPct+'%/нед. Иллюстративно.</div>':'')
+    +'<div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--dim);margin-bottom:9px"><span>Уже зарабатывают на комиссии больше затрат</span><span class="mono" style="color:'+(ready>0?'var(--mint)':'var(--coral)')+'">'+ready+' / '+DATA.length+'</span></div>'
+    +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:11px">'+pips+'</div>'
+    +'<div class="hint">'+(ready>0?ready+' из '+DATA.length+' точек зарабатывают на комиссии больше затрат уже сейчас; остальных держит гарантия, пока они набирают объём.':'Сейчас все '+DATA.length+' точек держит гарантия, пока сеть набирает заказы.')+'</div>'
+    +'</div>';
 }
 /* ---------- deep-linking: вид/период/валюта/сегмент в URL ---------- */
 function parseURL(){ try{
