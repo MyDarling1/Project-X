@@ -315,7 +315,7 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
       <div>Частное инвест-предложение · конфиденциально</div>
     </div>
     <div class="kicker">Сеть ПВЗ Uzum · Узбекистан</div>
-    <h1 class="disp rv">Построили более 70 пунктов выдачи в Узбекистане.<span class="l2">Ваши — следующие десять.</span></h1>
+    <h1 class="disp rv">Построили более 70 пунктов выдачи в Узбекистане.<span class="l2">Следующие десять — с вами.</span></h1>
     <p class="lede rv d1">Мы — операционная команда, открывшая <b>72 ПВЗ</b> по всему Узбекистану; сегодня под управлением <b>18 действующих точек</b> Uzum — и каждую инвестор видит в реальном времени через <b>живой дашборд</b> с AI-мониторингом. Минимальный чек <b>$100 000</b> — это <b>10 ПВЗ</b>. Прогнозная доходность <b>~48–69% годовых</b> на зрелости.</p>
     <div class="heroband rv d2" id="heroband"></div>
     <div class="scrollcue"><span class="ln"></span> Листайте</div>
@@ -397,7 +397,7 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
 
     <div class="grid2 rv d3" style="margin-top:34px">
       <div class="card">
-        <div class="ch-ttl"><h4>Заказы в день · вся сеть</h4><span class="note">зак./день · послед. неделя — пунктир*</span></div>
+        <div class="ch-ttl"><h4>Заказы в день · все ПВЗ в управлении</h4><span class="note">зак./день · послед. неделя — пунктир*</span></div>
         <svg class="chart" id="chOrders" viewBox="0 0 800 320" preserveAspectRatio="none"></svg>
       </div>
       <div class="card">
@@ -513,7 +513,7 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
   <!-- ── CLOSING ── -->
   <section class="closing" data-crumb="Резюме">
     <div class="seghead rv"><span class="no">§ 09</span><span class="ttl">Резюме</span><span class="rule"></span></div>
-    <div class="pull disp rv">72 точки за плечами. Минимум вознаграждения гарантирует Uzum.<br><em>Ваши десять — следующие.</em></div>
+    <div class="pull disp rv">72 точки за плечами. Минимум вознаграждения гарантирует Uzum.<br><em>Следующие десять — с вами.</em></div>
     <div class="recap rv d1" id="recap"></div>
     <div class="cta rv d2">
       <a href="#" id="ctaLink">Обсудить участие <span class="arr">→</span></a>
@@ -540,7 +540,7 @@ const EMAIL = "ilya.slavin@satorigroup.asia";          // почта
 
 const SEGCOL={1:'#5a2ea6',2:'#8e6bd9',3:'#b1842f'};
 const MOB=()=>matchMedia('(max-width:760px)').matches;
-const MKT=[{c:'Южная Корея',v:44},{c:'Китай',v:31},{c:'США',v:26},{c:'Россия',v:20},{c:'Казахстан',v:17},{c:'Узбекистан · 2025',v:4,hl:1},{c:'Узбекистан · 2027п',v:10,fc:1}];
+const MKT=[{c:'Южная Корея',v:44},{c:'Китай',v:31},{c:'США',v:26},{c:'Россия',v:20},{c:'Казахстан',v:17},{c:'Узбекистан · 2025',v:4,hl:1}];
 const usd=n=>'$'+Math.round(n).toLocaleString('en-US');
 const usdK=n=>'$'+Math.round(n/1000)+'K';
 const r1=n=>n.toLocaleString('ru-RU',{minimumFractionDigits:1,maximumFractionDigits:1});
@@ -586,14 +586,14 @@ function leaderBars(id){
   if(m){
     W=440; H=476; const T=6, rh=(H-T)/top.length;
     top.forEach((p,i)=>{const ry=T+rh*i, bw=(W-12)*(p.orders/max);
-      out+=`<text x="6" y="${(ry+24).toFixed(1)}" font-family="Hanken Grotesk" font-size="22" font-weight="600" fill="#181410">${p.aka}</text>`;
+      out+=`<text x="6" y="${(ry+24).toFixed(1)}" font-family="Hanken Grotesk" font-size="22" font-weight="600" fill="#181410">ПВЗ ${i+1}</text>`;
       out+=`<text x="${W-6}" y="${(ry+24).toFixed(1)}" text-anchor="end" font-family="Spline Sans Mono" font-size="22" font-weight="600" fill="#181410">${r1(p.orders)}</text>`;
       out+=`<rect x="6" y="${(ry+34).toFixed(1)}" width="${(W-12).toFixed(1)}" height="15" rx="7.5" fill="#eadfcb"/>`;
       out+=`<rect class="lbar" x="6" y="${(ry+34).toFixed(1)}" width="${bw.toFixed(1)}" height="15" rx="7.5" fill="${SEGCOL[p.seg]}"/>`;});
   } else {
     W=800; H=320; const L=8,R=70,T=10, rh=(H-T)/top.length;
     top.forEach((p,i)=>{const by=T+rh*i+rh*.18, bh=rh*.42, bw=(W-220-R)*(p.orders/max);
-      out+=`<text x="${L}" y="${(by+bh/2+5).toFixed(1)}" font-family="Hanken Grotesk" font-size="15" font-weight="600" fill="#181410">${p.aka}</text>`;
+      out+=`<text x="${L}" y="${(by+bh/2+5).toFixed(1)}" font-family="Hanken Grotesk" font-size="15" font-weight="600" fill="#181410">ПВЗ ${i+1}</text>`;
       out+=`<rect class="lbar" x="172" y="${by.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="5" fill="${SEGCOL[p.seg]}"/>`;
       out+=`<text x="${(172+bw+10).toFixed(1)}" y="${(by+bh/2+5).toFixed(1)}" font-family="Spline Sans Mono" font-size="14" font-weight="600" fill="#181410">${r1(p.orders)}</text>`;});
   }
