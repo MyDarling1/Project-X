@@ -1,7 +1,7 @@
 # HANDOVER — Uzum ПВЗ дашборд
 
 Документ для Claude Code. Прочти целиком перед любыми изменениями.
-Папка проекта: `C:\Users\Zephyrus\OneDrive\Project X`. Деплой: GitHub → Railway.
+Папка проекта зависит от машины (текущая: `C:\Users\BattleBox Pro\OneDrive\Rainbow\OneDrive\Project X`). Деплой: GitHub → Railway.
 
 ---
 
