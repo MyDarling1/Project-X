@@ -369,6 +369,16 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
       <button class="bebtn" id="beBtn">Показать безубыточность сети</button>
       <button class="bebtn" id="t150Btn">150 заказов/день на 1 ПВЗ</button>
       <button class="bebtn" id="resetBtn">Текущий результат (сброс)</button>
+
+      <!-- Named scenarios (minimal addition using existing .bebtn / .hint patterns + localStorage) -->
+      <div style="margin-top:8px">
+        <div class="hint" style="margin-bottom:4px;font-size:11px">Сохранённые сценарии (localStorage)</div>
+        <div id="savedScenarios" style="display:flex;gap:3px;flex-wrap:wrap"></div>
+        <div style="display:flex;gap:4px;margin-top:4px;align-items:center">
+          <input id="scenarioName" placeholder="имя" style="flex:1;padding:3px 6px;border-radius:6px;border:1px solid var(--line2);background:var(--bg);color:var(--txt);font-size:11px">
+          <button class="bebtn" id="saveScenarioBtn" style="padding:3px 6px;font-size:10px">Сохранить</button>
+        </div>
+      </div>
     </div>
 
     <!-- initial slider values match DEFAULTS in script (centralized in JS logic + reset) -->
@@ -1322,6 +1332,7 @@ document.querySelectorAll('#pills .pill').forEach(x=>x.classList.toggle('on',x.d
 document.querySelectorAll('#curTog button').forEach(x=>x.classList.toggle('on',x.dataset.c===S.cur));
 renderAll();
 setView(S.view);
+bindScenarioUI(); // named scenarios UI (after DOM ready)
 
 // show data freshness if UPD available from /data.js wrapper (server sets it)
 (function showFresh(){
@@ -1364,6 +1375,73 @@ document.getElementById('resetBtn').onclick=()=>{
   renderAll();
   toast('Сброшено к текущему результату — неделя 3, на гарантии');
 };
+
+/* ---------- Named/saved scenarios (localStorage, builds on deep links) ---------- */
+const SCEN_KEY = 'uzum_scenarios_v1';
+function loadSavedScenarios() {
+  try { return JSON.parse(localStorage.getItem(SCEN_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveSavedScenarios(list) {
+  localStorage.setItem(SCEN_KEY, JSON.stringify(list));
+}
+function renderSavedScenarios() {
+  const cont = document.getElementById('savedScenarios'); if (!cont) return;
+  const list = loadSavedScenarios();
+  cont.innerHTML = '';
+  list.forEach((item, idx) => {
+    const pill = document.createElement('span');
+    pill.className = 'pill';
+    pill.style.padding = '2px 6px';
+    pill.style.fontSize = '10px';
+    pill.style.cursor = 'pointer';
+    pill.textContent = item.name;
+    pill.onclick = () => {
+      const st = item.state;
+      Object.keys(st).forEach(k => { if (S.hasOwnProperty(k)) S[k] = st[k]; });
+      // update visible controls
+      const b = document.getElementById('boost'); if (b) b.value = S.boost;
+      const bv = document.getElementById('boostV'); if (bv) bv.textContent = '×' + S.boost.toFixed(1);
+      const f = document.getElementById('fx'); if (f) f.value = S.fx;
+      const fv = document.getElementById('fxV'); if (fv) fv.textContent = fmt(S.fx);
+      const c = document.getElementById('chk'); if (c) c.value = S.chk;
+      const cv = document.getElementById('chkV'); if (cv) cv.textContent = '$' + S.chk;
+      const u = document.getElementById('uk'); if (u) u.value = S.uk;
+      const uv = document.getElementById('ukV'); if (uv) uv.textContent = '$' + S.uk;
+      document.querySelectorAll('#scen button').forEach(x => x.classList.toggle('on', x.dataset.s === S.scen));
+      document.querySelectorAll('#pills .pill').forEach(x => x.classList.toggle('on', x.dataset.s === S.seg || (S.seg==='all' && x.dataset.s==='all')));
+      renderAll();
+      syncURL();
+    };
+    // small delete
+    const del = document.createElement('span');
+    del.textContent = '×';
+    del.style.marginLeft = '2px';
+    del.style.cursor = 'pointer';
+    del.onclick = (e) => { e.stopImmediatePropagation(); const l = loadSavedScenarios(); l.splice(idx,1); saveSavedScenarios(l); renderSavedScenarios(); };
+    pill.appendChild(del);
+    cont.appendChild(pill);
+  });
+}
+function saveCurrentScenario() {
+  const nameEl = document.getElementById('scenarioName');
+  const name = (nameEl && nameEl.value.trim()) || ('s' + Date.now());
+  const list = loadSavedScenarios();
+  // snapshot relevant state
+  const snap = { boost: S.boost, flat: S.flat, scen: S.scen, seg: S.seg, cur: S.cur, fx: S.fx, chk: S.chk, uk: S.uk };
+  // remove duplicate name
+  const filtered = list.filter(x => x.name !== name);
+  filtered.push({ name, state: snap, ts: Date.now() });
+  saveSavedScenarios(filtered);
+  if (nameEl) nameEl.value = '';
+  renderSavedScenarios();
+}
+
+// bind save button (called on init)
+function bindScenarioUI() {
+  const saveBtn = document.getElementById('saveScenarioBtn');
+  if (saveBtn) saveBtn.onclick = () => saveCurrentScenario();
+  renderSavedScenarios();
+}
 
 /* ---------- загрузка файла (админ) ---------- */
 function aggregate(wb){
