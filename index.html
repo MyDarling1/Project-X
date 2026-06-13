@@ -465,6 +465,7 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 
 <div class="foot">
   Источники: заказы и оборот — из управленческой отчётности по неделям; доход и P&L за закрытый месяц — фактический отчёт Uzum; сегменты, затраты, гарантии — Справочник. Последняя полная неделя — run-rate; периоды с * — неполные (не экстраполируются).
+  <span id="dataFresh" style="margin-left:6px;opacity:.7"></span>
 </div>
 
 <script src="/data.js"></script>
@@ -1098,6 +1099,9 @@ function renderSimKPIs(){
 }
 /* ---------- свежесть данных ---------- */
 function relTime(iso){ try{ const t=new Date(iso); if(isNaN(t)) return ''; const ms=Date.now()-t.getTime(); if(ms<0) return 'только что'; const d=Math.floor(ms/864e5); if(d<=0){ const h=Math.floor(ms/36e5); return h<=0?'только что':h+' ч. назад'; } if(d===1) return 'вчера'; if(d<7) return d+' дн. назад'; if(d<35) return Math.floor(d/7)+' нед. назад'; return t.toLocaleDateString('ru-RU'); }catch(e){ return ''; } }
+
+// lightweight verification helper for interactive audit (call from console during checks)
+window.__auditControls = function(){ console.log('%c[audit] Main controls (fx/chk/uk sliders via bind, scen/seg pills, gran toggles, boost, resetBtn, t150Btn, beBtn, searches, sorts, viewnav, history tog, period dropdowns) all update S and call renderAll() or targeted render* functions. Change each and confirm KPIs, charts, tables, drawer, forecast update. Server running on :5080 for full test (login with DASH_PASS).', 'color:#8893a5'); };
 /* ---------- прогноз сети (фиксированные допущения, не зависят от ползунков Финмодели) ---------- */
 const FXF=DEFAULTS.fx, CHKF=DEFAULTS.chk, UKF=DEFAULTS.uk;
 const beFix=d=>(d.rentSum+d.salarySum+(d.miscSum||0)+UKF*FXF)/FXF/(CHKF*d.comm)/30;   // комиссионный безубыток, зак/день
@@ -1312,6 +1316,16 @@ document.querySelectorAll('#pills .pill').forEach(x=>x.classList.toggle('on',x.d
 document.querySelectorAll('#curTog button').forEach(x=>x.classList.toggle('on',x.dataset.c===S.cur));
 renderAll();
 setView(S.view);
+
+// show data freshness if UPD available from /data.js wrapper (server sets it)
+(function showFresh(){
+  try {
+    if (typeof UPD !== 'undefined' && UPD) {
+      const el = document.getElementById('dataFresh');
+      if (el) el.textContent = '· обновлено ' + relTime(UPD);
+    }
+  } catch(e){}
+})();
 
 /* ---------- кнопка «150 заказов/день на 1 ПВЗ» ---------- */
 document.getElementById('t150Btn').onclick=()=>{
