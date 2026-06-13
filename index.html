@@ -90,7 +90,11 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--panel2);border:1px solid var(--mint);color:var(--txt);padding:13px 22px;border-radius:13px;font-size:13.5px;font-weight:600;box-shadow:0 14px 44px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:.35s;z-index:60;max-width:90vw;text-align:center}
 #tip{position:fixed;z-index:80;max-width:250px;background:var(--panel2);border:1px solid var(--line2);color:var(--txt);padding:8px 11px;border-radius:10px;font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:500;line-height:1.4;box-shadow:0 12px 30px rgba(0,0,0,.5);pointer-events:none;opacity:0;transform:translateY(3px);transition:opacity .1s ease,transform .1s ease}
 #tip.on{opacity:1;transform:none}
-.fwd-actuals-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;margin-bottom:18px}
+.fwd-actuals-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:stretch;margin-bottom:18px}
+.fwd-actuals-row>#fwdCard,.fwd-actuals-row>.actuals-col{display:flex;flex-direction:column;min-width:0}
+.fwd-actuals-row #fcMerged{flex:1}
+.hist-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.actuals-col>#histNet{flex:1;display:flex;flex-direction:column;justify-content:center;min-width:0}
 .pitchlink{font-size:12px;color:var(--violet);text-decoration:none;font-weight:600;white-space:nowrap}
 .pitchlink:hover{text-decoration:underline}
 @media(max-width:900px){.fwd-actuals-row{grid-template-columns:1fr}}
@@ -228,7 +232,7 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 .viewnav{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
 .viewnav button{font-family:inherit;font-size:13.5px;font-weight:700;border:1px solid var(--line2);background:transparent;color:var(--dim);padding:10px 18px;border-radius:11px;cursor:pointer;transition:.16s}
 .viewnav button.on{background:var(--panel2);color:var(--txt);border-color:var(--violet);box-shadow:0 0 0 1px var(--violet) inset}
-.hist-net{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.hist-net{min-width:0}
 @media(max-width:760px){.hist-net{grid-template-columns:1fr}}
 .wkbar{transition:y .5s cubic-bezier(.22,1,.36,1),height .5s cubic-bezier(.22,1,.36,1)}
 /* ---- карта сети ---- */
@@ -314,20 +318,18 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 </div>
 
 <div class="fwd-actuals-row">
-  <div id="fwdCard">
+  <div id="fwdCard" class="card">
     <h3 style="margin:0 0 12px">Прогноз сети</h3>
-    <div class="card" id="fcMerged"></div>
+    <div id="fcMerged"></div>
   </div>
 
-  <div class="actuals-col">
-    <div class="card" style="margin-bottom:18px">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-        <div><h3>Фактические результаты</h3><div class="hint" style="margin:0">Факт по неделям. <b style="color:var(--dim)">Недели с * — неполные</b> (&lt; 7 дней с данными): показаны как есть, не для экстраполяции. Объём и P&L — в выбранной валюте.</div></div>
-        <div class="seg-toggle" id="histTog" style="max-width:420px">
-          <button data-h="orders" class="on">Заказы/день</button>
-          <button data-h="volume">Объём/день</button>
-          <button data-h="pnl">P&amp;L/нед.</button>
-        </div>
+  <div class="actuals-col card">
+    <div class="hist-head">
+      <div><h3>Фактические результаты</h3><div class="hint" style="margin:0">Факт по неделям. <b style="color:var(--dim)">Недели с * — неполные</b> (&lt; 7 дней с данными): показаны как есть, не для экстраполяции. Объём и P&L — в выбранной валюте.</div></div>
+      <div class="seg-toggle" id="histTog" style="max-width:420px">
+        <button data-h="orders" class="on">Заказы/день</button>
+        <button data-h="volume">Объём/день</button>
+        <button data-h="pnl">P&amp;L/нед.</button>
       </div>
     </div>
     <div class="hist-net" id="histNet"></div>
@@ -962,11 +964,11 @@ function renderHistory(){
   const m=S.histMetric;
   const HMAX=13, allI=WK.weeks.map((_,i)=>i), show=allI.slice(-HMAX), moreN=allI.length-show.length;
   const sl=show.map(i=>WK.weeks[i]), sp=show.map(i=>partial[i]);
-  const card=(ttl,hint,svg)=>`<div class="card" style="grid-column:1/-1"><h3 style="margin-bottom:2px">${ttl}</h3><div class="hint">${hint}</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${svg}</div></div>`;
+  const chartBody=(hint,svg)=>`<div class="hint" style="margin:0 0 4px">${hint}</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${svg}</div>`;
   document.getElementById('histNet').innerHTML =
-      m==='pnl'    ? card('Сеть · P&L по неделям','P&L по неделям: доля месячного факта Uzum по дням (для закрытых месяцев) или модель (для текущих). Согласовано с блоком «Обзор».', wkBarsPnl(show.map(i=>netPnl[i]),sl,sp))
-    : m==='volume' ? card('Сеть · объём (GMV)/день','сумма по сети, по неделям', wkBars(show.map(i=>WK.net.rev[i]),money,'var(--mint)','hist-hv',sl,sp))
-    :                card('Сеть · заказы/день','сумма по сети, по неделям', wkBars(show.map(i=>WK.net.ord[i]),fmt1,'var(--violet)','hist-ho',sl,sp));
+      m==='pnl'    ? chartBody('P&L по неделям: доля месячного факта Uzum по дням (для закрытых месяцев) или модель (для текущих). Согласовано с блоком «Обзор».', wkBarsPnl(show.map(i=>netPnl[i]),sl,sp))
+    : m==='volume' ? chartBody('сумма по сети, по неделям', wkBars(show.map(i=>WK.net.rev[i]),money,'var(--mint)','hist-hv',sl,sp))
+    :                chartBody('сумма по сети, по неделям', wkBars(show.map(i=>WK.net.ord[i]),fmt1,'var(--violet)','hist-ho',sl,sp));
   renderCosts();
 }
 function renderCosts(){
