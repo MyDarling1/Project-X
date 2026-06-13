@@ -371,6 +371,7 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
       <button class="bebtn" id="resetBtn">Текущий результат (сброс)</button>
     </div>
 
+    <!-- initial slider values match DEFAULTS in script (centralized in JS logic + reset) -->
     <div class="ctrl"><div class="row"><label>Курс USD/UZS</label><span class="num" id="fxV">12 000</span></div><input type="range" id="fx" min="11000" max="13500" step="50" value="12000"></div>
     <div class="ctrl"><div class="row"><label>Средний чек, $</label><span class="num" id="chkV">$14</span></div><input type="range" id="chk" min="8" max="22" step="0.5" value="14"></div>
     <div class="ctrl"><div class="row"><label>Затраты на УК, $/мес</label><span class="num" id="ukV">$320</span></div><input type="range" id="uk" min="0" max="800" step="20" value="320"></div>
@@ -469,13 +470,20 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 <script src="/data.js"></script>
 <script>
 if(typeof DATA==='undefined'||!Array.isArray(DATA)||!DATA.length){['viewnav','viewMain','viewMap','viewSim','viewUpload'].forEach(id=>{var el=document.getElementById(id);if(el)el.style.display='none';});var de=document.getElementById('dataErr');if(de)de.style.display='';throw new Error('data unavailable');}
-const S={fx:12000,chk:14,uk:320,boost:1,flat:null,scen:'guar',seg:'all',metric:'be',cur:'usd',view:'main',histMetric:'orders',sortKey:'revW3',sortDir:-1,q:'',costSortKey:null,costSortDir:-1,ovSortKey:'o',ovSortDir:-1,ovq:'',gran:'week',monthKey:null,weekIdx:null};
+
+const DEFAULTS = { fx: 12000, chk: 14, uk: 320 };
+const S={fx:DEFAULTS.fx,chk:DEFAULTS.chk,uk:DEFAULTS.uk,boost:1,flat:null,scen:'guar',seg:'all',metric:'be',cur:'usd',view:'main',histMetric:'orders',sortKey:'revW3',sortDir:-1,q:'',costSortKey:null,costSortDir:-1,ovSortKey:'o',ovSortDir:-1,ovq:'',gran:'week',monthKey:null,weekIdx:null};
 /* эталон: run-rate = последняя полная неделя; недели/дни задаются данными или дефолтом */
 DATA.forEach(d=>{if(d.runRate==null)d.runRate=d.w3;});
 if(WK.runIdx==null)WK.runIdx=2;
 WK.runIdx=Math.min(Math.max(WK.runIdx|0,0),(WK.weeks?WK.weeks.length:1)-1);
 if(!WK.dayCounts)WK.dayCounts=[5,7,7,2];
 if(!WK.weeks)WK.weeks=['11.05–17.05','18.05–24.05','25.05–31.05','01.06–07.06'];
+
+// load-time invariants (help catch contract/data issues early, per project checks)
+if (!DATA || DATA.length !== 18) { console.warn('DATA length unexpected:', DATA ? DATA.length : 0); }
+if (WK && WK.weeks && WK.dayCounts && WK.weeks.length !== WK.dayCounts.length) { console.warn('WK weeks/dayCounts length mismatch'); }
+
 const segColor={1:'var(--s1)',2:'var(--s2)',3:'var(--s3)'};
 const segHex={1:'#8b6dff',2:'#49c8ff',3:'#ffb84d'};
 const fmt=n=>Math.round(n).toLocaleString('ru-RU');
@@ -1091,7 +1099,7 @@ function renderSimKPIs(){
 /* ---------- свежесть данных ---------- */
 function relTime(iso){ try{ const t=new Date(iso); if(isNaN(t)) return ''; const ms=Date.now()-t.getTime(); if(ms<0) return 'только что'; const d=Math.floor(ms/864e5); if(d<=0){ const h=Math.floor(ms/36e5); return h<=0?'только что':h+' ч. назад'; } if(d===1) return 'вчера'; if(d<7) return d+' дн. назад'; if(d<35) return Math.floor(d/7)+' нед. назад'; return t.toLocaleDateString('ru-RU'); }catch(e){ return ''; } }
 /* ---------- прогноз сети (фиксированные допущения, не зависят от ползунков Финмодели) ---------- */
-const FXF=12000, CHKF=14, UKF=320;
+const FXF=DEFAULTS.fx, CHKF=DEFAULTS.chk, UKF=DEFAULTS.uk;
 const beFix=d=>(d.rentSum+d.salarySum+(d.miscSum||0)+UKF*FXF)/FXF/(CHKF*d.comm)/30;   // комиссионный безубыток, зак/день
 function netGrowth(){   // геом. среднее недельного роста по сети за ПОЛНЫЕ недели
   const f=[]; (WK.weeks||[]).forEach((w,i)=>{ if((WK.dayCounts&&WK.dayCounts[i])>=7 && WK.net && WK.net.ord[i]>0) f.push(WK.net.ord[i]); });
@@ -1323,11 +1331,11 @@ document.getElementById('t150Btn').onclick=()=>{
 
 /* ---------- сброс к текущему результату (W3, на гарантии) ---------- */
 document.getElementById('resetBtn').onclick=()=>{
-  S.fx=12000;S.chk=14;S.uk=320;S.boost=1;S.flat=null;S.scen='guar';S.seg='all';S.metric='be';
+  S.fx=DEFAULTS.fx;S.chk=DEFAULTS.chk;S.uk=DEFAULTS.uk;S.boost=1;S.flat=null;S.scen='guar';S.seg='all';S.metric='be';
   const sl=document.getElementById('boost');sl.max='6';sl.value=1;document.getElementById('boostV').textContent='×1.0';
-  document.getElementById('fx').value=12000;document.getElementById('fxV').textContent=fmt(12000);
-  document.getElementById('chk').value=14;document.getElementById('chkV').textContent='$14';
-  document.getElementById('uk').value=320;document.getElementById('ukV').textContent='$320';
+  document.getElementById('fx').value=DEFAULTS.fx;document.getElementById('fxV').textContent=fmt(DEFAULTS.fx);
+  document.getElementById('chk').value=DEFAULTS.chk;document.getElementById('chkV').textContent='$'+DEFAULTS.chk;
+  document.getElementById('uk').value=DEFAULTS.uk;document.getElementById('ukV').textContent='$'+DEFAULTS.uk;
   document.querySelectorAll('#scen button').forEach(x=>x.classList.toggle('on',x.dataset.s==='guar'));
   document.getElementById('scenTag').textContent='Сценарий: на гарантии';
   document.getElementById('scenHint').textContent='Доход = max(гарантия; комиссия×оборот). Действует 6 мес от старта.';
