@@ -1204,6 +1204,9 @@ function parseURL(){ try{
   if(p.has('m')){ const m=p.get('m'); if(monthList.some(x=>x.key===m)) S.monthKey=m; }
   const c=p.get('cur'); if(c==='uzs'||c==='usd') S.cur=c;
   const s=p.get('seg'); if(['all','1','2','3'].includes(s)) S.seg=s;
+  if(p.has('boost')){ const b=+p.get('boost'); if(!isNaN(b)&&b>=1&&b<=6) S.boost=b; }
+  if(p.has('flat')){ const f=+p.get('flat'); if(!isNaN(f)&&f>0){ S.flat=f; S.boost=1; } }
+  const sc=p.get('scen'); if(sc==='guar'||sc==='comm') S.scen=sc;
 }catch(e){} }
 function syncURL(){ try{
   const p=new URLSearchParams();
@@ -1212,6 +1215,9 @@ function syncURL(){ try{
   else { const last=(WK.weeks?WK.weeks.length:1)-1; if(S.weekIdx!=null&&S.weekIdx!==last) p.set('w',S.weekIdx); }
   if(S.cur&&S.cur!=='usd') p.set('cur',S.cur);
   if(S.seg&&S.seg!=='all') p.set('seg',S.seg);
+  if(S.boost != null && S.boost !== 1) p.set('boost', S.boost.toFixed(1));
+  if(S.flat != null) p.set('flat', S.flat);
+  if(S.scen && S.scen !== 'guar') p.set('scen', S.scen);
   const qs=p.toString();
   history.replaceState(null,'',qs?('?'+qs):location.pathname);
 }catch(e){} }
@@ -1412,6 +1418,8 @@ function applyAgg(agg){
   S.weekIdx=Math.min(Math.max(S.weekIdx|0,0),WK.weeks.length-1);       // кламп выбранной недели в новый диапазон
   if(!monthList.some(m=>m.key===S.monthKey)) S.monthKey=monthList.length?monthList[monthList.length-1].key:null;
   renderAll();
+  const st=document.getElementById('ustatus');
+  if(st) st.innerHTML=`<span class="pos">✓ Загружено. run-rate: нед.${agg.runIdx+1}, дней в последней: ${agg.dayCounts[agg.dayCounts.length-1]||0}, недель всего: ${agg.weeks.length}</span>`;
 }
 let BACKUP=null;
 function restoreBackup(){ if(!BACKUP)return; const b=JSON.parse(BACKUP);
