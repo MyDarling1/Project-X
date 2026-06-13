@@ -23,7 +23,7 @@
   --s1:#8b6dff; --s2:#49c8ff; --s3:#ffb84d;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;overflow-x:hidden}
+html{scroll-behavior:smooth;overflow-x:hidden;background:var(--bg)}
 body{
   font-family:'Hanken Grotesk',system-ui,sans-serif;
   background:var(--bg); color:var(--txt);
@@ -33,7 +33,7 @@ body{
     linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
   background-size:auto,auto,42px 42px,42px 42px;
-  min-height:100vh; padding:28px clamp(14px,4vw,48px) 60px;
+  min-height:100vh; max-width:1500px; margin:0 auto; padding:28px clamp(14px,4vw,48px) 60px;
   -webkit-font-smoothing:antialiased;overflow-x:hidden;
 }
 .mono{font-family:'Spline Sans Mono',monospace;font-variant-numeric:tabular-nums}
