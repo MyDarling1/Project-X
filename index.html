@@ -379,6 +379,12 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
           <button class="bebtn" id="saveScenarioBtn" style="padding:3px 6px;font-size:10px">Сохранить</button>
         </div>
       </div>
+
+      <!-- Simple new PVZ simulator (reuse patterns, in-memory only, shows network impact) -->
+      <div style="margin-top:6px">
+        <button class="bebtn" id="addHypoBtn" style="padding:2px 5px;font-size:9px">+1 гипот. ПВЗ</button>
+        <span id="hypoInfo" style="font-size:9px;margin-left:4px;color:var(--dim)"></span>
+      </div>
     </div>
 
     <!-- initial slider values match DEFAULTS in script (centralized in JS logic + reset) -->
@@ -1333,6 +1339,7 @@ document.querySelectorAll('#curTog button').forEach(x=>x.classList.toggle('on',x
 renderAll();
 setView(S.view);
 bindScenarioUI(); // named scenarios UI (after DOM ready)
+bindHypoUI(); // hypo new PVZ sim (minimal)
 
 // show data freshness if UPD available from /data.js wrapper (server sets it)
 (function showFresh(){
@@ -1441,6 +1448,32 @@ function bindScenarioUI() {
   const saveBtn = document.getElementById('saveScenarioBtn');
   if (saveBtn) saveBtn.onclick = () => saveCurrentScenario();
   renderSavedScenarios();
+}
+
+/* Minimal new PVZ simulator (in-memory, reuses calc, shows in sim area) */
+let hypoNew = 0;
+function updateHypoInfo() {
+  const el = document.getElementById('hypoInfo'); if (!el) return;
+  if (hypoNew > 0) {
+    // rough avg BE and pnl per point from current rows
+    const r = (typeof rows === 'function') ? rows() : DATA;
+    const n = r.length || 1;
+    let sumBE = 0, sumPNL = 0;
+    r.forEach(d => { const c = (typeof simOf === 'function') ? simOf(d) : compute(d); sumBE += c.be; sumPNL += c.pnl; });
+    const avgBE = sumBE / n, avgPNL = sumPNL / n;
+    el.textContent = `+${hypoNew} → ~${(avgBE*hypoNew).toFixed(0)} BE, P&L ~${(avgPNL*hypoNew).toFixed(0)}`;
+  } else el.textContent = '';
+}
+function bindHypoUI() {
+  const btn = document.getElementById('addHypoBtn');
+  if (btn) btn.onclick = () => { hypoNew++; updateHypoInfo(); if (typeof renderSimKPIs === 'function') renderSimKPIs(); };
+  // also allow reset via existing reset or add a note
+  const origReset = document.getElementById('resetBtn');
+  if (origReset) {
+    const old = origReset.onclick;
+    origReset.onclick = () => { hypoNew = 0; updateHypoInfo(); if (old) old(); };
+  }
+  updateHypoInfo();
 }
 
 /* ---------- загрузка файла (админ) ---------- */
