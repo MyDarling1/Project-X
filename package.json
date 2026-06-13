@@ -5,6 +5,7 @@
   "description": "Uzum ПВЗ — интерактивный дашборд (статический сайт)",
   "scripts": {
     "start": "node server.js",
-    "checks": "echo 'Pre-commit (Windows): use full node path - \"C:\\Program Files\\nodejs\\node.exe\" --check + data.json validation per CLAUDE.md and HANDOVER'"
+    "test": "node tests/calc.test.js",
+    "checks": "echo 'Pre-commit (Windows): use full node path - \"C:\\Program Files\\nodejs\\node.exe\" --check + data.json validation per CLAUDE.md and HANDOVER' && node tests/calc.test.js || echo 'Calc tests failed'"
   }
 }
