@@ -23,16 +23,20 @@
   --s1:#8b6dff; --s2:#49c8ff; --s3:#ffb84d;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;overflow-x:hidden;background:var(--bg)}
-body{
-  font-family:'Hanken Grotesk',system-ui,sans-serif;
-  background:var(--bg); color:var(--txt);
+html{
+  scroll-behavior:smooth;overflow-x:hidden;
+  background:var(--bg);
   background-image:
     radial-gradient(900px 500px at 88% -8%, rgba(139,109,255,.16), transparent 60%),
     radial-gradient(700px 460px at -6% 8%, rgba(73,200,255,.10), transparent 55%),
     linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
   background-size:auto,auto,42px 42px,42px 42px;
+  background-attachment:fixed;
+}
+body{
+  font-family:'Hanken Grotesk',system-ui,sans-serif;
+  color:var(--txt);
   min-height:100vh; max-width:1500px; margin:0 auto; padding:28px clamp(14px,4vw,48px) 60px;
   -webkit-font-smoothing:antialiased;overflow-x:hidden;
 }
