@@ -90,10 +90,10 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--panel2);border:1px solid var(--mint);color:var(--txt);padding:13px 22px;border-radius:13px;font-size:13.5px;font-weight:600;box-shadow:0 14px 44px rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:.35s;z-index:60;max-width:90vw;text-align:center}
 #tip{position:fixed;z-index:80;max-width:250px;background:var(--panel2);border:1px solid var(--line2);color:var(--txt);padding:8px 11px;border-radius:10px;font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:500;line-height:1.4;box-shadow:0 12px 30px rgba(0,0,0,.5);pointer-events:none;opacity:0;transform:translateY(3px);transition:opacity .1s ease,transform .1s ease}
 #tip.on{opacity:1;transform:none}
-.fwd-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.fwd-actuals-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;margin-bottom:18px}
 .pitchlink{font-size:12px;color:var(--violet);text-decoration:none;font-weight:600;white-space:nowrap}
 .pitchlink:hover{text-decoration:underline}
-@media(max-width:720px){.fwd-grid{grid-template-columns:1fr}}
+@media(max-width:900px){.fwd-actuals-row{grid-template-columns:1fr}}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .brow{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:9px}
 .brow .blab{font-size:12.5px;color:var(--dim);font-weight:600;line-height:1.15}
@@ -313,23 +313,26 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
   <div class="kpis" id="unitEcon" style="margin:0"></div>
 </div>
 
-<div id="fwdCard" style="margin-bottom:22px">
-  <h3 style="margin:0 0 12px">Прогноз сети</h3>
-  <div class="card" id="fcMerged"></div>
-</div>
-
-<div class="card" style="margin-bottom:18px">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-      <div><h3>Фактические результаты</h3><div class="hint" style="margin:0">Факт по неделям. <b style="color:var(--dim)">Недели с * — неполные</b> (&lt; 7 дней с данными): показаны как есть, не для экстраполяции. Объём и P&L — в выбранной валюте.</div></div>
-      <div class="seg-toggle" id="histTog" style="max-width:420px">
-        <button data-h="orders" class="on">Заказы/день</button>
-        <button data-h="volume">Объём/день</button>
-        <button data-h="pnl">P&amp;L/нед.</button>
-      </div>
-    </div>
+<div class="fwd-actuals-row">
+  <div id="fwdCard">
+    <h3 style="margin:0 0 12px">Прогноз сети</h3>
+    <div class="card" id="fcMerged"></div>
   </div>
 
-  <div class="hist-net" id="histNet"></div>
+  <div class="actuals-col">
+    <div class="card" style="margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <div><h3>Фактические результаты</h3><div class="hint" style="margin:0">Факт по неделям. <b style="color:var(--dim)">Недели с * — неполные</b> (&lt; 7 дней с данными): показаны как есть, не для экстраполяции. Объём и P&L — в выбранной валюте.</div></div>
+        <div class="seg-toggle" id="histTog" style="max-width:420px">
+          <button data-h="orders" class="on">Заказы/день</button>
+          <button data-h="volume">Объём/день</button>
+          <button data-h="pnl">P&amp;L/нед.</button>
+        </div>
+      </div>
+    </div>
+    <div class="hist-net" id="histNet"></div>
+  </div>
+</div>
 
   <div class="card tbl-card" style="margin-bottom:18px">
     <div class="tbl-top">
