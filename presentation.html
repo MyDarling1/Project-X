@@ -62,7 +62,7 @@ em{font-family:'Fraunces',serif; font-style:italic; font-weight:430; color:var(-
 @media print{.pageacts{display:none!important}}
 
 /* ── COVER ── */
-.cover{min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:84px 0 64px; position:relative}
+.cover{min-height:76vh; display:flex; flex-direction:column; justify-content:center; padding:96px 0 32px; position:relative}
 .coverhead{display:flex; justify-content:space-between; align-items:flex-start; position:absolute; top:46px; left:0; right:0;
   font-family:'Spline Sans Mono',monospace; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim)}
 .coverhead .mk{color:var(--ink); font-weight:600}
@@ -87,7 +87,7 @@ em{font-family:'Fraunces',serif; font-style:italic; font-weight:430; color:var(-
 @keyframes cue{0%,100%{transform:scaleY(.4);opacity:.4;transform-origin:top}50%{transform:scaleY(1);opacity:1;transform-origin:top}}
 
 /* ── SECTIONS ── */
-section.blk{padding:112px 0; border-top:1px solid var(--line); position:relative}
+section.blk{padding:60px 0; position:relative}
 .seghead{display:flex; align-items:baseline; gap:20px; margin-bottom:42px}
 .seghead .no{font-family:'Spline Sans Mono',monospace; font-size:13px; font-weight:600; letter-spacing:.1em; color:var(--violet)}
 .seghead .ttl{font-family:'Spline Sans Mono',monospace; font-size:13px; letter-spacing:.26em; text-transform:uppercase; color:var(--dim)}
@@ -111,6 +111,19 @@ h2.big.wide{max-width:20ch}
 .pillar .pno{font-family:'Spline Sans Mono',monospace; font-size:12px; color:var(--violet); letter-spacing:.1em}
 .pillar h3{font-family:'Fraunces',serif; font-weight:500; font-size:22px; color:var(--ink); margin:13px 0 9px; line-height:1.14}
 .pillar p{font-size:15px; color:var(--dim); line-height:1.55}
+
+/* process flow (numbered steps) */
+.flow{margin-top:42px; border-top:1px solid var(--line2)}
+.flow .fstep{display:grid; grid-template-columns:auto 1fr; gap:24px; align-items:baseline; padding:20px 0; border-bottom:1px solid var(--line)}
+.flow .fstep:last-child{border-bottom:0}
+.flow .snum{font-family:'Fraunces',serif; font-weight:500; font-size:clamp(26px,3vw,36px); color:var(--violet); line-height:1; letter-spacing:-.02em; min-width:1.1ch}
+.flow .stxt{font-size:clamp(16px,1.5vw,19px); color:var(--ink2); line-height:1.5; max-width:60ch}
+.flow .stxt b{color:var(--ink); font-weight:600}
+
+/* fit list (qualifying conditions) */
+.fitlist{display:grid; grid-template-columns:1fr 1fr; gap:14px 30px; margin-top:36px; max-width:84ch}
+.fititem{font-size:clamp(16px,1.6vw,19px); color:var(--ink2); line-height:1.5; padding:14px 0 14px 20px; border-left:2px solid var(--violet)}
+.fititem b{color:var(--ink); font-weight:600}
 
 /* cards / charts */
 .card{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:28px 30px;
@@ -238,7 +251,7 @@ td .num{font-family:'Spline Sans Mono',monospace; font-weight:500; color:var(--i
 .barcell .fg{position:absolute; left:18px; bottom:7px; height:3px; border-radius:3px; background:var(--violet)}
 
 /* closing */
-.closing{padding:120px 0 80px; border-top:1px solid var(--line)}
+.closing{padding:60px 0 80px}
 .closing .pull{max-width:22ch; font-size:clamp(30px,4.4vw,56px); margin-bottom:38px}
 .recap{display:flex; gap:0; border-top:1px solid var(--line2); border-bottom:1px solid var(--line2); margin:44px 0}
 .recap .r{flex:1; padding:24px 24px 22px 0; border-right:1px solid var(--line)}
@@ -271,11 +284,11 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
   .timeline::before{display:none}
   .pillar,.hstat{border-right:0; border-bottom:1px solid var(--line); padding-right:0}
   .hstat:not(:first-child),.pillar:not(:first-child),.recap .r:not(:first-child){padding-left:0}
-  .grid2,.grid2.even,.riskrow,.assum ul,.uoflegend{grid-template-columns:1fr}
+  .grid2,.grid2.even,.riskrow,.assum ul,.uoflegend,.fitlist{grid-template-columns:1fr}
   .riskrow .rk{border-right:0; border-bottom:1px solid var(--line)}
   .recap{flex-wrap:wrap}.recap .r{flex:1 1 45%; border-right:0; border-bottom:1px solid var(--line)}
   .topbar .crumb{display:none}
-  section.blk{padding:78px 0}
+  section.blk{padding:44px 0}
 }
 @media (max-width:520px){
   .heroband,.tiles,.scen,.timeline,.feegrid{grid-template-columns:1fr}
@@ -318,7 +331,6 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
     <h1 class="disp rv">Построили более 70 пунктов выдачи в Узбекистане.<span class="l2">Следующие десять — с вами.</span></h1>
     <p class="lede rv d1">Мы — операционная команда, открывшая <b>72 ПВЗ</b> по всему Узбекистану; сегодня под управлением <b>18 действующих точек</b> Uzum. Минимальный вход — <b>$100 000</b>, такой объём инвестиций позволит открыть <b>10 ПВЗ</b> с прогнозной доходностью около <b>50% годовых</b>.</p>
     <div class="heroband rv d2" id="heroband"></div>
-    <div class="scrollcue"><span class="ln"></span> Листайте</div>
   </header>
 
   <!-- ── §01 ТРЕК-РЕКОРД ── -->
@@ -387,7 +399,7 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
     <div class="seghead rv"><span class="no">§ 03</span><span class="ttl">Текущий портфель</span><span class="rule"></span></div>
     <h2 class="big disp rv">18 точек, 8 городов — и мы видим, <em>что выстреливает.</em></h2>
     <p class="body-lg rv d1">Сеть в фазе разгона и уже уверенно растёт по заказам. Главное — на действующих точках уже видно, <b>какие локации выигрывают</b>. Именно по ним отбираем следующие 10 точек.</p>
-    <p class="body-lg rv d1">Гарантийное вознаграждение от Uzum покрывает операционные расходы точки первые ~6 месяцев, при этом доходность зрелых точек в среднем выходит в плюс на уровне <b>$500–600 в месяц</b> (см. §04).</p>
+    <p class="body-lg rv d1">Гарантийное вознаграждение от Uzum покрывает операционные расходы точки первые ~6 месяцев, при этом доходность зрелых точек в среднем выходит в плюс на уровне <b>$500–600 в месяц</b> (см. §05).</p>
 
     <div class="calls rv d2">
       <div class="call"><div class="cv" id="c-gmv"></div><div class="cl">GMV сети в месяц (run-rate)</div></div>
@@ -407,9 +419,23 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
     </div>
   </section>
 
-  <!-- ── §04 ЮНИТ-ЭКОНОМИКА ── -->
-  <section class="blk" data-crumb="04 · Экономика точки">
-    <div class="seghead rv"><span class="no">§ 04</span><span class="ttl">Экономика одного ПВЗ</span><span class="rule"></span></div>
+  <!-- ── §04 КАК МЫ РАБОТАЕМ ── -->
+  <section class="blk" data-crumb="04 · Как мы работаем">
+    <div class="seghead rv"><span class="no">§ 04</span><span class="ttl">Как мы работаем</span><span class="rule"></span></div>
+    <div class="pull disp rv" style="max-width:34ch">Это не вложение в один пункт выдачи. Это <em>доля в управляемой сети</em>: мы знаем, где открывать, сами ведём всю операционку и показываем вам каждую цифру онлайн.</div>
+    <p class="body-lg rv d1" style="margin-top:24px">За два года мы открыли <b>72 точки</b> и поняли, что именно делает точку прибыльной. Теперь это не эксперимент, а понятный повторяемый процесс.</p>
+    <div class="flow rv d2">
+      <div class="fstep"><div class="snum">1</div><div class="stxt">Смотрим на свои действующие точки и видим, какие места реально приносят заказы.</div></div>
+      <div class="fstep"><div class="snum">2</div><div class="stxt">По этим признакам выбираем, где открыть следующие — не наугад, а по тому, что уже сработало.</div></div>
+      <div class="fstep"><div class="snum">3</div><div class="stxt">Запускаем быстро: процесс открытия отлажен на 72 точках.</div></div>
+      <div class="fstep"><div class="snum">4</div><div class="stxt">Ведём каждую точку через живой дашборд и сразу замечаем, если где-то проседает.</div></div>
+      <div class="fstep"><div class="snum">5</div><div class="stxt">Подтягиваем слабые ПВЗ и открываем следующие.</div></div>
+    </div>
+  </section>
+
+  <!-- ── §05 ЮНИТ-ЭКОНОМИКА ── -->
+  <section class="blk" data-crumb="05 · Экономика точки">
+    <div class="seghead rv"><span class="no">§ 05</span><span class="ttl">Экономика одного ПВЗ</span><span class="rule"></span></div>
     <h2 class="big disp rv">Зрелый ПВЗ приносит <em>$500–600</em> в месяц.</h2>
     <p class="body-lg rv d1">Точке нужно ~6 месяцев, чтобы выйти на оборот. Дальше экономика проста и устойчива: Uzum платит по каждой точке минимум вознаграждения, ниже которого она не опускается.</p>
 
@@ -426,9 +452,9 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
     </div>
   </section>
 
-  <!-- ── §05 ПРЕДЛОЖЕНИЕ ── -->
-  <section class="blk" data-crumb="05 · Предложение">
-    <div class="seghead rv"><span class="no">§ 05</span><span class="ttl">Предложение инвестору</span><span class="rule"></span></div>
+  <!-- ── §06 ПРЕДЛОЖЕНИЕ ── -->
+  <section class="blk" data-crumb="06 · Предложение">
+    <div class="seghead rv"><span class="no">§ 06</span><span class="ttl">Предложение инвестору</span><span class="rule"></span></div>
     <h2 class="big disp rv">Минимальный чек — $100 000.</h2>
     <p class="body-lg rv d1">Чек <b>$100K</b> = <b>10 ПВЗ</b> (≈$10K на точку): инвестор владеет долей в 10 точках и получает их денежный поток, а всю операционную работу мы как управляющая компания берём на себя.</p>
 
@@ -444,9 +470,25 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
     </div>
   </section>
 
-  <!-- ── §06 ДОХОДНОСТЬ ── -->
-  <section class="blk" data-crumb="06 · Доходность">
-    <div class="seghead rv"><span class="no">§ 06</span><span class="ttl">Доходность инвестора</span><span class="rule"></span></div>
+  <!-- ── §07 ЧТО ПОЛУЧАЕТ ИНВЕСТОР ── -->
+  <section class="blk" data-crumb="07 · Что получает инвестор">
+    <div class="seghead rv"><span class="no">§ 07</span><span class="ttl">Что получает инвестор</span><span class="rule"></span></div>
+    <h2 class="big wide disp rv">Доля в десяти точках — <em>и вся операционка на нас.</em></h2>
+    <div class="pillars rv d1">
+      <div class="pillar"><div class="pno">01</div><h3>Ничего не делаете руками</h3><p>Поиск помещений, найм администраторов, отношения с Uzum, решение проблем — всё на нас.</p></div>
+      <div class="pillar"><div class="pno">02</div><h3>Видите всё онлайн</h3><p>Живой дашборд по сети и по каждой точке: заказы, оборот, прибыль — без ожидания отчётов.</p></div>
+      <div class="pillar"><div class="pno">03</div><h3>Гарантированный минимум</h3><p>Uzum выплачивает минимальное вознаграждение по каждой точке даже в провальный месяц.</p></div>
+    </div>
+    <div class="pillars rv d2" style="margin-top:0">
+      <div class="pillar"><div class="pno">04</div><h3>Зарабатываем вместе с вами</h3><p>Основной наш доход — доля прибыли, поэтому нам выгодно, чтобы точки приносили больше.</p></div>
+      <div class="pillar"><div class="pno">05</div><h3>Это реальный бизнес</h3><p>Вы владеете долей в десяти работающих точках и их доходом.</p></div>
+      <div class="pillar"><div class="pno">06</div><h3>Сразу десять, а не одна</h3><p>Десять ПВЗ в разных городах: если где-то слабее — это сглаживается остальными.</p></div>
+    </div>
+  </section>
+
+  <!-- ── §08 ДОХОДНОСТЬ ── -->
+  <section class="blk" data-crumb="08 · Доходность">
+    <div class="seghead rv"><span class="no">§ 08</span><span class="ttl">Доходность инвестора</span><span class="rule"></span></div>
     <h2 class="big disp rv">Окупаемость ~2.5 года, далее <em>~51% годовых.</em></h2>
     <p class="body-lg rv d1">Модель построена на фактических данных сети. Первые ~6 месяцев точка разгоняется (чистая прибыль ≈$0), затем выходит на зрелость. Сценарии — по чистой прибыли на точку.</p>
 
@@ -465,9 +507,9 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
     <p class="footnote rv">Помимо денежного потока у инвестора остаётся доля в 10 действующих ПВЗ (остаточная стоимость актива). Цифры — прогноз на основе текущих данных сети; не гарантия будущей доходности. Любой параметр модели можно пересчитать.</p>
   </section>
 
-  <!-- ── §07 ПОЧЕМУ МЫ ── -->
-  <section class="blk" data-crumb="07 · Почему мы">
-    <div class="seghead rv"><span class="no">§ 07</span><span class="ttl">Наши преимущества</span><span class="rule"></span></div>
+  <!-- ── §09 ПОЧЕМУ МЫ ── -->
+  <section class="blk" data-crumb="09 · Почему мы">
+    <div class="seghead rv"><span class="no">§ 09</span><span class="ttl">Наши преимущества</span><span class="rule"></span></div>
     <h2 class="big wide disp rv">Почему именно мы.</h2>
     <div class="pillars rv d1">
       <div class="pillar"><div class="pno">01</div><h3>Трек-рекорд 72 ПВЗ</h3><p>Отлаженный плейбук открытия и вывода точки на объём — не теория, а 72 реальных запуска.</p></div>
@@ -486,9 +528,9 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
     </div>
   </section>
 
-  <!-- ── §08 РИСКИ ── -->
-  <section class="blk" data-crumb="08 · Риски">
-    <div class="seghead rv"><span class="no">§ 08</span><span class="ttl">Риски и митигация</span><span class="rule"></span></div>
+  <!-- ── §10 РИСКИ ── -->
+  <section class="blk" data-crumb="10 · Риски">
+    <div class="seghead rv"><span class="no">§ 10</span><span class="ttl">Риски и митигация</span><span class="rule"></span></div>
     <h2 class="big disp rv">Риски — и как мы их закрываем.</h2>
     <div class="risk rv d1">
       <div class="riskrow">
@@ -510,9 +552,21 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
     </div>
   </section>
 
+  <!-- ── §11 КОМУ ЭТО ПОДХОДИТ ── -->
+  <section class="blk" data-crumb="11 · Кому это подходит">
+    <div class="seghead rv"><span class="no">§ 11</span><span class="ttl">Кому это подходит</span><span class="rule"></span></div>
+    <h2 class="big disp rv">Подходит, если вы:</h2>
+    <div class="fitlist rv d1">
+      <div class="fititem">хотите понятный доход с реальной логикой</div>
+      <div class="fititem">готовы вложиться от 1 года</div>
+      <div class="fititem">хотите доход без хлопот — чтобы всё вели за вас</div>
+      <div class="fititem">верите, что онлайн-торговля в Узбекистане будет расти</div>
+    </div>
+  </section>
+
   <!-- ── CLOSING ── -->
   <section class="closing" data-crumb="Резюме">
-    <div class="seghead rv"><span class="no">§ 09</span><span class="ttl">Резюме</span><span class="rule"></span></div>
+    <div class="seghead rv"><span class="no">§ 12</span><span class="ttl">Резюме</span><span class="rule"></span></div>
     <div class="pull disp rv">72 точки за плечами. Минимум вознаграждения гарантирует Uzum.<br><em>Следующие десять — с вами.</em></div>
     <div class="recap rv d1" id="recap"></div>
     <div class="cta rv d2">
