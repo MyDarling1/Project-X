@@ -169,6 +169,7 @@ svg.chart{width:100%; height:auto; display:block; overflow:visible}
 .pl{margin-top:6px}
 .plrow{display:flex; justify-content:space-between; align-items:center; padding:13px 0; border-bottom:1px solid var(--line)}
 .plrow:last-child{border-bottom:0}
+.plrow:has(+ .plrow.total){border-bottom:0}
 .plrow .pt{font-size:15.5px; color:var(--ink2); display:flex; align-items:center; gap:11px}
 .plrow .pt .sw{width:9px; height:9px; border-radius:2px; display:inline-block}
 .plrow .pv{font-family:'Spline Sans Mono',monospace; font-size:16px; color:var(--ink); font-weight:500}
@@ -178,7 +179,7 @@ svg.chart{width:100%; height:auto; display:block; overflow:visible}
 .plrow.total .pv{font-family:'Fraunces',serif; font-size:26px; color:var(--green); font-weight:600}
 
 /* fee grid */
-.feegrid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:24px}
+.feegrid{display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-top:24px}
 .fee{background:var(--card); border:1px solid var(--line); border-radius:15px; padding:22px 22px 20px}
 .fee .fv{font-family:'Fraunces',serif; font-size:42px; color:var(--violet); font-weight:500; line-height:1}
 .fee .fn{font-family:'Spline Sans Mono',monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink); font-weight:600; margin:12px 0 6px}
@@ -337,6 +338,7 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
   <section class="blk" data-crumb="01 · Трек-рекорд">
     <div class="seghead rv"><span class="no">§ 01</span><span class="ttl">Кто мы</span><span class="rule"></span></div>
     <h2 class="big disp rv">Уже открыли 72 ПВЗ — и умеем <em>быстро разворачиваться.</em></h2>
+    <p class="body-lg rv d1">Работаем в Узбекистане с <b>2022 года</b>. В сегменте пунктов выдачи за один год развернули <b>72 точки</b>.</p>
     <p class="body-lg rv d1">Сначала мы построили <b>54 ПВЗ под Яндекс</b>. Когда Яндекс резко свернул работу на рынке, мы перестроились за недели: закрыли невыгодное, срезали затраты и перезапустили команду на Uzum — ведущий маркетплейс страны.</p>
     <p class="body-lg rv d1">Результат — <b>отработанный процесс</b>: как найти локацию, открыть точку и вывести её на оборот. Сегодня это <b>18 действующих ПВЗ Uzum</b>, а всего за плечами — 72 запуска.</p>
 
@@ -399,7 +401,7 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
     <div class="seghead rv"><span class="no">§ 03</span><span class="ttl">Текущий портфель</span><span class="rule"></span></div>
     <h2 class="big disp rv">18 точек, 8 городов — и мы видим, <em>что выстреливает.</em></h2>
     <p class="body-lg rv d1">Сеть в фазе разгона и уже уверенно растёт по заказам. Главное — на действующих точках уже видно, <b>какие локации выигрывают</b>. Именно по ним отбираем следующие 10 точек.</p>
-    <p class="body-lg rv d1">Гарантийное вознаграждение от Uzum покрывает операционные расходы точки первые ~6 месяцев, при этом доходность зрелых точек в среднем выходит в плюс на уровне <b>$500–600 в месяц</b> (см. §05).</p>
+    <p class="body-lg rv d1">Гарантийное вознаграждение от Uzum покрывает операционные расходы точки первые ~6 месяцев, при этом доходность зрелых точек в среднем выходит в плюс на уровне <b>$450–650 в месяц</b> (см. §05).</p>
 
     <div class="calls rv d2">
       <div class="call"><div class="cv" id="c-gmv"></div><div class="cl">GMV сети в месяц (run-rate)</div></div>
@@ -423,7 +425,7 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
   <section class="blk" data-crumb="04 · Как мы работаем">
     <div class="seghead rv"><span class="no">§ 04</span><span class="ttl">Как мы работаем</span><span class="rule"></span></div>
     <div class="pull disp rv" style="max-width:34ch">Это не вложение в один пункт выдачи. Это <em>доля в управляемой сети</em>: мы знаем, где открывать, сами ведём всю операционку и показываем вам каждую цифру онлайн.</div>
-    <p class="body-lg rv d1" style="margin-top:24px">За два года мы открыли <b>72 точки</b> и поняли, что именно делает точку прибыльной. Теперь это не эксперимент, а понятный повторяемый процесс.</p>
+    <p class="body-lg rv d1" style="margin-top:24px">Открыв <b>72 точки</b>, мы поняли, что именно делает точку прибыльной. Теперь это не эксперимент, а понятный повторяемый процесс.</p>
     <div class="flow rv d2">
       <div class="fstep"><div class="snum">1</div><div class="stxt">Смотрим на свои действующие точки и видим, какие места реально приносят заказы.</div></div>
       <div class="fstep"><div class="snum">2</div><div class="stxt">По этим признакам выбираем, где открыть следующие — не наугад, а по тому, что уже сработало.</div></div>
@@ -436,7 +438,7 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
   <!-- ── §05 ЮНИТ-ЭКОНОМИКА ── -->
   <section class="blk" data-crumb="05 · Экономика точки">
     <div class="seghead rv"><span class="no">§ 05</span><span class="ttl">Экономика одного ПВЗ</span><span class="rule"></span></div>
-    <h2 class="big disp rv">Зрелый ПВЗ приносит <em>$500–600</em> в месяц.</h2>
+    <h2 class="big disp rv">Зрелый ПВЗ приносит <em>$450–650</em> в месяц.</h2>
     <p class="body-lg rv d1">Точке нужно ~6 месяцев, чтобы выйти на оборот. Дальше экономика проста и устойчива: Uzum платит по каждой точке минимум вознаграждения, ниже которого она не опускается.</p>
 
     <div class="grid2 even rv d2" style="margin-top:8px">
@@ -461,7 +463,6 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
     <div class="feegrid rv d2">
       <div class="fee"><div class="fv">2<span style="font-size:24px">%</span></div><div class="fn">Управление / год</div><div class="fd">От суммы инвестиций — сопровождение и отчётность.</div></div>
       <div class="fee"><div class="fv">20<span style="font-size:24px">%</span></div><div class="fn">Carry — с прибыли</div><div class="fd">Только с фактической прибыли точек. Так наши интересы совпадают с вашими.</div></div>
-      <div class="fee"><div class="fv" style="color:var(--green)">0<span style="font-size:24px">%</span></div><div class="fn">Вход</div><div class="fd">Входной комиссии нет — капитал инвестора на 100% идёт в точки.</div></div>
     </div>
 
     <div class="card rv d3" style="margin-top:24px">
@@ -482,7 +483,7 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
     <div class="pillars rv d2" style="margin-top:0">
       <div class="pillar"><div class="pno">04</div><h3>Зарабатываем вместе с вами</h3><p>Основной наш доход — доля прибыли, поэтому нам выгодно, чтобы точки приносили больше.</p></div>
       <div class="pillar"><div class="pno">05</div><h3>Это реальный бизнес</h3><p>Вы владеете долей в десяти работающих точках и их доходом.</p></div>
-      <div class="pillar"><div class="pno">06</div><h3>Сразу десять, а не одна</h3><p>Десять ПВЗ в разных городах: если где-то слабее — это сглаживается остальными.</p></div>
+      <div class="pillar"><div class="pno">06</div><h3>Десять ПВЗ в разных городах</h3><p>Если одна точка проседает, остальные девять это компенсируют.</p></div>
     </div>
   </section>
 
