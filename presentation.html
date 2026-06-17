@@ -330,36 +330,34 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
     </div>
     <div class="kicker">Сеть ПВЗ Uzum · Узбекистан</div>
     <h1 class="disp rv">Построили более 70 пунктов выдачи в Узбекистане.<span class="l2">Следующие десять — с вами.</span></h1>
-    <p class="lede rv d1">Мы — операционная команда, открывшая <b>72 ПВЗ</b> по всему Узбекистану; сегодня под управлением <b>18 действующих точек</b> Uzum. Минимальный вход — <b>$100 000</b>, такой объём инвестиций позволит открыть <b>10 ПВЗ</b> с прогнозной доходностью около <b>50% годовых</b>.</p>
+    <p class="lede rv d1">Мы — операционная команда, открывшая <b>72 ПВЗ</b> по всему Узбекистану. Мы ищем инвесторов для расширения бизнеса.</p>
     <div class="heroband rv d2" id="heroband"></div>
   </header>
 
   <!-- ── §01 ТРЕК-РЕКОРД ── -->
   <section class="blk" data-crumb="01 · Трек-рекорд">
     <div class="seghead rv"><span class="no">§ 01</span><span class="ttl">Кто мы</span><span class="rule"></span></div>
-    <h2 class="big disp rv">Уже открыли 72 ПВЗ — и умеем <em>быстро разворачиваться.</em></h2>
-    <p class="body-lg rv d1">Работаем в Узбекистане с <b>2022 года</b>. В сегменте пунктов выдачи за один год развернули <b>72 точки</b>.</p>
-    <p class="body-lg rv d1">Сначала мы построили <b>54 ПВЗ под Яндекс</b>. Когда Яндекс резко свернул работу на рынке, мы перестроились за недели: закрыли невыгодное, срезали затраты и перезапустили команду на Uzum — ведущий маркетплейс страны.</p>
-    <p class="body-lg rv d1">Результат — <b>отработанный процесс</b>: как найти локацию, открыть точку и вывести её на оборот. Сегодня это <b>18 действующих ПВЗ Uzum</b>, а всего за плечами — 72 запуска.</p>
+    <h2 class="big disp rv">Уже открыли 72 ПВЗ <em>по всему Узбекистану.</em></h2>
+    <p class="body-lg rv d1">Работаем в Узбекистане с <b>2022 года</b>. За последний год запустили <b>72 пункта выдачи</b> по всей стране и отточили ряд процессов: как найти локацию, открыть точку и вывести её в прибыль.</p>
 
     <div class="timeline rv d2">
-      <div class="tnode closed">
+      <div class="tnode">
         <div class="dot"></div>
-        <div class="ty">Фаза 1 · под Яндекс</div>
-        <div class="tbig cl">54 ПВЗ</div>
-        <div class="td">Построены и отработаны. Закрыты после ухода Яндекса с рынка.</div>
+        <div class="ty">Старт · 2022</div>
+        <div class="tbig">2022</div>
+        <div class="td">Запустили операцию в Узбекистане.</div>
       </div>
       <div class="tnode">
         <div class="dot"></div>
-        <div class="ty">Разворот</div>
-        <div class="tbig">Недели</div>
-        <div class="td">Быстро сократили затраты, сохранили команду и регламенты работы.</div>
+        <div class="ty">Опыт</div>
+        <div class="tbig">72 запуска</div>
+        <div class="td">Отладили процесс: локация → открытие → вывод точки в прибыль.</div>
       </div>
       <div class="tnode">
         <div class="dot"></div>
-        <div class="ty">Фаза 2 · под Uzum · сейчас</div>
+        <div class="ty">Сейчас · Uzum</div>
         <div class="tbig">18 ПВЗ</div>
-        <div class="td">Действующая, растущая сеть. Готовы к следующим 10 точкам.</div>
+        <div class="td">Действующая сеть. Готовы к следующим 10.</div>
       </div>
     </div>
 
@@ -606,7 +604,7 @@ function heroBand(){
     {v:'72',l:'ПВЗ открыто всего'},
     {v:'18',l:'действующих ПВЗ Uzum'},
     {v:usdK(DEAL.deal.check),l:'минимальный чек'},
-    {v:'~'+DEAL.scen.base.pbY,u:' года',l:'окупаемость (база)'}
+    {v:'~'+DEAL.scen.base.pbY,u:' года',l:'окупаемость'}
   ];
   document.getElementById('heroband').innerHTML=items.map(i=>
     `<div class="hstat"><div class="v">${i.v}<span class="u">${i.u||''}</span></div><div class="l">${i.l}</div></div>`).join('');
