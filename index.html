@@ -569,7 +569,7 @@ function renderSelfSuff(){
   const trend=sm.samePrevCur?'':`<span class="mono" style="font-size:15px;color:${up?'var(--mint)':'var(--coral)'};margin-left:10px">${up?'▲':'▼'} ${pct(covCur)}% ${curMo}</span>`;
   const capTrend=sm.samePrevCur?'':`, ${curMo} идёт к <b style="color:var(--txt)">${pct(covCur)}%</b>`;
   host.innerHTML=
-    `<div class="ssf-num"><div class="ssf-lab">Комиссия покрывает затраты на ${prevMo}</div>`+
+    `<div class="ssf-num"><div class="ssf-lab">Комиссия vs затраты (${prevMo})</div>`+
     `<div><span class="mono ssf-big">${pct(covPrev)}%</span>${trend}</div></div>`+
     `<div class="ssf-barwrap"><span class="covbar"><i style="width:${Math.min(pct(covPrev),100)}%"></i><span class="mk"></span></span>`+
     `<div class="ssf-cap">Фактическая комиссия (не путать с гарантией) покрывает <b style="color:var(--txt)">${pct(covPrev)}%</b> затрат сети (${money(prev.comm)} из ${money(prev.cost)}/мес, ${prevMo})${capTrend}. <b style="color:var(--txt)">100%</b> — сеть окупается своей комиссией, без гарантии Uzum.</div></div>`;
