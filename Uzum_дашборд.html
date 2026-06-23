@@ -1165,10 +1165,12 @@ window.__auditControls = function(){ console.log('%c[audit] Main controls (fx/ch
 /* ---------- прогноз сети (фиксированные допущения, не зависят от ползунков Финмодели) ---------- */
 const FXF=DEFAULTS.fx, CHKF=DEFAULTS.chk, UKF=DEFAULTS.uk;
 const beFix=d=>(d.rentSum+d.salarySum+(d.miscSum||0)+UKF*FXF)/FXF/(CHKF*d.comm)/30;   // комиссионный безубыток, зак/день
-function netGrowth(){   // геом. среднее недельного роста по сети за ПОЛНЫЕ недели
+const FC_WEEKS=3;   // окно темпа прогноза: последние N ПОЛНЫХ недель (свежая динамика, без раннего разгона)
+function netGrowth(){   // геом. среднее недельного роста заказов сети за последние FC_WEEKS полных недель
   const f=[]; (WK.weeks||[]).forEach((w,i)=>{ if((WK.dayCounts&&WK.dayCounts[i])>=7 && WK.net && WK.net.ord[i]>0) f.push(WK.net.ord[i]); });
-  if(f.length<2) return null;
-  let p=1,n=0; for(let i=1;i<f.length;i++){ if(f[i-1]>0){ p*=f[i]/f[i-1]; n++; } }
+  const g=f.slice(-FC_WEEKS);   // только последние N полных недель — темп пересчитывается с обновлением данных
+  if(g.length<2) return null;
+  let p=1,n=0; for(let i=1;i<g.length;i++){ if(g[i-1]>0){ p*=g[i]/g[i-1]; n++; } }
   return n?Math.pow(p,1/n):null;
 }
 function fcTimeline(netNow, netBE, gc, beW, guarW, guarWlast, beLabel, guarLabel){
@@ -1216,29 +1218,31 @@ function renderForecast(){
   if(!el) return;
   const MON=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
   const mlabel=ms=>{const d=new Date(ms);return '≈ '+MON[d.getMonth()]+' '+d.getFullYear();};
-  const netNow=DATA.reduce((a,d)=>a+(d.runRate||0),0);
-  const netBE=DATA.reduce((a,d)=>a+beFix(d),0);
-  const gc=netGrowth();   // реальный измеренный темп (геом. среднее по полным неделям), без потолка
-  // гарантия: 6 мес от старта каждой точки (даты у точек разные)
-  const {ordOf}=ovPeriodStats();
-  const now=Date.now(); let minW=Infinity, ends=[], fut=[], ready=0;
-  DATA.forEach(d=>{ const e=new Date(d.start); e.setMonth(e.getMonth()+6); const t=e.getTime(); ends.push(t); if(t>now){minW=Math.min(minW,(t-now)/6048e5);fut.push(t);} if(ordOf(d)>=beOf(d)) ready++; });
-  ends.sort((a,b)=>a-b); fut.sort((a,b)=>a-b);
-  const guarW=isFinite(minW)?Math.max(0,minW):0;
-  const guarWlast=Math.max(0,(ends[ends.length-1]-now)/6048e5);
-  const nearTs=fut.length?fut[0]:ends[ends.length-1];
-  const reached=netNow>=netBE;
+  const gc=netGrowth();   // темп заказов по последним FC_WEEKS полным неделям (пересчитывается с данными)
+  const growthPct=(gc!=null&&gc>1)?Math.round((gc-1)*100):null;
+  // самоокупаемость на ФАКТИЧЕСКОЙ комиссии (COMM) vs затраты — по всей сети, run-rate текущего месяца
+  const sm=(typeof hasComm!=='undefined'&&hasComm)?selfMonths():null;
+  let covNow=null, ready=0, perCov=[];
+  if(sm){ let comm=0,cost=0;
+    DATA.forEach(d=>{ const c=runRate(commOf(d.code,sm.cur),sm), k=costOf(d), cov=k?c/k:0; comm+=c; cost+=k; perCov.push(cov); if(cov>=1) ready++; });
+    covNow=cost?comm/cost:null; }
+  // гарантия: РЕАЛЬНЫЕ даты из бота (guarEnds), фолбэк — старт+6мес
+  const now=Date.now(); let ends=[];
+  DATA.forEach(d=>{ const ge=(sm&&COMM.pvz[d.code]&&COMM.pvz[d.code].guarEnds)?new Date(COMM.pvz[d.code].guarEnds+'T00:00:00'):(()=>{const e=new Date(d.start);e.setMonth(e.getMonth()+6);return e;})(); ends.push(ge.getTime()); });
+  ends.sort((a,b)=>a-b);
+  const fut=ends.filter(t=>t>now);
+  const guarW=fut.length?(fut[0]-now)/6048e5:0, guarWlast=Math.max(0,(ends[ends.length-1]-now)/6048e5);
+  const guarHero=mlabel(fut.length?fut[0]:ends[ends.length-1]);
+  const reached=covNow!=null&&covNow>=1;
   let beW=null, beHero='—';
   if(reached){ beHero='<span class="pos">сейчас</span>'; }
-  else if(gc!=null&&gc>1){ beW=Math.log(netBE/netNow)/Math.log(gc); beHero=mlabel(now+beW*6048e5); }
-  const guarHero=mlabel(nearTs);
+  else if(covNow!=null&&gc!=null&&gc>1){ beW=Math.log(1/covNow)/Math.log(gc); beHero=mlabel(now+beW*6048e5); }
   const marginW=(beW!=null&&isFinite(guarW))?Math.max(0,Math.round(guarW)-Math.ceil(beW)):null;
-  const growthPct=(gc!=null&&gc>1)?Math.round((gc-1)*100):null;
   let chart;
-  if(beW!=null) chart=fcTimeline(netNow,netBE,gc,beW,guarW,guarWlast,'≈'+Math.ceil(beW)+' нед',guarHero);
+  if(beW!=null) chart=fcTimeline(covNow,1,gc,beW,guarW,guarWlast,'≈'+Math.ceil(beW)+' нед',guarHero);
   else if(reached) chart='<div class="hint" style="margin:14px 0 4px"><span class="pos">Комиссия уже покрывает затраты сети.</span></div>';
-  else chart='<div class="hint" style="margin:14px 0 4px">Пока недостаточно полных недель с ростом, чтобы оценить срок (нужно ×'+(netBE/netNow).toFixed(1)+' к текущему потоку).</div>';
-  const states=DATA.map(d=>ordOf(d)>=beOf(d)).sort((a,b)=>(b?1:0)-(a?1:0));
+  else chart='<div class="hint" style="margin:14px 0 4px">Пока недостаточно роста за последние недели, чтобы оценить срок'+(covNow!=null?' (нужно ×'+(1/covNow).toFixed(1)+' к текущей комиссии)':'')+'.</div>';
+  const states=perCov.slice().sort((a,b)=>b-a).map(c=>c>=1);
   let pips=''; states.forEach(on=>{ pips+='<span style="width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--'+(on?'mint':'amber')+');opacity:'+(on?'1':'.55')+'"></span>'; });
   el.innerHTML=
     '<div class="hint" style="margin-bottom:16px">Когда сеть выйдет на самоокупаемость — и насколько её страхует гарантия Uzum.</div>'
@@ -1248,7 +1252,7 @@ function renderForecast(){
     +'<div style="text-align:right"><div class="disp" style="font-size:clamp(17px,3.4vw,25px);font-weight:800;color:var(--amber);line-height:1.05">'+guarHero+'</div><div class="hint" style="color:var(--dim)">истекает гарантия</div></div>'
     +'</div>'
     +chart
-    +(beW!=null&&growthPct!=null?'<div class="hint" style="margin-top:6px">При текущем темпе ≈+'+growthPct+'%/нед. Иллюстративно.</div>':'')
+    +(beW!=null&&growthPct!=null?'<div class="hint" style="margin-top:6px">При темпе последних '+FC_WEEKS+' недель ≈+'+growthPct+'%/нед (по заказам). Иллюстративно.</div>':'')
     +'<div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">'
     +'<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--dim);margin-bottom:9px"><span>Уже зарабатывают на комиссии больше затрат</span><span class="mono" style="color:'+(ready>0?'var(--mint)':'var(--coral)')+'">'+ready+' / '+DATA.length+'</span></div>'
     +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:11px">'+pips+'</div>'
