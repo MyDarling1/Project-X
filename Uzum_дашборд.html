@@ -548,6 +548,8 @@ const hasComm=(typeof COMM!=='undefined')&&COMM&&COMM.pvz&&COMM.months&&COMM.mon
 const commMonthName=(key,short)=>{const n=MONTH_RU2[+String(key).split('-')[1]]||key;return short?n.slice(0,3):n;};
 const commOf=(code,m)=>(hasComm&&COMM.pvz[code]&&COMM.pvz[code].comm[m]!=null)?COMM.pvz[code].comm[m]:0;
 const costOf=d=>d.rentSum+d.salarySum+(d.miscSum||0)+S.uk*S.fx;   // затраты/мес, сум — как в compute()/beOf
+const cpoOf=d=>(typeof hasComm!=='undefined'&&hasComm&&COMM.pvz[d.code]&&COMM.pvz[d.code].cpo)?COMM.pvz[d.code].cpo:(S.chk*d.comm*S.fx);  // комиссия за ЗАКАЗ (сум): факт Uzum (income_sum/issued_count), фолбэк — модель chk×comm
+const beReal=d=>costOf(d)/Math.max(cpoOf(d),1)/30;   // безубыток зак/день на ФАКТИЧЕСКОЙ комиссии — для «Обзора»/здоровья (≈ покрытие затрат комиссией)
 function selfMonths(){   // {prev: последний полный месяц, cur: текущий/неполный, curDay, dim} — берётся из данных, без хардкода
   if(!hasComm)return null;
   const ms=COMM.months.slice().sort(), cur=(COMM.asOf||ms[ms.length-1]).slice(0,7);
@@ -631,8 +633,8 @@ function netStats(idxs, mode, monthDays, factKey){
   const revOf=d=>idxs.reduce((a,i)=>a+((WK.pvz[d.code]?WK.pvz[d.code].rev[i]:0)*pvzDays(d.code,i)),0);       // оборот ПВЗ за период (rate×дни работы = сумма)
   const netOrdDay=r.reduce((a,d)=>a+ordOf(d),0), ordPV=netOrdDay/n;   // числитель — только выбранный сегмент rows(), не вся сеть (для «Все» == сетевому)
   const gmv=r.reduce((a,d)=>a+revOf(d),0);
-  const bePV=r.reduce((a,d)=>a+beOf(d),0)/n;
-  const above=r.filter(d=>ordOf(d)>=beOf(d)).length;
+  const bePV=r.reduce((a,d)=>a+beReal(d),0)/n;
+  const above=r.filter(d=>ordOf(d)>=beReal(d)).length;
   let income=0,cost=0,pnl=0; r.forEach(d=>{const f=periodFin(d,idxs,mode,monthDays,factKey); income+=f.income;cost+=f.cost;pnl+=f.pnl;});
   return {ordPV,bePV,above,n,pnl,income,cost,gmv,netOrdDay};
 }
@@ -884,13 +886,13 @@ function renderPointsFact(){
   if(S.ovq){const q=S.ovq.toLowerCase(); base=base.filter(d=>(d.aka+d.code+d.city).toLowerCase().includes(q));}
   const pIdx=P.prevSpec?P.prevSpec.idxs:null;   // оборот/день прошлого периода — для дельты (per-day → честно)
   const prevRevOf=pIdx?(d=>{const dd=pIdx.reduce((a,i)=>a+pvzDays(d.code,i),0)||1; return pIdx.reduce((a,i)=>a+((WK.pvz[d.code]?WK.pvz[d.code].rev[i]:0)*pvzDays(d.code,i)),0)/dd;}):null;
-  let r=base.map(d=>{const o=ordOf(d), rev=revOf(d), be=beOf(d), f=periodFin(d,idxs,P.mode,P.monthDays,P.factKey);
+  let r=base.map(d=>{const o=ordOf(d), rev=revOf(d), be=beReal(d), f=periodFin(d,idxs,P.mode,P.monthDays,P.factKey);
     return {d,o,rev,be,prevRev:prevRevOf?prevRevOf(d):null,health:be>0?o/be:0,income:f.income,pnl:f.pnl,trend:show.map(i=>(WK.pvz[d.code]?(WK.pvz[d.code].ord[i]||0):0))};});
   const gv=x=>({aka:x.d.aka,seg:x.d.seg,o:x.o,be:x.be,health:x.health,rev:x.rev,income:x.income,pnl:x.pnl})[S.ovSortKey];
   r.sort((a,b)=>{let x=gv(a),y=gv(b); return typeof x==='string'?S.ovSortDir*x.localeCompare(y):S.ovSortDir*(x-y);});
   const C=[{k:'aka',t:'Точка',lft:1},{k:'seg',t:'Сег'},{k:'o',t:'Зак/д'},
-    {k:'be',t:'Безубыток',tip:'Сколько заказов в день нужно точке, чтобы выйти в ноль.'},
-    {k:'health',t:'Здоровье',tip:'Насколько точка близка к окупаемости: 100% — вышла в ноль, выше — уже прибыльна.'},
+    {k:'be',t:'Безубыток',tip:'Сколько заказов в день нужно, чтобы ФАКТИЧЕСКАЯ комиссия Uzum покрыла затраты точки.'},
+    {k:'health',t:'Здоровье',tip:'Фактическая комиссия Uzum как доля затрат: 100% — точка окупается своей комиссией (выше — прибыльна).'},
     {k:'rev',t:'Оборот/нед'},
     {k:'income',t:'Доход',tip:'Наш заработок на точке за период — вознаграждение от Uzum.'},
     {k:'pnl',t:'P&L',tip:'Прибыль точки за период: доход за вычетом всех расходов.'},
@@ -919,7 +921,7 @@ function renderPointsFact(){
 function openFactDrawer(code){
   const d=DATA.find(x=>x.code===code); if(!d) return;
   const {P,idxs,ordOf,revOf,show,sp}=ovPeriodStats();
-  const o=ordOf(d), rev=revOf(d), be=beOf(d), health=be>0?o/be:0, f=periodFin(d,idxs,P.mode,P.monthDays,P.factKey);
+  const o=ordOf(d), rev=revOf(d), be=beReal(d), health=be>0?o/be:0, f=periodFin(d,idxs,P.mode,P.monthDays,P.factKey);
   const src=P.mode==='model'?'модель':'факт · Uzum';
   // дельта оборота к прошлому периоду (как в таблице «По точкам», на день — честно при разном числе дней)
   const pIdx=P.prevSpec?P.prevSpec.idxs:null;
