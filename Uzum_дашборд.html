@@ -196,6 +196,14 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 .chip{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;color:#0a0c11}
 .health{position:relative;width:96px;height:8px;background:var(--line2);border-radius:99px;overflow:hidden;display:inline-block;vertical-align:middle}
 .health i{position:absolute;left:0;top:0;height:100%;border-radius:99px;transition:width .5s cubic-bezier(.22,1,.36,1)}
+#selfSuff{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+#selfSuff .ssf-lab{font-size:13px;color:var(--dim);margin-bottom:3px}
+#selfSuff .ssf-big{font-size:30px;color:var(--txt);font-weight:500}
+#selfSuff .ssf-barwrap{flex:1 1 260px;min-width:240px}
+#selfSuff .ssf-cap{font-size:12px;color:var(--dim);line-height:1.5;margin-top:8px}
+.covbar{position:relative;display:block;height:9px;background:var(--line2);border-radius:99px}
+.covbar i{position:absolute;left:0;top:0;height:100%;border-radius:99px;background:var(--violet);transition:width .5s cubic-bezier(.22,1,.36,1)}
+.covbar .mk{position:absolute;top:-3px;left:100%;width:2px;height:15px;margin-left:-1px;background:var(--txt);opacity:.4}
 .mark{position:absolute;top:-2px;width:2px;height:12px;background:var(--txt);opacity:.55}
 
 /* drawer */
@@ -316,6 +324,8 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
   <h3 style="margin-bottom:12px">Юнит-экономика · среднее на 1 ПВЗ</h3>
   <div class="kpis" id="unitEcon" style="margin:0"></div>
 </div>
+
+<div id="selfSuff" class="card" style="margin-bottom:22px"></div>
 
 <div class="fwd-actuals-row">
   <div id="fwdCard" class="card">
@@ -532,6 +542,52 @@ const wdays = i => (WK.dayCounts&&WK.dayCounts[i])||0;
 const pvzDays = (code,i) => { const p=WK.pvz[code]; return (p&&p.days&&p.days[i]!=null) ? p.days[i] : wdays(i); };   // дни РАБОТЫ этого ПВЗ за неделю i (с даты старта); фолбэк — союз дней недели
 const beOf = d => (d.rentSum+d.salarySum+(d.miscSum||0)+S.uk*S.fx)/S.fx/(S.chk*d.comm)/30;   // безубыток зак/день (модель)
 const NM_YEAR = hasFact ? +FACT.latest.split('-')[0] : 2026;
+
+/* ---------- самоокупаемость: фактическая комиссия Uzum vs затраты (блок COMM) ---------- */
+const hasComm=(typeof COMM!=='undefined')&&COMM&&COMM.pvz&&COMM.months&&COMM.months.length;
+const commMonthName=(key,short)=>{const n=MONTH_RU2[+String(key).split('-')[1]]||key;return short?n.slice(0,3):n;};
+const commOf=(code,m)=>(hasComm&&COMM.pvz[code]&&COMM.pvz[code].comm[m]!=null)?COMM.pvz[code].comm[m]:0;
+const costOf=d=>d.rentSum+d.salarySum+(d.miscSum||0)+S.uk*S.fx;   // затраты/мес, сум — как в compute()/beOf
+function selfMonths(){   // {prev: последний полный месяц, cur: текущий/неполный, curDay, dim} — берётся из данных, без хардкода
+  if(!hasComm)return null;
+  const ms=COMM.months.slice().sort(), cur=(COMM.asOf||ms[ms.length-1]).slice(0,7);
+  let ci=ms.indexOf(cur); if(ci<0)ci=ms.length-1;
+  const prev=ci>0?ms[ci-1]:ms[0], p=String(cur).split('-'), dim=new Date(+p[0],+p[1],0).getDate();
+  const a=COMM.asOf?new Date(COMM.asOf+'T00:00:00'):null;
+  const curDay=(a&&a.getFullYear()==+p[0]&&a.getMonth()+1==+p[1])?a.getDate():dim;
+  return {months:ms,cur,prev,curDay,dim,samePrevCur:prev===cur};
+}
+const runRate=(comm,sm)=>sm.curDay>0?comm/sm.curDay*sm.dim:comm;   // неполный месяц → темп ×(дней в месяце / прошло)
+function netCommCost(m){let comm=0,cost=0;rows().forEach(d=>{comm+=commOf(d.code,m);cost+=costOf(d);});return {comm,cost};}   // сеть за месяц (учитывает фильтр сегмента)
+function renderSelfSuff(){
+  const host=document.getElementById('selfSuff'); if(!host)return;
+  const sm=hasComm?selfMonths():null;
+  if(!sm){host.style.display='none';return;} host.style.display='';
+  const prev=netCommCost(sm.prev), cur=netCommCost(sm.cur);
+  const covPrev=prev.cost?prev.comm/prev.cost:0, covCur=cur.cost?runRate(cur.comm,sm)/cur.cost:0;
+  const pct=v=>Math.round(v*100), up=covCur>=covPrev, prevMo=commMonthName(sm.prev), curMo=commMonthName(sm.cur);
+  const trend=sm.samePrevCur?'':`<span class="mono" style="font-size:15px;color:${up?'var(--mint)':'var(--coral)'};margin-left:10px">${up?'▲':'▼'} ${pct(covCur)}% ${curMo}</span>`;
+  const capTrend=sm.samePrevCur?'':`, ${curMo} идёт к <b style="color:var(--txt)">${pct(covCur)}%</b>`;
+  host.innerHTML=
+    `<div class="ssf-num"><div class="ssf-lab">Комиссия покрывает затраты на ${prevMo}</div>`+
+    `<div><span class="mono ssf-big">${pct(covPrev)}%</span>${trend}</div></div>`+
+    `<div class="ssf-barwrap"><span class="covbar"><i style="width:${Math.min(pct(covPrev),100)}%"></i><span class="mk"></span></span>`+
+    `<div class="ssf-cap">Фактическая комиссия (не путать с гарантией) покрывает <b style="color:var(--txt)">${pct(covPrev)}%</b> затрат сети (${money(prev.comm)} из ${money(prev.cost)}/мес, ${prevMo})${capTrend}. <b style="color:var(--txt)">100%</b> — сеть окупается своей комиссией, без гарантии Uzum.</div></div>`;
+}
+function selfSuffBlock(d){   // блок в карточке точки (drawer)
+  if(!hasComm||!COMM.pvz[d.code])return '';
+  const sm=selfMonths(), cost=costOf(d);
+  const cPrev=commOf(d.code,sm.prev), covPrev=cost?cPrev/cost:0;
+  const covCur=cost?runRate(commOf(d.code,sm.cur),sm)/cost:0, pct=v=>Math.round(v*100);
+  const ramp=sm.months.map(m=>`${commMonthName(m,true)} ${(commOf(d.code,m)/1e6).toLocaleString('ru-RU',{maximumFractionDigits:1})}`).join(' ▸ ')+'М';
+  const toBE=Math.max(0,100-pct(covPrev));
+  return DRW.grp('Самоокупаемость (факт Uzum)')+
+    `<div class="stat"><span class="k">Комиссия → затраты</span><span class="v mono">${pct(covPrev)}%<span style="color:var(--faint);font-size:11px"> ${commMonthName(sm.prev)}</span></span></div>`+
+    `<div style="padding:4px 0 9px"><span class="covbar"><i style="width:${Math.min(pct(covPrev),100)}%"></i><span class="mk"></span></span>`+
+    `<div class="mono" style="font-size:10.5px;color:var(--faint);margin-top:7px">${money(cPrev)} комиссии из ${money(cost)} затрат/мес · до безубытка ещё ~${toBE}%</div></div>`+
+    DRW.row('Разгон комиссии','<span class="mono" style="font-size:11px">'+ramp+'</span>')+
+    (sm.samePrevCur?'':DRW.row('Покрытие · '+commMonthName(sm.cur)+' (темп)','<span class="mono" style="color:var(--mint)">'+pct(covCur)+'%</span>'));
+}
 const wkYear = i => (WK.years && WK.years[i]!=null) ? WK.years[i] : NM_YEAR;   // реальный год недели из данных (если есть), иначе fallback — корректно на стыке годов
 function buildMonthList(){ const seen={}, out=[];
   WK.weeks.forEach((w,i)=>{ const m=wkStartMonth(i), y=wkYear(i), key=y+'-'+String(m).padStart(2,'0');
@@ -759,7 +815,8 @@ const DRW=(()=>{
   const healthBar=h=>{const hp=Math.min(h,1.4), hc=h>=1?'var(--mint)':h>=.6?'var(--amber)':'var(--coral)';
     return `<span class="health"><i style="width:${hp/1.4*100}%;background:${hc}"></i><span class="mark" style="left:${1/1.4*100}%"></span></span> <span class="mono" style="color:${hc}">${Math.round(h*100)}%</span>`;};
   const contract=d=>{   // секция «Договор» — одинакова в обеих карточках
-    const startD=new Date(d.start), guarEnd=new Date(d.start); guarEnd.setMonth(guarEnd.getMonth()+6);
+    const startD=new Date(d.start);
+    const guarEnd=(typeof COMM!=='undefined'&&COMM&&COMM.pvz[d.code]&&COMM.pvz[d.code].guarEnds)?new Date(COMM.pvz[d.code].guarEnds+'T00:00:00'):(()=>{const g=new Date(d.start);g.setMonth(g.getMonth()+6);return g;})();
     const ageWk=Math.max(0,Math.round((Date.now()-startD)/6048e5)), gAct=guarEnd>new Date();
     const guarVal='<span style="color:'+(gAct?'var(--mint)':'var(--dim)')+'">'+(gAct?'активна до ':'истекла ')+guarEnd.toLocaleDateString('ru-RU')+'</span>';
     return grp('Договор')+row('Старт',startD.toLocaleDateString('ru-RU'))+row('Возраст',ageWk+' нед.')+row('Гарантия',guarVal);};
@@ -901,6 +958,7 @@ function openFactDrawer(code){
     row('Комиссия',Math.round(d.comm*100)+'%')+
     row('Средний чек (факт)',money(d.avgCheck))+
     row('Гарантия/мес (порог)',money(d.guarFull))+
+    selfSuffBlock(d)+
     contract(d);
   DRW.open({d,hint:'Заказы/день по неделям (⸺ безубыток; неполная неделя — со *)',spark,body,foot:'Доход и P&L — '+src+'; заказы и оборот — управленческая отчётность. Неполные недели (*) не экстраполируются.'});
 }
@@ -1234,7 +1292,7 @@ function setView(v){
   if(v==='sim'){renderSimKPIs();renderChart();renderTable();}
   renderHistory(); syncURL();
 }
-function renderAll(){setLabels();renderKPIs();renderUnit();renderForecast();renderSimKPIs();renderChart();renderTable();renderHistory();renderPointsFact();if(S.view==='map')renderNetMap();syncURL();}
+function renderAll(){setLabels();renderKPIs();renderUnit();renderForecast();renderSimKPIs();renderChart();renderTable();renderHistory();renderPointsFact();renderSelfSuff();if(S.view==='map')renderNetMap();syncURL();}
 
 /* ---------- bindings ---------- */
 const bind=(id,key,disp)=>{const e=document.getElementById(id);e.oninput=()=>{S[key]=parseFloat(e.value);if(key==='boost')S.flat=null;document.getElementById(disp).textContent=
