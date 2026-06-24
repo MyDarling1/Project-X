@@ -916,7 +916,7 @@ function renderPointsFact(){
   el.innerHTML=h+'</tbody>';
   el.querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(S.ovSortKey===k)S.ovSortDir*=-1;else{S.ovSortKey=k;S.ovSortDir=-1;}renderPointsFact();});
   el.querySelectorAll('.prow').forEach(tr=>tr.onclick=()=>openFactDrawer(tr.dataset.code));
-  const ttl=document.getElementById('ovTblTitle'); if(ttl) ttl.textContent='По точкам · '+P.label+(P.partial?' (неполный)':'');
+  const ttl=document.getElementById('ovTblTitle'); if(ttl) ttl.textContent='По точкам · '+P.label+(P.partial?' (неполный, '+idxs.reduce((a,i)=>a+wdays(i),0)+' дн.)':'');
 }
 function openFactDrawer(code){
   const d=DATA.find(x=>x.code===code); if(!d) return;
