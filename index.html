@@ -1176,7 +1176,7 @@ function netGrowth(){   // геом. среднее недельного рос�
   return n?Math.pow(p,1/n):null;
 }
 function fcTimeline(netNow, netBE, gc, beW, guarW, guarWlast, beLabel, guarLabel){
-  const W=720, H=210, padL=18, padR=18, padT=34;
+  const W=720, H=216, padL=18, padR=18, padT=34;
   const plotW=W-padL-padR, gl='font-family:Spline Sans Mono,monospace';
   const spanW=Math.max(Math.ceil(guarWlast)+1, Math.ceil(beW)+4, 1);
   const X=w=>padL+(Math.max(0,Math.min(w,spanW))/spanW)*plotW;
@@ -1209,9 +1209,11 @@ function fcTimeline(netNow, netBE, gc, beW, guarW, guarWlast, beLabel, guarLabel
   s+='<rect x="'+padL+'" y="'+barY+'" width="'+Math.max(0,xGuar-padL).toFixed(1)+'" height="'+barH+'" rx="6" fill="var(--amber)" fill-opacity="0.16" stroke="var(--amber)" stroke-opacity="0.5" stroke-width="1"/>';
   if(xGuarLast>xGuar) s+='<rect x="'+xGuar.toFixed(1)+'" y="'+barY+'" width="'+(xGuarLast-xGuar).toFixed(1)+'" height="'+barH+'" rx="6" fill="var(--amber)" fill-opacity="0.07"/>';
   s+='<text x="'+(padL+10)+'" y="'+(barY+9).toFixed(1)+'" style="fill:var(--amber);font-size:10px;'+gl+'">гарантия Uzum</text>';
+  const clX=x=>Math.max(padL+16,Math.min(W-padR-16,x));   // подписи оси: гарантия — у конца гарантийной полосы, безубыток — у пересечения
+  const bx=clX(xCross), gx=clX(xGuar), drop=(Math.abs(bx-gx)<60)||(gx<padL+52);   // близко к безубытку/«сейчас» → опускаем гарантию на строку ниже
   s+='<text x="'+padL+'" y="'+axisY+'" style="fill:var(--faint);font-size:10px;'+gl+'">сейчас</text>';
-  s+='<text x="'+xCross.toFixed(1)+'" y="'+axisY+'" text-anchor="middle" style="fill:var(--mint);font-size:10px;font-weight:600;'+gl+'">'+beLabel+'</text>';
-  s+='<text x="'+(W-padR)+'" y="'+axisY+'" text-anchor="end" style="fill:var(--faint);font-size:10px;'+gl+'">'+guarLabel+'</text>';
+  s+='<text x="'+bx.toFixed(1)+'" y="'+axisY+'" text-anchor="middle" style="fill:var(--mint);font-size:10px;font-weight:600;'+gl+'">'+beLabel+'</text>';
+  s+='<text x="'+gx.toFixed(1)+'" y="'+(drop?axisY+13:axisY)+'" text-anchor="middle" style="fill:var(--faint);font-size:10px;'+gl+'">'+guarLabel+'</text>';
   s+='</svg>';
   return s;
 }
