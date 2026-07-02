@@ -595,9 +595,15 @@ function buildMonthList(){ const seen={}, out=[];
   WK.weeks.forEach((w,i)=>{ const m=wkStartMonth(i), y=wkYear(i), key=y+'-'+String(m).padStart(2,'0');
     if(!seen[key]){ seen[key]={key,mn:m,label:(MONTH_RU2[m]||'?')+' '+y,weekIdxs:[],hasFact:!!factMonths[key]}; out.push(seen[key]); }
     seen[key].weekIdxs.push(i); });
+  // хвостовая неделя, зашедшая в НОВЫЙ месяц (напр. 29.06–05.07 при данных за 01.07): добавляем этот месяц сразу,
+  // чтобы он появился в дропдауне/везде, как только пошли его дни (иначе ждали бы первой чисто-месячной недели)
+  const li=WK.weeks.length-1;
+  if(li>=0){ const lw=WK.weeks[li], sm=wkStartMonth(li), sy=wkYear(li), em=+String(lw).split('–')[1].split('.')[1];
+    if(em!==sm){ const ey=em<sm?sy+1:sy, key=ey+'-'+String(em).padStart(2,'0');
+      if(!seen[key]){ seen[key]={key,mn:em,label:(MONTH_RU2[em]||'?')+' '+ey,weekIdxs:[li],hasFact:!!factMonths[key],boundary:true}; out.push(seen[key]); } } }
   return out; }
 let monthList = buildMonthList();
-if(S.monthKey==null) S.monthKey = monthList.length?monthList[monthList.length-1].key:null;   // по умолчанию — самый свежий месяц
+if(S.monthKey==null){ const real=monthList.filter(m=>!m.boundary); S.monthKey=(real.length?real[real.length-1]:monthList[monthList.length-1]).key; }   // по умолчанию — свежайший «настоящий» месяц (граничный только-что-начавшийся не берём в дефолт, но он выбираем)
 if(S.weekIdx==null) S.weekIdx = WK.weeks.length?WK.weeks.length-1:0;   // по умолчанию — самая свежая (текущая) неделя
 const weekMonth = i => monthList.find(m=>m.weekIdxs.includes(i));
 const monthDaysOf = m => m? m.weekIdxs.reduce((a,j)=>a+wdays(j),0) : 0;
