@@ -654,7 +654,7 @@ function deltaStr(cur,prev,lbl){ if(prev==null||!isFinite(prev)||prev===0) retur
 function renderKPIs(){
   updateNetCtl();
   const P=currentPeriod(), perLabel=P.perLabel;
-  const s=netStats(P.idxs,P.mode,P.monthDays,P.factKey), pnlPV=s.pnl/s.n;
+  const s=netStats(P.idxs,P.mode,P.monthDays,P.factKey);
   let dOrd='',dGmv='';
   if(P.prevSpec){ const ps=netStats(P.prevSpec.idxs,P.prevSpec.mode,P.prevSpec.md,P.prevSpec.factKey);
     const cd=P.idxs.reduce((a,i)=>a+slotDays(i),0)||1, pd=P.prevSpec.idxs.reduce((a,i)=>a+slotDays(i),0)||1;   // дельты НА ДЕНЬ → честны даже для неполного текущего периода (slotDays: месяц day-based, иначе месяц-слот=0→1 и дельта не на день)
@@ -672,7 +672,6 @@ function renderKPIs(){
     {l:'Точек выше безубытка',v:s.above+' / '+s.n,cls:s.above>0?'pos':'neg',d:s.above==0?'все в минусе':perLabel},
     {l:'P&L по сети',v:money(s.pnl),cls:s.pnl>=0?'pos':'neg',d:pnlSrc},
     {l:'Оборот (GMV) '+perLabel,v:money(s.gmv),d:(S.cur==='usd'?`≈ ${mln(s.gmv)} сум`:`≈ $${fmt(s.gmv/S.fx)}`)+dGmv},
-    {l:'P&L на 1 ПВЗ',v:money(pnlPV),cls:pnlPV>=0?'pos':'neg',d:pnlSrc},
   ];
   html+=cards.map(x=>`<div class="kpi"><div class="lab">${x.l}</div><div class="val ${x.cls||''}">${x.v}</div><div class="delta">${x.d||''}</div></div>`).join('');
   document.getElementById('kpis').innerHTML=html;
@@ -700,22 +699,14 @@ function updateNetCtl(){
 function closePerdd(){document.querySelectorAll('.perdd-menu').forEach(m=>m.classList.remove('open'));}
 
 /* ---------- юнит-экономика ---------- */
-function renderUnit(){
+function renderUnit(){   // только суть: доход − затраты = P&L (заказы/безубыток/оборот — в блоке «Сеть» выше)
   const P=currentPeriod(), s=netStats(P.idxs,P.mode,P.monthDays,P.factKey), n=s.n;
-  const ao=s.ordPV, agmv=s.gmv/n, ainc=s.income/n, acost=s.cost/n, apnl=s.pnl/n, abe=s.bePV;
-  const pdays=P.idxs.reduce((a,i)=>a+slotDays(i),0)||1;   // дней в периоде (месяц day-based / неделя) — slotDays, не wdays (иначе месяц-слот=0→1 и «доход на заказ» ×дней завышен)
-  const margin = ainc>0 ? apnl/ainc*100 : null;
-  const perOrder = (ao>0&&pdays>0) ? ainc/(ao*pdays) : 0;
+  const ainc=s.income/n, acost=s.cost/n, apnl=s.pnl/n;
   const src = P.mode==='model'?'модель':'факт · Uzum';
   const k=[
-    {l:'Заказов/день',v:fmt1(ao),d:'на 1 ПВЗ'},
-    {l:'Оборот (GMV) '+P.perLabel,v:money(agmv),d:'на 1 ПВЗ'},
-    {l:'Доход ПВЗ '+P.perLabel,v:money(ainc),d:src},
+    {l:'Доход '+P.perLabel,v:money(ainc),d:src},
     {l:'Затраты '+P.perLabel,v:money(acost),d:'аренда+ЗП+УК+разное'},
     {l:'P&L '+P.perLabel,v:money(apnl),cls:apnl>=0?'pos':'neg',d:src},
-    {l:'Маржа ПВЗ',v:margin==null?'—':Math.round(margin)+'%',cls:margin==null?'':(margin>=0?'pos':'neg'),d:'P&L ÷ доход'},
-    {l:'Доход на заказ',v:money(perOrder),d:'доход ПВЗ / заказ'},
-    {l:'Безубыток',v:fmt(abe)+' зак/д',d:'порог P&L = 0'},
   ];
   document.getElementById('unitEcon').innerHTML=k.map(x=>`<div class="kpi"><div class="lab">${x.l}</div><div class="val ${x.cls||''}">${x.v}</div><div class="delta">${x.d||''}</div></div>`).join('');
 }
