@@ -657,7 +657,7 @@ function renderKPIs(){
   const s=netStats(P.idxs,P.mode,P.monthDays,P.factKey), pnlPV=s.pnl/s.n;
   let dOrd='',dGmv='';
   if(P.prevSpec){ const ps=netStats(P.prevSpec.idxs,P.prevSpec.mode,P.prevSpec.md,P.prevSpec.factKey);
-    const cd=P.idxs.reduce((a,i)=>a+wdays(i),0)||1, pd=P.prevSpec.idxs.reduce((a,i)=>a+wdays(i),0)||1;   // дельты НА ДЕНЬ → честны даже для неполного текущего периода
+    const cd=P.idxs.reduce((a,i)=>a+slotDays(i),0)||1, pd=P.prevSpec.idxs.reduce((a,i)=>a+slotDays(i),0)||1;   // дельты НА ДЕНЬ → честны даже для неполного текущего периода (slotDays: месяц day-based, иначе месяц-слот=0→1 и дельта не на день)
     const dl=S.gran==='month'?'м/м':'нд/нд';
     dOrd=deltaStr(s.netOrdDay,ps.netOrdDay,dl); dGmv=deltaStr(s.gmv/cd,ps.gmv/pd,dl); }          // только заказы и оборот (vs прошлый период); P&L-дельту не показываем — смешала бы модель и факт
   const ratio=s.bePV>0?s.ordPV/s.bePV:0, toBE=s.ordPV>0?s.bePV/s.ordPV:0;
@@ -703,7 +703,7 @@ function closePerdd(){document.querySelectorAll('.perdd-menu').forEach(m=>m.clas
 function renderUnit(){
   const P=currentPeriod(), s=netStats(P.idxs,P.mode,P.monthDays,P.factKey), n=s.n;
   const ao=s.ordPV, agmv=s.gmv/n, ainc=s.income/n, acost=s.cost/n, apnl=s.pnl/n, abe=s.bePV;
-  const pdays=P.idxs.reduce((a,i)=>a+wdays(i),0)||1;
+  const pdays=P.idxs.reduce((a,i)=>a+slotDays(i),0)||1;   // дней в периоде (месяц day-based / неделя) — slotDays, не wdays (иначе месяц-слот=0→1 и «доход на заказ» ×дней завышен)
   const margin = ainc>0 ? apnl/ainc*100 : null;
   const perOrder = (ao>0&&pdays>0) ? ainc/(ao*pdays) : 0;
   const src = P.mode==='model'?'модель':'факт · Uzum';
