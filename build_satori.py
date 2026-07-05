@@ -41,10 +41,10 @@ def month_num(name):
     raise SystemExit(f'Не распознан месяц: «{name}»')
 
 def parse_amount(s):
-    m = re.search(r'([\d   ]+,\d{2})\s*сум', s)
+    # число с разрядами по 3 (иначе к сумме клеится цифра из «п.5.2.1» -> +10М). Разделитель — любой горизонт. пробел.
+    m = re.search(r'(\d{1,3}(?:[^\S\n]\d{3})*),(\d{2})[^\S\n]*сум', s)
     if not m: return None
-    return round(float(m.group(1).replace(' ', '').replace(' ', '').replace(' ', '').replace(',', '.')), 2)
-
+    return round(float(re.sub(r'[^\S\n]', '', m.group(1)) + '.' + m.group(2)), 2)
 def read_docx_rows(path):
     """Возвращает список строк таблиц как (text). Только текст ячеек, по строкам."""
     try:
@@ -59,14 +59,23 @@ def read_docx_rows(path):
             rows.append(' | '.join(tx(tc).strip() for tc in ch.findall(f'{W}tc')))
     return rows
 
+def read_pdf_rows(path):
+    """PDF (новый формат отчёта Uzum) -> строки текста всех страниц."""
+    import pdfplumber
+    rows = []
+    with pdfplumber.open(path) as pdf:
+        for pg in pdf.pages:
+            rows.extend((pg.extract_text() or '').split('\n'))
+    return rows
+
 def parse_satori(path):
     """docx -> (month_int, year_int, {code: {'income':сум, 'startDay':int, 'days':int}})."""
-    rows = read_docx_rows(path)
+    rows = read_pdf_rows(path) if path.lower().endswith('.pdf') else read_docx_rows(path)
     if not rows:
         raise SystemExit('В отчёте не найдено таблиц.')
     month = year = None
     acc = {}; order = []; cur = None
-    fix_re = re.compile(r'по\s+(Fr\S+?-\d+)\s+за\s+с\s+[«"]?(\d{1,2})[»"]?\s+([А-Яа-яЁё]+)\s+(\d{4})', re.I)
+    fix_re = re.compile(r'(Fr\S+?-\d+)\s+за\s+с\s+[«"]?(\d{1,2})[»"]?\s+([А-Яа-яЁё]+)\s+(\d{4})', re.I)
     for ln in rows:
         mfix = fix_re.search(ln)
         amt = parse_amount(ln)
