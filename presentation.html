@@ -761,7 +761,7 @@ function fillText(){
   document.getElementById('c-chk').innerHTML='$'+DEAL.net.avgChk;
   document.getElementById('c-cities').innerHTML=DEAL.track.cities;
   document.getElementById('asof').textContent='Данные сети на неделю '+DEAL.asOf;
-  document.getElementById('ctaSub').innerHTML='Чек от '+usd(DEAL.deal.check)+' · '+DEAL.deal.n+' ПВЗ &nbsp;·&nbsp; '+PHONE+' (WhatsApp)';
+  document.getElementById('ctaSub').innerHTML='Чек от '+usd(DEAL.deal.check)+' · '+DEAL.deal.n+' ПВЗ &nbsp;·&nbsp; '+PHONE+' (WhatsApp) &nbsp;·&nbsp; <a href="mailto:'+EMAIL+'" style="color:var(--violet);text-decoration:none">'+EMAIL+'</a>';
   document.getElementById('ctaLink').href=WHATSAPP;
 }
 
