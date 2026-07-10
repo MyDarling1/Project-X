@@ -436,7 +436,6 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
   <section class="blk" data-crumb="05 · Экономика точки">
     <div class="seghead rv"><span class="no">§ 05</span><span class="ttl">Экономика одного ПВЗ</span><span class="rule"></span></div>
     <h2 class="big wide disp rv">Через ~6 месяцев точка выходит на <em>$450–650</em> прибыли в месяц.</h2>
-    <p class="body-lg rv d1">Экономика проста и устойчива: Uzum платит по каждой точке минимум вознаграждения, ниже которого выплата не опускается.</p>
 
     <div class="grid2 even rv d2" style="margin-top:8px">
       <div class="card">
@@ -510,19 +509,14 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
     <div class="seghead rv"><span class="no">§ 09</span><span class="ttl">Наши преимущества</span><span class="rule"></span></div>
     <h2 class="big wide disp rv">Почему именно мы.</h2>
     <div class="pillars rv d1">
-      <div class="pillar"><div class="pno">01</div><h3>Трек-рекорд 72 ПВЗ</h3><p>Отлаженный плейбук открытия и вывода точки на объём — не теория, а 72 реальных запуска.</p></div>
+      <div class="pillar"><div class="pno">01</div><h3>Трек-рекорд 72 ПВЗ</h3><p>Отлаженный плейбук открытия и вывода точки на объём.</p></div>
       <div class="pillar"><div class="pno">02</div><h3>Прямые отношения с Uzum</h3><p>Прямые отношения с маркетплейсом дают доступ к лучшим локациям и условиям.</p></div>
       <div class="pillar"><div class="pno">03</div><h3>Гарантия как защита</h3><p>По гарантии Uzum точка первые 6 месяцев получает минимум вознаграждения — он закрывает операционные расходы и помогает выйти на окупаемость.</p></div>
     </div>
 
     <div class="card rv d2" style="margin-top:46px">
       <div class="ch-ttl"><h4>Прозрачность и автоматизация</h4><span class="note">тот же дашборд, что по ссылке «← Дашборд»</span></div>
-      <p class="body-lg" style="margin:8px 0 4px">Инвестор не ждёт квартальных сводок. Сеть и каждая точка видны в реальном времени — заказы, оборот, P&amp;L, выход на самоокупаемость. Этим же дашбордом мы управляем сетью каждый день — он открыт по ссылке «← Дашборд».</p>
-      <div class="pillars" style="margin-top:28px">
-        <div class="pillar"><div class="pno">01</div><h3>Живой дашборд</h3><p>Вся сеть и каждый ПВЗ как на ладони — заказы в день, оборот, юнит-экономика, история по неделям. Онлайн, без ожидания отчётов.</p></div>
-        <div class="pillar"><div class="pno">02</div><h3>AI-мониторинг</h3><p>Система сама следит за каждой точкой и подсвечивает отстающие раньше, чем это станет проблемой.</p></div>
-        <div class="pillar"><div class="pno">03</div><h3>Всё считается автоматически</h3><p>Свежие данные подтягиваются каждый день, модель и дашборд пересчитываются автоматически. Меньше ручной работы — меньше ошибок.</p></div>
-      </div>
+      <p class="body-lg" style="margin:8px 0 4px">Сеть и каждая точка видны в реальном времени — заказы, оборот, P&amp;L, выход на самоокупаемость. Этим же дашбордом мы управляем сетью каждый день — он открыт по ссылке «← Дашборд».</p>
     </div>
   </section>
 
@@ -541,11 +535,7 @@ footer{border-top:1px solid var(--line); padding:34px 0 56px; font-family:'Splin
       </div>
       <div class="riskrow">
         <div class="rk"><div class="rkl">Риск</div><div class="rkt">Выбор локации / исполнение</div></div>
-        <div class="rm"><div><div class="rml">Митигация</div><p>Отбираем локации по данным действующего портфеля, опираясь на AI-мониторинг эффективности и опыт 72 запусков.</p></div></div>
-      </div>
-      <div class="riskrow">
-        <div class="rk"><div class="rkl">Риск</div><div class="rkt">Валютный</div></div>
-        <div class="rm"><div><div class="rml">Митигация</div><p>Расчёты и отчётность для инвестора ведём в долларовом эквиваленте.</p></div></div>
+        <div class="rm"><div><div class="rml">Митигация</div><p>Отбираем локации по данным действующего портфеля, опираясь в том числе на AI-мониторинг.</p></div></div>
       </div>
     </div>
   </section>
@@ -742,10 +732,10 @@ function assumList(){
   const items=[
     `Чек <b>${usd(d.check)}</b> → <b>${d.n} ПВЗ</b> (${usd(d.capex)}/точку)`,
     `Прибыль точки после ~6 мес <b>$450–650/мес</b>`,
-    `Первые <b>${d.rampMo} мес</b> ≈ $0`,
+    `Комиссии УК: <b>${d.adminPct}%</b>/год · <b>${d.carryPct}%</b> carry · без входной`,
     `Операционное управление <b>$${d.mgmtMo}/мес</b> (в опексе точки)`,
-    `Комиссии УК: <b>${d.adminPct}%</b>/год управление · <b>${d.carryPct}%</b> carry · без входной`,
-    `Курс <b>${d.check?DEAL.rate.toLocaleString('ru-RU'):''} сум/$</b>`
+    `Первые <b>${d.rampMo} мес</b> ≈ $0`,
+    `Курс <b>${DEAL.rate.toLocaleString('ru-RU')} сум/$</b>`
   ];
   document.getElementById('assumList').innerHTML=items.map(t=>`<li>${t}</li>`).join('');
 }
