@@ -90,6 +90,13 @@ http.createServer((req, res) => {
     send(res, 302, 'text/plain', '', { 'Set-Cookie': `${COOKIE}=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`, 'Location': '/' });
     return;
   }
+  // инвесторская презентация — ПУБЛИЧНАЯ, без пароля (данные вшиты в сам файл; решение владельца 2026-07-10)
+  if (p === '/pitch' || p === '/pitch.html' || p === '/presentation' || p === '/presentation.html') {
+    fs.readFile(path.join(ROOT, 'presentation.html'), (e, buf) => e
+      ? send(res, 500, 'text/plain; charset=utf-8', 'presentation.html missing')
+      : send(res, 200, 'text/html; charset=utf-8', buf));
+    return;
+  }
   // без сессии → страница входа на любой GET (URL сохраняется), 200 чтобы healthcheck Railway был зелёным
   if (!authed(req)) { send(res, 200, 'text/html; charset=utf-8', LOGIN(false)); return; }
 
@@ -98,13 +105,6 @@ http.createServer((req, res) => {
   if (p === '/' || p === '/index.html') {
     fs.readFile(path.join(ROOT, 'index.html'), (e, buf) => e
       ? send(res, 500, 'text/plain; charset=utf-8', 'index.html missing')
-      : send(res, 200, 'text/html; charset=utf-8', buf));
-    return;
-  }
-  // инвесторская презентация — за тем же паролем (данные вшиты в файл)
-  if (p === '/pitch' || p === '/pitch.html' || p === '/presentation' || p === '/presentation.html') {
-    fs.readFile(path.join(ROOT, 'presentation.html'), (e, buf) => e
-      ? send(res, 500, 'text/plain; charset=utf-8', 'presentation.html missing')
       : send(res, 200, 'text/html; charset=utf-8', buf));
     return;
   }
