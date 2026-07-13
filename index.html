@@ -509,11 +509,11 @@ const money=v=>{ // v всегда в сумах; показывает в выб
 
 function compute(d, ordersOverride){   // ТОЛЬКО для «Обзора» (факт/модель). Симулятор Финмодели (рост/цель/сценарий) живёт в simOf и СЮДА не протекает.
   const orders = (ordersOverride!=null) ? ordersOverride : d.runRate;   // заказы выбранного периода, иначе run-rate; без ×рост/цели Финмодели
-  const margin = S.chk * d.comm;                    // маржа с заказа, $
+  const margin = S.chk * d.comm;                    // маржа с заказа, $ (для «Маржа с заказа» и GMV)
   const cost = d.rentSum + d.salarySum + (d.miscSum||0) + S.uk*S.fx;  // затраты/мес, сум (аренда+ЗП+разное фикс.; УК в $)
-  const be = (cost/S.fx) / margin / 30;             // точка безубытка, зак/день
+  const be = cost / Math.max(cpoOf(d),1) / 30;      // безубыток зак/день на ФАКТИЧЕСКОЙ комиссии (= beReal) — согласовано с «Безубыток/Здоровье» Обзора
   const rev = orders * S.chk * S.fx;                // оборот (GMV)/день, сум (единый чек $14)
-  const commRev = orders * margin * 30 * S.fx;      // комиссия/мес, сум (= заказы×маржа$×30×курс)
+  const commRev = orders * cpoOf(d) * 30;           // комиссия/мес, сум = заказы/день × ФАКТИЧЕСКАЯ комиссия за заказ (cpoOf) × 30 — та же база, что и безубыток
   const reward = Math.max(d.guarFull, commRev);     // «Обзор» — всегда сценарий гарантии (не зависит от тумблера Финмодели)
   const pnl = reward - cost;
   return {orders,margin,be,rev,commRev,cost,reward,pnl,health:orders/be,gap:orders-be};
