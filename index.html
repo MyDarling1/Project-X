@@ -94,7 +94,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .fwd-actuals-row>#fwdCard,.fwd-actuals-row>.actuals-col{display:flex;flex-direction:column;min-width:0}
 .fwd-actuals-row #fcMerged{flex:1}
 .hist-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-.actuals-col>#histNet{flex:1;display:flex;flex-direction:column;justify-content:center;min-width:0}
+.actuals-col>#histNet{flex:1;display:flex;flex-direction:column;justify-content:flex-start;min-width:0}
 .pitchlink{font-size:12px;color:var(--violet);text-decoration:none;font-weight:600;white-space:nowrap}
 .pitchlink:hover{text-decoration:underline}
 @media(max-width:900px){.fwd-actuals-row{grid-template-columns:1fr}}
@@ -982,8 +982,8 @@ function openFactDrawer(code){
 }
 
 /* ---------- weekly history ---------- */
-function wkBars(vals, fmtFn, base, hid, labels, partial){
-  const n=vals.length, slot=88, padL=14, padR=14, H=190, padT=28, padB=36, gap=18;
+function wkBars(vals, fmtFn, base, hid, labels, partial, Hin){
+  const n=vals.length, slot=88, padL=14, padR=14, H=Hin||190, padT=28, padB=36, gap=18;
   const W=padL+padR+n*slot, bw=slot-gap, max=Math.max(...vals,1);
   let el='';
   vals.forEach((v,i)=>{
@@ -1000,8 +1000,8 @@ function sparkline(vals,base,partial){
   vals.forEach((v,i)=>{const bh=Math.max((v/max)*H,1.5),x=i*(bw+gap),y=H-bh;el+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="1" fill="${base}"/>`;});
   return `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;height:${H}px;vertical-align:middle">${el}</svg>`;
 }
-function wkBarsPnl(vals, labels, partial){
-  const n=vals.length, slot=92, padL=14, padR=14, H=210, padT=24, padB=52, gap=18;
+function wkBarsPnl(vals, labels, partial, Hin){
+  const n=vals.length, slot=92, padL=14, padR=14, H=Hin||210, padT=24, padB=52, gap=18;
   const W=padL+padR+n*slot, bw=slot-gap, max=Math.max(...vals.map(v=>Math.abs(v)),1);
   const half=(H-padT-padB)/2, midY=padT+half;
   let el=`<line x1="${padL}" y1="${midY}" x2="${W-padR}" y2="${midY}" stroke="var(--line2)" stroke-width="1"/>`;
@@ -1024,11 +1024,21 @@ function renderHistory(){
   const m=S.histMetric;
   const HMAX=13, allI=WK.weeks.map((_,i)=>i), show=allI.slice(-HMAX), moreN=allI.length-show.length;
   const sl=show.map(i=>WK.weeks[i]), sp=show.map(i=>partial[i]);
-  const chartBody=(hint,svg)=>`<div class="hint" style="margin:0 0 4px">${hint}</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${svg}</div>`;
+  const chartBody=(hint,svg)=>`<div class="hint" style="margin:0 0 8px">${hint}</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${svg}</div>`;
+  // SVG отдаётся как width:100% + height:auto → он сжимается пропорционально ширине контейнера,
+  // и чем БОЛЬШЕ недель (шире viewBox), тем НИЖЕ график на экране. Компенсируем: считаем H в единицах
+  // viewBox так, чтобы после масштабирования график занял всю свободную высоту карточки.
+  const fitH=(slotW,capPx,base)=>{
+    const host=document.getElementById('histNet');
+    const W=28+show.length*slotW, cw=host.clientWidth||W, availH=host.clientHeight||0;
+    const shown=Math.min(cw,W), want=availH-capPx;                       // высота под сам SVG
+    if(!(shown>0)||!(want>0)) return base;
+    return Math.round(Math.min(560, Math.max(base, want*W/shown)));      // клампы: не ниже исходной, не выше 560
+  };
   document.getElementById('histNet').innerHTML =
-      m==='pnl'    ? chartBody('P&L по неделям: доля месячного факта Uzum по дням (для закрытых месяцев) или модель (для текущих). Согласовано с блоком «Обзор».', wkBarsPnl(show.map(i=>netPnl[i]),sl,sp))
-    : m==='volume' ? chartBody('сумма по сети, по неделям', wkBars(show.map(i=>WK.net.rev[i]),money,'var(--mint)','hist-hv',sl,sp))
-    :                chartBody('сумма по сети, по неделям', wkBars(show.map(i=>WK.net.ord[i]),fmt1,'var(--violet)','hist-ho',sl,sp));
+      m==='pnl'    ? chartBody('P&L по неделям: доля месячного факта Uzum по дням (для закрытых месяцев) или модель (для текущих). Согласовано с блоком «Обзор».', wkBarsPnl(show.map(i=>netPnl[i]),sl,sp,fitH(92,58,210)))
+    : m==='volume' ? chartBody('сумма по сети, по неделям', wkBars(show.map(i=>WK.net.rev[i]),money,'var(--mint)','hist-hv',sl,sp,fitH(88,30,190)))
+    :                chartBody('сумма по сети, по неделям', wkBars(show.map(i=>WK.net.ord[i]),fmt1,'var(--violet)','hist-ho',sl,sp,fitH(88,30,190)));
   renderCosts();
 }
 function renderCosts(){
@@ -1349,6 +1359,8 @@ document.querySelectorAll('#curTog button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#curTog button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
   S.cur=b.dataset.c;renderAll();});
 document.querySelectorAll('#viewnav button').forEach(b=>b.onclick=()=>setView(b.dataset.v));
+// высота графиков истории считается от доступного места → пересчитываем при ресайзе
+let _histRz; addEventListener('resize',()=>{clearTimeout(_histRz);_histRz=setTimeout(()=>{try{renderHistory();}catch(e){}},180);});
 document.querySelectorAll('#histTog button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#histTog button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
   S.histMetric=b.dataset.h;renderHistory();});
