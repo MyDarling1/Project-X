@@ -113,7 +113,7 @@ http.createServer((req, res) => {
     fs.readFile(path.join(ROOT, 'data.json'), 'utf8', (e, txt) => e
       ? send(res, 500, 'application/javascript; charset=utf-8', 'console.error("data.json missing")')
       : send(res, 200, 'application/javascript; charset=utf-8',
-          'const __D=' + txt + ';const DATA=__D.DATA,WK=__D.WK,FACT=__D.FACT,SAL=__D.SAL,COMM=__D.COMM||null,MON=__D.MON||null,UPD=__D.updatedAt||null;'));
+          'const __D=' + txt + ';const DATA=__D.DATA,WK=__D.WK,FACT=__D.FACT,SAL=__D.SAL,COMM=__D.COMM||null,MON=__D.MON||null,SUMMARY=__D.SUMMARY||null,UPD=__D.updatedAt||null;'));
     return;
   }
   // ВСЁ остальное (эталон, *.py, *.md, копии, выгрузки) НЕ отдаём
