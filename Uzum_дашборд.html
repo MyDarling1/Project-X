@@ -1205,7 +1205,7 @@ function commGrowthMonthly(){   // ПОМЕСЯЧНЫЙ темп роста ко
   const ms=COMM.months.slice().sort();
   const net={}; ms.forEach(m=>{ let s=0; DATA.forEach(d=>s+=commOf(d.code,m)); net[m]=(m===sm.cur)?runRate(s,sm):s; });
   const mx=Math.max(...ms.map(m=>net[m]||0))||1;
-  const ratios=[]; for(let i=1;i<ms.length;i++){ const a=net[ms[i-1]],b=net[ms[i]]; if(a>=0.15*mx&&a>0) ratios.push(b/a); }   // отбрасываем разгон с ~0 (апрель)
+  const ratios=[]; for(let i=1;i<ms.length;i++){ const a=net[ms[i-1]],b=net[ms[i]]; if(a>=0.5*mx&&a>0) ratios.push(b/a); }   // темп по ЗРЕЛЫМ месяцам: база ≥50% текущего уровня. Отсекает разгон открытия (апр~0, май ×2.3 с малой базы), иначе прогноз завышен
   if(!ratios.length) return null;
   const last=ratios.slice(-3); let p=1; last.forEach(r=>p*=r); return Math.pow(p,1/last.length);
 }
