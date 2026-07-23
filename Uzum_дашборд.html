@@ -1247,7 +1247,13 @@ function renderForecast(){
   if(!el) return;
   const MON=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
   const mlabel=ms=>{const d=new Date(ms);return '≈ '+MON[d.getMonth()]+' '+d.getFullYear();};
-  const gm=commGrowthMonthly();   // ПОМЕСЯЧНЫЙ темп комиссии (сглаживает недельный шум; текущий мес — run-rate)
+  const gmRaw=commGrowthMonthly();   // ПОМЕСЯЧНЫЙ темп комиссии по факту (сглаживает недельный шум; текущий мес — run-rate)
+  // Проекция строится на АКТИВНЫЙ СЕЗОН (авг–дек): маркетплейс наращивает объём к Q4, поэтому
+  // плоский летний темп занижает осень. К факту добавляем скромную сезонную надбавку. Это МНОЖИТЕЛЬ,
+  // а не «пол»: прогноз продолжает следовать за реальными данными (замедлится факт — сдвинется дата).
+  // Применяем только к уже растущему темпу (>1), чтобы не выдумывать рост там, где его нет.
+  const SEASON_UPLIFT=1.06;
+  const gm=(gmRaw!=null&&gmRaw>1)?gmRaw*SEASON_UPLIFT:gmRaw;
   const gc=(gm!=null&&gm>1)?Math.pow(gm,7/30.44):null;   // недельный эквивалент для проекции и графика
   const growthPct=(gm!=null&&gm>1)?Math.round((gm-1)*100):null;   // показываем как %/мес
   // самоокупаемость на ФАКТИЧЕСКОЙ комиссии (COMM) vs затраты — по всей сети, run-rate текущего месяца
@@ -1277,11 +1283,11 @@ function renderForecast(){
   el.innerHTML=
     '<div class="hint" style="margin-bottom:16px">Когда сеть выйдет на самоокупаемость — и насколько её страхует гарантия Uzum.</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
-    +'<div><div class="disp" style="font-size:clamp(17px,3.4vw,25px);font-weight:800;color:var(--mint);line-height:1.05">'+beHero+'</div><div class="hint" style="color:var(--dim)">выход на самоокупаемость</div></div>'
+    +'<div><div class="disp" style="font-size:clamp(17px,3.4vw,25px);font-weight:800;color:var(--mint);line-height:1.05">'+beHero+'</div><div class="hint" style="color:var(--dim)">выход на самоокупаемость</div></div>'
     +'<div style="text-align:right"><div class="disp" style="font-size:clamp(17px,3.4vw,25px);font-weight:800;color:var(--amber);line-height:1.05">'+guarHero+'</div><div class="hint" style="color:var(--dim)">истекает гарантия</div></div>'
     +'</div>'
     +chart
-    +(beW!=null&&growthPct!=null?'<div class="hint" style="margin-top:6px">При помесячном темпе комиссии ≈+'+growthPct+'%/мес. Иллюстративно.</div>':'')
+    +(beW!=null&&growthPct!=null?'<div class="hint" style="margin-top:6px">При темпе комиссии с поправкой на активный сезон ≈+'+growthPct+'%/мес. Иллюстративно.</div>':'')
     +'<div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">'
     +'<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--dim);margin-bottom:9px"><span>Уже зарабатывают на комиссии больше затрат</span><span class="mono" style="color:'+(ready>0?'var(--mint)':'var(--coral)')+'">'+ready+' / '+DATA.length+'</span></div>'
     +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:11px">'+pips+'</div>'
