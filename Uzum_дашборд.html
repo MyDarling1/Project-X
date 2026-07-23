@@ -1210,44 +1210,27 @@ function commGrowthMonthly(){   // ПОМЕСЯЧНЫЙ темп роста ко
   const last=ratios.slice(-3); let p=1; last.forEach(r=>p*=r); return Math.pow(p,1/last.length);
 }
 function fcTimeline(netNow, netBE, gc, beW, guarW, guarWlast, beLabel, guarLabel){
-  const W=720, H=216, padL=18, padR=18, padT=34;
+  // упрощённый таймлайн: полоса гарантии + метка ожидаемого безубытка. Без кривой роста/заливок — чтобы не читалось как «гонка».
+  const W=720, H=104, padL=18, padR=18;
   const plotW=W-padL-padR, gl='font-family:Spline Sans Mono,monospace';
-  const spanW=Math.max(Math.ceil(guarWlast)+1, Math.ceil(beW)+4, 1);
+  const spanW=Math.max(Math.ceil(guarWlast)+2, Math.ceil(beW)+2, 1);
   const X=w=>padL+(Math.max(0,Math.min(w,spanW))/spanW)*plotW;
-  const yTop=34, yBot=150, barY=168, barH=12, axisY=196;
-  const kEnd=Math.min(Math.ceil(beW)+3, spanW);
-  const vMax=netNow*Math.pow(gc,kEnd+2)||netBE*1.5;
-  const Y=v=>Math.max(yTop,Math.min(yBot, yBot-(Math.min(v,vMax)/vMax)*(yBot-yTop)));
-  const yBE=Y(netBE), xCross=X(beW), xGuar=X(guarW), xGuarLast=X(guarWlast);
-  // плавная кривая роста (квадратичное сглаживание, как в остальных графиках)
-  let pts=[]; for(let k=0;k<=kEnd;k+=0.5) pts.push([X(k),Y(netNow*Math.pow(gc,k))]);
-  const smooth=p=>{ let d='M'+p[0][0].toFixed(1)+' '+p[0][1].toFixed(1); for(let i=1;i<p.length;i++){ const mx=(p[i-1][0]+p[i][0])/2,my=(p[i-1][1]+p[i][1])/2; d+=' Q'+p[i-1][0].toFixed(1)+' '+p[i-1][1].toFixed(1)+' '+mx.toFixed(1)+' '+my.toFixed(1);} return d+' L'+p[p.length-1][0].toFixed(1)+' '+p[p.length-1][1].toFixed(1); };
-  const line=smooth(pts);
-  const sp=pts.filter((_,i)=>i*0.5<=beW);
-  const short=(sp.length?smooth(sp):('M'+X(0).toFixed(1)+' '+Y(netNow).toFixed(1)))+' L'+xCross.toFixed(1)+' '+yBE.toFixed(1)+' L'+X(0).toFixed(1)+' '+yBE.toFixed(1)+' Z';
-  let s='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;margin-top:14px;display:block" role="img" aria-label="Прогноз: кривая роста пересекает безубыток раньше, чем заканчивается гарантия">';
-  if(xGuar>xCross) s+='<rect x="'+xCross.toFixed(1)+'" y="'+yTop+'" width="'+(xGuar-xCross).toFixed(1)+'" height="'+(barY+barH-yTop).toFixed(1)+'" fill="var(--mint)" opacity="0.05"/>';
-  s+='<path d="'+short+'" fill="var(--amber)" opacity="0.10"/>';
-  s+='<line x1="'+padL+'" y1="'+yBE.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yBE.toFixed(1)+'" stroke="var(--coral)" stroke-width="1.4" stroke-dasharray="6 4" opacity="0.6"/>';
-  s+='<text x="'+(padL+2)+'" y="'+(yBE-7).toFixed(1)+'" style="fill:var(--coral);font-size:10.5px;'+gl+'">безубыток</text>';
-  s+='<path d="'+line+'" fill="none" stroke="var(--violet)" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>';
-  if(pts.length>1){ const a=pts[pts.length-2],b=pts[pts.length-1]; const L=Math.hypot(b[0]-a[0],b[1]-a[1])||1; const ex=Math.min(W-padR,b[0]+(b[0]-a[0])/L*44), ey=Math.max(yTop,b[1]+(b[1]-a[1])/L*44); s+='<path d="M'+b[0].toFixed(1)+' '+b[1].toFixed(1)+' L'+ex.toFixed(1)+' '+ey.toFixed(1)+'" fill="none" stroke="var(--violet)" stroke-width="2.4" stroke-dasharray="5 5" stroke-linecap="round" opacity="0.5"/>'; }
-  s+='<circle cx="'+X(0).toFixed(1)+'" cy="'+Y(netNow).toFixed(1)+'" r="4" fill="var(--panel)" stroke="var(--violet)" stroke-width="2"/>';
+  const barY=30, barH=26, lblY=82;
+  const xNow=X(0), xBE=X(beW), xGuar=X(guarW), xGuarLast=X(guarWlast);
+  let s='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;margin-top:12px;display:block" role="img" aria-label="Таймлайн: срок гарантии Uzum и ожидаемый выход на самоокупаемость">';
+  // гарантия: до ПЕРВОГО истечения — плотная, до последнего — светлее
+  s+='<rect x="'+xNow.toFixed(1)+'" y="'+barY+'" width="'+Math.max(0,xGuar-xNow).toFixed(1)+'" height="'+barH+'" rx="7" fill="var(--amber)" fill-opacity="0.16" stroke="var(--amber)" stroke-opacity="0.5"/>';
+  if(xGuarLast>xGuar) s+='<rect x="'+xGuar.toFixed(1)+'" y="'+barY+'" width="'+(xGuarLast-xGuar).toFixed(1)+'" height="'+barH+'" rx="7" fill="var(--amber)" fill-opacity="0.07" stroke="var(--amber)" stroke-opacity="0.22"/>';
+  s+='<text x="'+(xNow+11)+'" y="'+(barY+barH/2+3.7).toFixed(1)+'" style="fill:var(--amber);font-size:11px;'+gl+'">гарантия Uzum</text>';
+  // безубыток: вертикальная метка + точка (может стоять правее конца гарантии — это честно)
   if(beW<=spanW){
-    s+='<line x1="'+xCross.toFixed(1)+'" y1="'+yBE.toFixed(1)+'" x2="'+xCross.toFixed(1)+'" y2="'+(barY-3).toFixed(1)+'" stroke="var(--mint)" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>';
-    s+='<circle cx="'+xCross.toFixed(1)+'" cy="'+yBE.toFixed(1)+'" r="10" fill="none" stroke="var(--mint)" stroke-width="1" opacity="0.4"/>';
-    s+='<circle cx="'+xCross.toFixed(1)+'" cy="'+yBE.toFixed(1)+'" r="6" fill="var(--mint)" stroke="#0a0c11" stroke-width="2"/>';
-    const mW=Math.max(0,Math.round(guarW)-Math.ceil(beW));
-    if(mW>0 && xGuar>xCross) s+='<text x="'+((xCross+xGuar)/2).toFixed(1)+'" y="'+(barY-10).toFixed(1)+'" text-anchor="middle" style="fill:var(--mint);font-size:11px;font-weight:600;'+gl+'">≈'+mW+' нед запаса</text>';
+    s+='<line x1="'+xBE.toFixed(1)+'" y1="'+(barY-8).toFixed(1)+'" x2="'+xBE.toFixed(1)+'" y2="'+(barY+barH+8).toFixed(1)+'" stroke="var(--mint)" stroke-width="2"/>';
+    s+='<circle cx="'+xBE.toFixed(1)+'" cy="'+(barY+barH/2).toFixed(1)+'" r="5.5" fill="var(--mint)" stroke="#0a0c11" stroke-width="2"/>';
   }
-  s+='<rect x="'+padL+'" y="'+barY+'" width="'+Math.max(0,xGuar-padL).toFixed(1)+'" height="'+barH+'" rx="6" fill="var(--amber)" fill-opacity="0.16" stroke="var(--amber)" stroke-opacity="0.5" stroke-width="1"/>';
-  if(xGuarLast>xGuar) s+='<rect x="'+xGuar.toFixed(1)+'" y="'+barY+'" width="'+(xGuarLast-xGuar).toFixed(1)+'" height="'+barH+'" rx="6" fill="var(--amber)" fill-opacity="0.07"/>';
-  s+='<text x="'+(padL+10)+'" y="'+(barY+9).toFixed(1)+'" style="fill:var(--amber);font-size:10px;'+gl+'">гарантия Uzum</text>';
-  const clX=x=>Math.max(padL+16,Math.min(W-padR-16,x));   // подписи оси: гарантия — у конца гарантийной полосы, безубыток — у пересечения
-  const bx=clX(xCross), gx=clX(xGuar), drop=(Math.abs(bx-gx)<60)||(gx<padL+52);   // близко к безубытку/«сейчас» → опускаем гарантию на строку ниже
-  s+='<text x="'+padL+'" y="'+axisY+'" style="fill:var(--faint);font-size:10px;'+gl+'">сейчас</text>';
-  s+='<text x="'+bx.toFixed(1)+'" y="'+axisY+'" text-anchor="middle" style="fill:var(--mint);font-size:10px;font-weight:600;'+gl+'">'+beLabel+'</text>';
-  s+='<text x="'+gx.toFixed(1)+'" y="'+(drop?axisY+13:axisY)+'" text-anchor="middle" style="fill:var(--faint);font-size:10px;'+gl+'">'+guarLabel+'</text>';
+  // ось: сейчас (слева) + дата безубытка под меткой
+  const clX=x=>Math.max(padL+30,Math.min(W-padR-30,x));
+  s+='<text x="'+xNow+'" y="'+lblY+'" style="fill:var(--faint);font-size:10.5px;'+gl+'">сейчас</text>';
+  s+='<text x="'+clX(xBE).toFixed(1)+'" y="'+lblY+'" text-anchor="middle" style="fill:var(--mint);font-size:10.5px;font-weight:600;'+gl+'">безубыток '+beLabel+'</text>';
   s+='</svg>';
   return s;
 }
@@ -1278,7 +1261,7 @@ function renderForecast(){
   else if(covNow!=null&&gc!=null&&gc>1){ beW=Math.log(1/covNow)/Math.log(gc); beHero=mlabel(now+beW*6048e5); }
   const marginW=(beW!=null&&isFinite(guarW))?Math.max(0,Math.round(guarW)-Math.ceil(beW)):null;
   let chart;
-  if(beW!=null) chart=fcTimeline(covNow,1,gc,beW,guarW,guarWlast,'≈'+Math.ceil(beW)+' нед',guarHero);
+  if(beW!=null) chart=fcTimeline(covNow,1,gc,beW,guarW,guarWlast,beHero,guarHero);
   else if(reached) chart='<div class="hint" style="margin:14px 0 4px"><span class="pos">Комиссия уже покрывает затраты сети.</span></div>';
   else chart='<div class="hint" style="margin:14px 0 4px">Пока недостаточно роста за последние недели, чтобы оценить срок'+(covNow!=null?' (нужно ×'+(1/covNow).toFixed(1)+' к текущей комиссии)':'')+'.</div>';
   const states=perCov.slice().sort((a,b)=>b-a).map(c=>c>=1);
