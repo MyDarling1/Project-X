@@ -1210,27 +1210,35 @@ function commGrowthMonthly(){   // ПОМЕСЯЧНЫЙ темп роста ко
   const last=ratios.slice(-3); let p=1; last.forEach(r=>p*=r); return Math.pow(p,1/last.length);
 }
 function fcTimeline(netNow, netBE, gc, beW, guarW, guarWlast, beLabel, guarLabel){
-  // упрощённый таймлайн: полоса гарантии + метка ожидаемого безубытка. Без кривой роста/заливок — чтобы не читалось как «гонка».
-  const W=720, H=104, padL=18, padR=18;
+  // кривая роста комиссии до безубытка + полоса гарантии. Без заливок/колец/хвоста — чисто, но с визуалом роста.
+  const W=720, H=180, padL=18, padR=18;
   const plotW=W-padL-padR, gl='font-family:Spline Sans Mono,monospace';
-  const spanW=Math.max(Math.ceil(guarWlast)+2, Math.ceil(beW)+2, 1);
+  const spanW=Math.max(Math.ceil(guarWlast)+2, Math.ceil(beW)+3, 1);
   const X=w=>padL+(Math.max(0,Math.min(w,spanW))/spanW)*plotW;
-  const barY=30, barH=26, lblY=82;
-  const xNow=X(0), xBE=X(beW), xGuar=X(guarW), xGuarLast=X(guarWlast);
-  let s='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;margin-top:12px;display:block" role="img" aria-label="Таймлайн: срок гарантии Uzum и ожидаемый выход на самоокупаемость">';
-  // гарантия: до ПЕРВОГО истечения — плотная, до последнего — светлее
-  s+='<rect x="'+xNow.toFixed(1)+'" y="'+barY+'" width="'+Math.max(0,xGuar-xNow).toFixed(1)+'" height="'+barH+'" rx="7" fill="var(--amber)" fill-opacity="0.16" stroke="var(--amber)" stroke-opacity="0.5"/>';
-  if(xGuarLast>xGuar) s+='<rect x="'+xGuar.toFixed(1)+'" y="'+barY+'" width="'+(xGuarLast-xGuar).toFixed(1)+'" height="'+barH+'" rx="7" fill="var(--amber)" fill-opacity="0.07" stroke="var(--amber)" stroke-opacity="0.22"/>';
-  s+='<text x="'+(xNow+11)+'" y="'+(barY+barH/2+3.7).toFixed(1)+'" style="fill:var(--amber);font-size:11px;'+gl+'">гарантия Uzum</text>';
-  // безубыток: вертикальная метка + точка (может стоять правее конца гарантии — это честно)
+  const yTop=24, yBot=120, barY=140, barH=14, axisY=168;
+  const kEnd=Math.min(Math.ceil(beW)+2, spanW);
+  const vMax=netNow*Math.pow(gc,kEnd+1)||netBE*1.5;
+  const Y=v=>Math.max(yTop,Math.min(yBot, yBot-(Math.min(v,vMax)/vMax)*(yBot-yTop)));
+  const yBE=Y(netBE), xCross=X(beW), xGuar=X(guarW), xGuarLast=X(guarWlast);
+  let pts=[]; for(let k=0;k<=kEnd;k+=0.5) pts.push([X(k),Y(netNow*Math.pow(gc,k))]);
+  const smooth=p=>{ let d='M'+p[0][0].toFixed(1)+' '+p[0][1].toFixed(1); for(let i=1;i<p.length;i++){ const mx=(p[i-1][0]+p[i][0])/2,my=(p[i-1][1]+p[i][1])/2; d+=' Q'+p[i-1][0].toFixed(1)+' '+p[i-1][1].toFixed(1)+' '+mx.toFixed(1)+' '+my.toFixed(1);} return d+' L'+p[p.length-1][0].toFixed(1)+' '+p[p.length-1][1].toFixed(1); };
+  let s='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;margin-top:12px;display:block" role="img" aria-label="Прогноз: рост комиссии до безубытка и срок гарантии Uzum">';
+  s+='<line x1="'+padL+'" y1="'+yBE.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yBE.toFixed(1)+'" stroke="var(--coral)" stroke-width="1.4" stroke-dasharray="6 4" opacity="0.55"/>';
+  s+='<text x="'+(padL+2)+'" y="'+(yBE-7).toFixed(1)+'" style="fill:var(--coral);font-size:10.5px;'+gl+'">безубыток</text>';
+  s+='<path d="'+smooth(pts)+'" fill="none" stroke="var(--violet)" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>';
+  s+='<circle cx="'+X(0).toFixed(1)+'" cy="'+Y(netNow).toFixed(1)+'" r="4" fill="var(--panel)" stroke="var(--violet)" stroke-width="2"/>';
   if(beW<=spanW){
-    s+='<line x1="'+xBE.toFixed(1)+'" y1="'+(barY-8).toFixed(1)+'" x2="'+xBE.toFixed(1)+'" y2="'+(barY+barH+8).toFixed(1)+'" stroke="var(--mint)" stroke-width="2"/>';
-    s+='<circle cx="'+xBE.toFixed(1)+'" cy="'+(barY+barH/2).toFixed(1)+'" r="5.5" fill="var(--mint)" stroke="#0a0c11" stroke-width="2"/>';
+    s+='<line x1="'+xCross.toFixed(1)+'" y1="'+yBE.toFixed(1)+'" x2="'+xCross.toFixed(1)+'" y2="'+(barY-2).toFixed(1)+'" stroke="var(--mint)" stroke-width="1" stroke-dasharray="4 4" opacity="0.5"/>';
+    s+='<circle cx="'+xCross.toFixed(1)+'" cy="'+yBE.toFixed(1)+'" r="6" fill="var(--mint)" stroke="#0a0c11" stroke-width="2"/>';
   }
-  // ось: сейчас (слева) + дата безубытка под меткой
-  const clX=x=>Math.max(padL+30,Math.min(W-padR-30,x));
-  s+='<text x="'+xNow+'" y="'+lblY+'" style="fill:var(--faint);font-size:10.5px;'+gl+'">сейчас</text>';
-  s+='<text x="'+clX(xBE).toFixed(1)+'" y="'+lblY+'" text-anchor="middle" style="fill:var(--mint);font-size:10.5px;font-weight:600;'+gl+'">безубыток '+beLabel+'</text>';
+  s+='<rect x="'+X(0).toFixed(1)+'" y="'+barY+'" width="'+Math.max(0,xGuar-X(0)).toFixed(1)+'" height="'+barH+'" rx="6" fill="var(--amber)" fill-opacity="0.16" stroke="var(--amber)" stroke-opacity="0.5"/>';
+  if(xGuarLast>xGuar) s+='<rect x="'+xGuar.toFixed(1)+'" y="'+barY+'" width="'+(xGuarLast-xGuar).toFixed(1)+'" height="'+barH+'" rx="6" fill="var(--amber)" fill-opacity="0.07"/>';
+  s+='<text x="'+(padL+10)+'" y="'+(barY+10).toFixed(1)+'" style="fill:var(--amber);font-size:10px;'+gl+'">гарантия Uzum</text>';
+  const clX=x=>Math.max(padL+16,Math.min(W-padR-16,x));
+  const bx=clX(xCross), gx=clX(xGuar), drop=(Math.abs(bx-gx)<70);
+  s+='<text x="'+padL+'" y="'+axisY+'" style="fill:var(--faint);font-size:10px;'+gl+'">сейчас</text>';
+  s+='<text x="'+bx.toFixed(1)+'" y="'+axisY+'" text-anchor="middle" style="fill:var(--mint);font-size:10px;font-weight:600;'+gl+'">'+beLabel+'</text>';
+  s+='<text x="'+gx.toFixed(1)+'" y="'+(drop?axisY+13:axisY)+'" text-anchor="middle" style="fill:var(--faint);font-size:10px;'+gl+'">'+guarLabel+'</text>';
   s+='</svg>';
   return s;
 }
@@ -1268,9 +1276,8 @@ function renderForecast(){
   let pips=''; states.forEach(on=>{ pips+='<span style="width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--'+(on?'mint':'amber')+');opacity:'+(on?'1':'.55')+'"></span>'; });
   el.innerHTML=
     '<div class="hint" style="margin-bottom:16px">Когда сеть выйдет на самоокупаемость — и насколько её страхует гарантия Uzum.</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">'
-    +'<div><div class="disp" style="font-size:clamp(17px,3.4vw,25px);font-weight:800;color:var(--mint);line-height:1.05">'+beHero+'</div><div class="hint" style="color:var(--dim)">выход на самоокупаемость</div></div>'
-    +'<div style="text-align:center"><div class="disp" style="font-size:clamp(17px,3.4vw,25px);font-weight:800;color:var(--mint);line-height:1.05">'+(marginW!=null?'≈'+marginW+' нед':'—')+'</div><div class="hint" style="color:var(--dim)">запас до конца гарантии</div></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    +'<div><div class="disp" style="font-size:clamp(17px,3.4vw,25px);font-weight:800;color:var(--mint);line-height:1.05">'+beHero+'</div><div class="hint" style="color:var(--dim)">выход на самоокупаемость</div></div>'
     +'<div style="text-align:right"><div class="disp" style="font-size:clamp(17px,3.4vw,25px);font-weight:800;color:var(--amber);line-height:1.05">'+guarHero+'</div><div class="hint" style="color:var(--dim)">истекает гарантия</div></div>'
     +'</div>'
     +chart
