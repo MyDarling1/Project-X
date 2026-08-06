@@ -1202,7 +1202,9 @@ function netGrowth(){   // геом. среднее недельного рос�
 function commGrowthMonthly(){   // ПОМЕСЯЧНЫЙ темп роста комиссии сети (геом. среднее последних валидных переходов; текущий мес — run-rate)
   if(typeof hasComm==='undefined'||!hasComm) return null;
   const sm=selfMonths(); if(!sm) return null;
-  const ms=COMM.months.slice().sort().filter(m=>m<=sm.cur);   // ТОЛЬКО по текущий месяц: в 1-е числа нового месяца COMM уже содержит его с нулём — иначе переход «пред→новый» даёт ratio 0 и обнуляет весь темп (прогноз становился «—»)
+  const FC_MIN_DAYS=7;   // текущий месяц идёт в ТЕМП только с ≥7 днями данных: run-rate по 3–5 дням — шум, он дёргает прогноз на месяцы (покрытия covNow это НЕ касается — там run-rate нужен свежий)
+  const ms=COMM.months.slice().sort().filter(m=>m<=sm.cur)   // ТОЛЬКО по текущий месяц: в 1-е числа нового месяца COMM уже содержит его с нулём — иначе переход «пред→новый» даёт ratio 0 и обнуляет весь темп (прогноз становился «—»)
+                       .filter(m=>!(m===sm.cur&&sm.curDay<FC_MIN_DAYS));
   const net={}; ms.forEach(m=>{ let s=0; DATA.forEach(d=>s+=commOf(d.code,m)); net[m]=(m===sm.cur)?runRate(s,sm):s; });
   const mx=Math.max(...ms.map(m=>net[m]||0))||1;
   const ratios=[]; for(let i=1;i<ms.length;i++){ const a=net[ms[i-1]],b=net[ms[i]]; if(a>=0.5*mx&&a>0) ratios.push(b/a); }   // темп по ЗРЕЛЫМ месяцам: база ≥50% текущего уровня. Отсекает разгон открытия (апр~0, май ×2.3 с малой базы), иначе прогноз завышен
