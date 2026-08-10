@@ -216,6 +216,8 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 .stat{display:flex;justify-content:space-between;gap:14px;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--line)}
 .stat .k{color:var(--dim);font-size:13px;flex:0 1 auto;min-width:0}
 .stat .v{font-family:'Spline Sans Mono';font-weight:600;font-size:14px;flex:0 0 auto;text-align:right;white-space:nowrap}
+.stat.col{flex-direction:column;align-items:stretch;gap:6px}   /* длинное значение (напр. цепочка месяцев) — подпись сверху, значение снизу с переносом, иначе наезжает */
+.stat.col .v{white-space:normal;text-align:left;flex:1 1 auto;line-height:1.6}
 .dgrp{color:var(--faint);font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin:18px 0 2px}
 .spark{margin:16px 0 6px}
 .foot{margin-top:26px;color:var(--faint);font-size:11.5px;line-height:1.6;text-align:center}
@@ -615,7 +617,7 @@ function selfSuffBlock(d){   // блок в карточке точки (drawer)
     `<div class="stat"><span class="k">Комиссия → затраты</span><span class="v mono">${pct(covPrev)}%<span style="color:var(--faint);font-size:11px"> ${commMonthName(sm.prev)}</span></span></div>`+
     `<div style="padding:4px 0 9px"><span class="covbar"><i style="width:${Math.min(pct(covPrev),100)}%"></i><span class="mk"></span></span>`+
     `<div class="mono" style="font-size:10.5px;color:var(--faint);margin-top:7px">${money(cPrev)} комиссии из ${money(cost)} затрат/мес · до безубытка ещё ~${toBE}%</div></div>`+
-    DRW.row('Разгон комиссии','<span class="mono" style="font-size:11px">'+ramp+'</span>')+
+    DRW.row('Разгон комиссии','<span class="mono" style="font-size:11px">'+ramp+'</span>','','col')+
     (sm.samePrevCur?'':DRW.row('Покрытие · '+commMonthName(sm.cur)+' (темп)','<span class="mono" style="color:var(--mint)">'+pct(covCur)+'%</span>'));
 }
 const wkYear = i => (WK.years && WK.years[i]!=null) ? WK.years[i] : NM_YEAR;   // реальный год недели из данных (если есть), иначе fallback — корректно на стыке годов
@@ -834,7 +836,7 @@ function renderTable(){
 
 /* ---------- drawer: общий каркас обеих карточек (факт + симулятор) ---------- */
 const DRW=(()=>{
-  const row=(k,v,cls)=>`<div class="stat"><span class="k">${k}</span><span class="v ${cls||''}">${v}</span></div>`;
+  const row=(k,v,cls,rowCls)=>`<div class="stat ${rowCls||''}"><span class="k">${k}</span><span class="v ${cls||''}">${v}</span></div>`;   // rowCls='col' — для длинных значений (перенос вместо наезда)
   const grp=t=>`<div class="dgrp">${t}</div>`;
   const healthBar=h=>{const hp=Math.min(h,1.4), hc=h>=1?'var(--mint)':h>=.6?'var(--amber)':'var(--coral)';
     return `<span class="health"><i style="width:${hp/1.4*100}%;background:${hc}"></i><span class="mark" style="left:${1/1.4*100}%"></span></span> <span class="mono" style="color:${hc}">${Math.round(h*100)}%</span>`;};
