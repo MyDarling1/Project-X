@@ -345,11 +345,17 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 
   <div class="actuals-col card">
     <div class="hist-head">
-      <div><h3>Фактические результаты</h3><div class="hint" style="margin:0">Факт по неделям. <b style="color:var(--dim)">Недели с * — неполные</b> (&lt; 7 дней с данными): показаны как есть, не для экстраполяции. Объём и P&L — в выбранной валюте.</div></div>
-      <div class="seg-toggle" id="histTog" style="max-width:420px">
-        <button data-h="orders" class="on">Заказы/день</button>
-        <button data-h="volume">Объём/день</button>
-        <button data-h="pnl">P&amp;L/нед.</button>
+      <div><h3>Фактические результаты</h3><div class="hint" id="histHint" style="margin:0"></div></div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <div class="seg-toggle" id="histTog" style="max-width:420px">
+          <button data-h="orders" class="on">Заказы/день</button>
+          <button data-h="volume">Объём/день</button>
+          <button data-h="pnl" id="histPnlBtn">P&amp;L/нед.</button>
+        </div>
+        <div class="seg-toggle" id="histGran" style="max-width:200px">
+          <button data-hg="week" class="on">Недели</button>
+          <button data-hg="month">Месяцы</button>
+        </div>
       </div>
     </div>
     <div class="hist-net" id="histNet"></div>
@@ -495,7 +501,7 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 if(typeof DATA==='undefined'||!Array.isArray(DATA)||!DATA.length){['viewnav','viewMain','viewMap','viewSim','viewUpload'].forEach(id=>{var el=document.getElementById(id);if(el)el.style.display='none';});var de=document.getElementById('dataErr');if(de)de.style.display='';throw new Error('data unavailable');}
 
 const DEFAULTS = { fx: 12000, chk: 14, uk: 320 };
-const S={fx:DEFAULTS.fx,chk:DEFAULTS.chk,uk:DEFAULTS.uk,boost:1,flat:null,scen:'guar',seg:'all',metric:'be',cur:'usd',view:'main',histMetric:'orders',sortKey:'revW3',sortDir:-1,q:'',costSortKey:null,costSortDir:-1,ovSortKey:'o',ovSortDir:-1,ovq:'',gran:'week',monthKey:null,weekIdx:null};
+const S={fx:DEFAULTS.fx,chk:DEFAULTS.chk,uk:DEFAULTS.uk,boost:1,flat:null,scen:'guar',seg:'all',metric:'be',cur:'usd',view:'main',histMetric:'orders',histGran:'week',sortKey:'revW3',sortDir:-1,q:'',costSortKey:null,costSortDir:-1,ovSortKey:'o',ovSortDir:-1,ovq:'',gran:'week',monthKey:null,weekIdx:null};
 /* эталон: run-rate = последняя полная неделя; недели/дни задаются данными или дефолтом */
 DATA.forEach(d=>{if(d.runRate==null)d.runRate=d.w3;});
 if(WK.runIdx==null)WK.runIdx=2;
@@ -1029,24 +1035,41 @@ function renderHistory(){
   const pnlW=(code,i)=>{const d=D[code]; if(!d)return 0; const wm=weekMonth(i), fa=weekFa(i);
     return periodFin(d,[i], fa?'fact-alloc':'model', monthDaysOf(wm), fa?wm.key:null).pnl;};
   const netPnl=WK.weeks.map((_,i)=>Object.keys(WK.pvz).reduce((a,c)=>a+pnlW(c,i),0));
-  const m=S.histMetric;
+  const m=S.histMetric, gm=(S.histGran==='month'&&hasMON&&monthList.length);
   const HMAX=13, allI=WK.weeks.map((_,i)=>i), show=allI.slice(-HMAX), moreN=allI.length-show.length;
   const sl=show.map(i=>WK.weeks[i]), sp=show.map(i=>partial[i]);
+  // --- МЕСЯЦЫ: те же метрики, но слот = календарный месяц (заказы/оборот — НА ДЕНЬ, чтобы месяцы разной длины были сравнимы) ---
+  const withMonth=(key,fn)=>{ const g=S.gran,k=S.monthKey; S.gran='month'; S.monthKey=key;   // cpoOf/monLen читают выбранный месяц → считаем ИМЕННО его
+    try{ return fn(); } finally { S.gran=g; S.monthKey=k; } };
+  const mKeys=monthList.map(x=>x.key), mLab=monthList.map(x=>x.label.replace(' 2026','').replace(' 20','’')),
+        mPart=mKeys.map(k=>((MON.days&&MON.days[k])||0)<daysInMonthKey(k)),
+        mDays=mKeys.map(k=>(MON.days&&MON.days[k])||1),
+        mOrdD=mKeys.map((k,i)=>DATA.reduce((a,d)=>a+((MON.pvz[d.code]||{})[k]||{}).ord||0,0)/mDays[i]),
+        mRevD=mKeys.map((k,i)=>DATA.reduce((a,d)=>a+((MON.pvz[d.code]||{})[k]||{}).rev||0,0)/mDays[i]),
+        mPnl =mKeys.map((k,i)=>{ const mo=monthList[i]; return withMonth(k,()=>DATA.reduce((a,d)=>a+periodFin(d,[k],mo.hasFact?'fact':'model',0,mo.hasFact?k:null).pnl,0)); });
+  const hh=document.getElementById('histHint');
+  if(hh) hh.innerHTML = gm
+    ? 'Факт по месяцам. <b style="color:var(--dim)">Месяцы с * — неполные</b> (данные не за все календарные дни): заказы и объём показаны НА ДЕНЬ, поэтому месяцы разной длины сравнимы. Объём и P&L — в выбранной валюте.'
+    : 'Факт по неделям. <b style="color:var(--dim)">Недели с * — неполные</b> (&lt; 7 дней с данными): показаны как есть, не для экстраполяции. Объём и P&L — в выбранной валюте.';
+  const pb=document.getElementById('histPnlBtn'); if(pb) pb.textContent = gm?'P&L/мес.':'P&L/нед.';
   const chartBody=(hint,svg)=>`<div class="hint" style="margin:0 0 8px">${hint}</div><div style="overflow-x:auto;text-align:center;margin:0 -4px">${svg}</div>`;
   // SVG отдаётся как width:100% + height:auto → он сжимается пропорционально ширине контейнера,
   // и чем БОЛЬШЕ недель (шире viewBox), тем НИЖЕ график на экране. Компенсируем: считаем H в единицах
   // viewBox так, чтобы после масштабирования график занял всю свободную высоту карточки.
-  const fitH=(slotW,capPx,base)=>{
+  const fitH=(slotW,capPx,base,nSlots)=>{
     const host=document.getElementById('histNet');
-    const W=28+show.length*slotW, cw=host.clientWidth||W, availH=host.clientHeight||0;
+    const W=28+(nSlots||show.length)*slotW, cw=host.clientWidth||W, availH=host.clientHeight||0;
     const shown=Math.min(cw,W), want=availH-capPx;                       // высота под сам SVG
     if(!(shown>0)||!(want>0)) return base;
     return Math.round(Math.min(560, Math.max(base, want*W/shown)));      // клампы: не ниже исходной, не выше 560
   };
-  document.getElementById('histNet').innerHTML =
-      m==='pnl'    ? chartBody('P&L по неделям: доля месячного факта Uzum по дням (для закрытых месяцев) или модель (для текущих). Согласовано с блоком «Обзор».', wkBarsPnl(show.map(i=>netPnl[i]),sl,sp,fitH(92,58,210)))
-    : m==='volume' ? chartBody('сумма по сети, по неделям', wkBars(show.map(i=>WK.net.rev[i]),money,'var(--mint)','hist-hv',sl,sp,fitH(88,30,190)))
-    :                chartBody('сумма по сети, по неделям', wkBars(show.map(i=>WK.net.ord[i]),fmt1,'var(--violet)','hist-ho',sl,sp,fitH(88,30,190)));
+  document.getElementById('histNet').innerHTML = gm
+    ? ( m==='pnl'    ? chartBody('P&L по месяцам: факт Uzum за закрытые месяцы, модель — за текущий. Согласовано с блоком «Обзор».', wkBarsPnl(mPnl,mLab,mPart,fitH(92,58,210,mKeys.length)))
+      : m==='volume' ? chartBody('сумма по сети, в среднем за день месяца', wkBars(mRevD,money,'var(--mint)','hist-hv',mLab,mPart,fitH(88,30,190,mKeys.length)))
+      :                chartBody('сумма по сети, в среднем за день месяца', wkBars(mOrdD,fmt1,'var(--violet)','hist-ho',mLab,mPart,fitH(88,30,190,mKeys.length))) )
+    : ( m==='pnl'    ? chartBody('P&L по неделям: доля месячного факта Uzum по дням (для закрытых месяцев) или модель (для текущих). Согласовано с блоком «Обзор».', wkBarsPnl(show.map(i=>netPnl[i]),sl,sp,fitH(92,58,210)))
+      : m==='volume' ? chartBody('сумма по сети, по неделям', wkBars(show.map(i=>WK.net.rev[i]),money,'var(--mint)','hist-hv',sl,sp,fitH(88,30,190)))
+      :                chartBody('сумма по сети, по неделям', wkBars(show.map(i=>WK.net.ord[i]),fmt1,'var(--violet)','hist-ho',sl,sp,fitH(88,30,190))) );
   renderCosts();
 }
 function renderCosts(){
@@ -1372,6 +1395,9 @@ let _histRz; addEventListener('resize',()=>{clearTimeout(_histRz);_histRz=setTim
 document.querySelectorAll('#histTog button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#histTog button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
   S.histMetric=b.dataset.h;renderHistory();});
+document.querySelectorAll('#histGran button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#histGran button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  S.histGran=b.dataset.hg;renderHistory();});
 document.querySelectorAll('.gran-tog button').forEach(b=>b.onclick=()=>{S.gran=b.dataset.g;renderAll();});
 document.querySelectorAll('.perdd-btn').forEach(btn=>btn.onclick=e=>{e.stopPropagation();const menu=btn.parentElement.querySelector('.perdd-menu');const open=menu.classList.contains('open');closePerdd();if(!open)menu.classList.add('open');});
 document.addEventListener('click',e=>{if(!e.target.closest('.perdd'))closePerdd();});
