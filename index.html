@@ -516,7 +516,7 @@ if (WK && WK.weeks && WK.dayCounts && WK.weeks.length !== WK.dayCounts.length) {
 const segColor={1:'var(--s1)',2:'var(--s2)',3:'var(--s3)'};
 const segHex={1:'#8b6dff',2:'#49c8ff',3:'#ffb84d'};
 const fmt=n=>Math.round(n).toLocaleString('ru-RU');
-const fmt1=n=>n.toLocaleString('ru-RU',{minimumFractionDigits:1,maximumFractionDigits:1});
+const fmt1=n=>Math.round(n).toLocaleString('ru-RU');   // ЗАКАЗЫ (шт/день, безубыток в заказах) — только целые: доли заказа смысла не имеют
 const mln=n=>(n/1e6).toLocaleString('ru-RU',{minimumFractionDigits:1,maximumFractionDigits:1})+' млн';
 const money=v=>{ // v всегда в сумах; показывает в выбранной валюте
   if(S.cur==='usd'){const d=v/S.fx,a=Math.abs(d);return (d<0?'-$':'$')+(a<100?a.toFixed(1):fmt(a));}
