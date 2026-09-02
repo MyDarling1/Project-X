@@ -589,6 +589,9 @@ function selfMonths(){   // {prev: последний полный месяц, c
   return {months:ms,cur,prev,curDay,dim,samePrevCur:prev===cur};
 }
 const runRate=(comm,sm)=>sm.curDay>0?comm/sm.curDay*sm.dim:comm;   // неполный месяц → темп ×(дней в месяце / прошло)
+const RR_MIN_DAYS=7;   // столько закрытых дней нужно, чтобы run-rate текущего месяца был осмысленным
+const rrReady=sm=>!!sm&&sm.curDay>=RR_MIN_DAYS;   // 1-2 дня в начале месяца растягиваются ×30 и дают дикий скачок (01.09: один сильный день → «покрытие 58%» вместо августовских 46%). Тот же порог, что у темпа в commGrowthMonthly
+const covMonthKey=sm=>rrReady(sm)?sm.cur:sm.prev;   // пока месяц «сырой» — показываем ФАКТ прошлого полного месяца, а не экстраполяцию
 function netCommCost(m){let comm=0,cost=0;rows().forEach(d=>{comm+=commOf(d.code,m);cost+=costOf(d);});return {comm,cost};}   // сеть за месяц (учитывает фильтр сегмента)
 /* ---------- сводка под меню: короткий текст-вывод, редактируется вручную при /sync (ключ SUMMARY в data.json) ---------- */
 function renderSummary(){
@@ -604,8 +607,9 @@ function renderSelfSuff(){
   const prev=netCommCost(sm.prev), cur=netCommCost(sm.cur);
   const covPrev=prev.cost?prev.comm/prev.cost:0, covCur=cur.cost?runRate(cur.comm,sm)/cur.cost:0;
   const pct=v=>Math.round(v*100), up=covCur>=covPrev, prevMo=commMonthName(sm.prev), curMo=commMonthName(sm.cur);
-  const trend=sm.samePrevCur?'':`<span class="mono" style="font-size:15px;color:${up?'var(--mint)':'var(--coral)'};margin-left:10px">${up?'▲':'▼'} ${pct(covCur)}% ${curMo}</span>`;
-  const capTrend=sm.samePrevCur?'':`, ${curMo} идёт к <b style="color:var(--txt)">${pct(covCur)}%</b>`;
+  const showCur=!sm.samePrevCur&&rrReady(sm);   // прогноз по текущему месяцу — только с ≥7 закрытыми днями
+  const trend=!showCur?'':`<span class="mono" style="font-size:15px;color:${up?'var(--mint)':'var(--coral)'};margin-left:10px">${up?'▲':'▼'} ${pct(covCur)}% ${curMo}</span>`;
+  const capTrend=!showCur?'':`, ${curMo} идёт к <b style="color:var(--txt)">${pct(covCur)}%</b>`;
   host.innerHTML=
     `<div class="ssf-num"><div class="ssf-lab">Комиссия vs затраты (${prevMo})</div>`+
     `<div><span class="mono ssf-big">${pct(covPrev)}%</span>${trend}</div></div>`+
@@ -624,7 +628,7 @@ function selfSuffBlock(d){   // блок в карточке точки (drawer)
     `<div style="padding:4px 0 9px"><span class="covbar"><i style="width:${Math.min(pct(covPrev),100)}%"></i><span class="mk"></span></span>`+
     `<div class="mono" style="font-size:10.5px;color:var(--faint);margin-top:7px">${money(cPrev)} комиссии из ${money(cost)} затрат/мес · до безубытка ещё ~${toBE}%</div></div>`+
     DRW.row('Разгон комиссии','<span class="mono" style="font-size:11px">'+ramp+'</span>','','col')+
-    (sm.samePrevCur?'':DRW.row('Покрытие · '+commMonthName(sm.cur)+' (темп)','<span class="mono" style="color:var(--mint)">'+pct(covCur)+'%</span>'));
+    ((sm.samePrevCur||!rrReady(sm))?'':DRW.row('Покрытие · '+commMonthName(sm.cur)+' (темп)','<span class="mono" style="color:var(--mint)">'+pct(covCur)+'%</span>'));
 }
 const wkYear = i => (WK.years && WK.years[i]!=null) ? WK.years[i] : NM_YEAR;   // реальный год недели из данных (если есть), иначе fallback — корректно на стыке годов
 function buildMonthList(){   // МЕСЯЦЫ — day-based из MON (календарные, с ≥1 закрытым днём). Фолбэк без MON — по началу недель.
@@ -1291,11 +1295,13 @@ function renderForecast(){
   const gm=(gmRaw!=null&&gmRaw>1)?gmRaw*SEASON_UPLIFT:gmRaw;
   const gc=(gm!=null&&gm>1)?Math.pow(gm,7/30.44):null;   // недельный эквивалент для проекции и графика
   const growthPct=(gm!=null&&gm>1)?Math.round((gm-1)*100):null;   // показываем как %/мес
-  // самоокупаемость на ФАКТИЧЕСКОЙ комиссии (COMM) vs затраты — по всей сети, run-rate текущего месяца
+  // самоокупаемость на ФАКТИЧЕСКОЙ комиссии (COMM) vs затраты — по всей сети.
+  // Текущий месяц берём по run-rate только с ≥7 закрытыми днями; иначе — ФАКТ прошлого полного месяца
+  // (иначе 1-2 дня в начале месяца растягиваются ×30 и завышают покрытие на десятки п.п.).
   const sm=(typeof hasComm!=='undefined'&&hasComm)?selfMonths():null;
   let covNow=null, ready=0, perCov=[];
-  if(sm){ let comm=0,cost=0;
-    DATA.forEach(d=>{ const c=runRate(commOf(d.code,sm.cur),sm), k=costOf(d), cov=k?c/k:0; comm+=c; cost+=k; perCov.push(cov); if(cov>=1) ready++; });
+  if(sm){ let comm=0,cost=0; const mk=covMonthKey(sm), rr=rrReady(sm);
+    DATA.forEach(d=>{ const raw=commOf(d.code,mk), c=rr?runRate(raw,sm):raw, k=costOf(d), cov=k?c/k:0; comm+=c; cost+=k; perCov.push(cov); if(cov>=1) ready++; });
     covNow=cost?comm/cost:null; }
   // гарантия: РЕАЛЬНЫЕ даты из бота (guarEnds), фолбэк — старт+6мес
   const now=Date.now(); let ends=[];
