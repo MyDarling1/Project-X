@@ -550,10 +550,12 @@ function factOf(d){ if(!hasFact) return null; const m=factMonths[FACT.latest]; i
 const useFact = ()=> hasFact && S.boost===1 && S.flat==null;   // факт по умолчанию; при симуляции — модель
 /* ---- доп. комиссия: продажа сопутствующих услуг в ПВЗ (карты, микрозаймы). Считается ПО СЕТИ:
        акты приходят общей суммой, без разбивки по точкам, поэтому в таблицу «По точкам» не входит.
-       В данных лежит уже наша доля (net) — 40% от акта, остальное уходит премиями сотрудникам ПВЗ. ---- */
+       В данных лежит уже наша доля (net): по каждой бумаге своя (вознаграждение Uzum за пластик — целиком наше,
+       по договору № 002 нам остаётся 40%, остальное уходит премиями сотрудникам ПВЗ). ---- */
 const hasExtra = (typeof EXTRA!=='undefined') && EXTRA && EXTRA.months && Object.keys(EXTRA.months).length>0;
 const extraMon = key => (hasExtra && key && EXTRA.months[key]) ? EXTRA.months[key] : null;
-const extraNet = key => { const e=extraMon(key); return e?(e.net||0):0; };
+const extraNet = key => { const e=extraMon(key); return e?(e.net||0):0; };       // наша доля
+const extraGrs = key => { const e=extraMon(key); return e?(e.gross||0):0; };     // начислено по актам
 function rows(){ return DATA.filter(d=>S.seg==='all'||d.seg==S.seg); }   // только сегмент — для сетевых KPI/юнит/графика
 function tableRows(){ let r=rows(); if(S.q){const q=S.q.toLowerCase();r=r.filter(d=>(d.aka+d.code+d.city).toLowerCase().includes(q));} return r; }  // + поиск, только для таблицы
 
@@ -686,10 +688,10 @@ function netStats(idxs, mode, monthDays, factKey){
   const above=r.filter(d=>ordOf(d)>=beReal(d)).length;
   let income=0,cost=0,pnl=0; r.forEach(d=>{const f=periodFin(d,idxs,mode,monthDays,factKey); income+=f.income;cost+=f.cost;pnl+=f.pnl;});
   // доп. комиссия за услуги — сетевая: только когда показана вся сеть (по сегментам разбивки в актах нет) и только за закрытый месяц с отчётом
-  let extra=0;
-  if(hasExtra && factKey && S.seg==='all'){ const e=extraNet(factKey);
-    extra = (mode==='fact-alloc') ? e*(slotDays(idxs[0])/(monthDays||1)) : e; }
-  return {ordPV,bePV,above,n,pnl,income,cost,gmv,netOrdDay,extra};
+  let extra=0,extraG=0;
+  if(hasExtra && factKey && S.seg==='all'){ const sh = (mode==='fact-alloc') ? slotDays(idxs[0])/(monthDays||1) : 1;
+    extra=extraNet(factKey)*sh; extraG=extraGrs(factKey)*sh; }
+  return {ordPV,bePV,above,n,pnl,income,cost,gmv,netOrdDay,extra,extraG};
 }
 function deltaStr(cur,prev,lbl){ if(prev==null||!isFinite(prev)||prev===0) return '';
   const dp=(cur-prev)/Math.abs(prev)*100; if(Math.abs(dp)<0.5) return '';
@@ -713,14 +715,14 @@ function renderKPIs(){
     <div class="val">${fmt1(s.ordPV)} <span style="color:var(--faint);font-weight:400;font-size:18px">/ ${fmt(s.bePV)}</span></div>
     <div class="health" style="width:100%;margin-top:9px"><i style="width:${Math.min(ratio,1.4)/1.4*100}%;background:${col}"></i><span class="mark" style="left:${1/1.4*100}%"></span></div>
     <div class="delta">${ratio>=1?'<span class="pos">безубыток достигнут</span>':'×'+toBE.toFixed(1)+' до безубытка'}${dOrd}</div></div>`;
-  const pnlTot=s.pnl+(s.extra||0), eSh=(hasExtra&&EXTRA.share)||0.4;
+  const pnlTot=s.pnl+(s.extra||0);
   const cards=[
     {l:'Точек выше безубытка',v:s.above+' / '+s.n,cls:s.above>0?'pos':'neg',d:s.above==0?'все в минусе':perLabel},
     {l:'P&L по сети',v:money(pnlTot),cls:pnlTot>=0?'pos':'neg',d:s.extra>0?pnlSrc+' + услуги':pnlSrc},
     {l:'Оборот (GMV) '+perLabel,v:money(s.gmv),d:(S.cur==='usd'?`≈ ${mln(s.gmv)} сум`:`≈ $${fmt(s.gmv/S.fx)}`)+dGmv},
   ];
   if(s.extra>0) cards.splice(2,0,{l:'Доп. комиссия · услуги',v:money(s.extra),cls:'pos',
-    d:`${Math.round(eSh*100)}% от ${money(s.extra/eSh)} · карты, займы`});
+    d:`карты, займы · начислено ${money(s.extraG)}`});
   html+=cards.map(x=>`<div class="kpi"><div class="lab">${x.l}</div><div class="val ${x.cls||''}">${x.v}</div><div class="delta">${x.d||''}</div></div>`).join('');
   document.getElementById('kpis').innerHTML=html;
 }
