@@ -68,11 +68,66 @@ def read_pdf_rows(path):
             rows.extend((pg.extract_text() or '').split('\n'))
     return rows
 
+# --- формат отчёта с августа 2026 ---------------------------------------------
+# Uzum разбил прежнюю единую строку «Фиксированное вознаграждение по FrXXX» на составляющие:
+#   Вознаграждение от оборота ПВЗ № FrXXX                         (процент с оборота)
+#   Корректировка вознаграждения ... по возвращенным товарам      (минус, п.1.7)
+#   Доплата до гарантированного вознаграждения для ПВЗ № FrXXX    (добивка до гарантии п.1.1)
+#   Вознаграждение по выдаче Заказов ... п.1.8                    (без кода — относится к предыдущему ПВЗ)
+# Сумма всех строк ПВЗ = его доход за месяц; сумма по сети = ИТОГО отчёта (сверяем).
+NEW_AMT    = re.compile(r'(-?\d{1,3}(?:[^\S\n]\d{3})*\.\d{2})[^\S\n]*$')
+NEW_TOTAL  = re.compile(r'ИТОГО:\s*(-?\d{1,3}(?:[^\S\n]\d{3})*\.\d{2})')
+NEW_CODE   = re.compile(r'(Fr\S+?-\d+)', re.I)
+NEW_PERIOD = re.compile(r'в\s+период\s+с\s+(\d{4})-(\d{2})-\d{2}\s+по\s+(\d{4})-(\d{2})-\d{2}')
+
+def _num(s):
+    return round(float(re.sub(r'[^\S\n]', '', s)), 2)
+
+def parse_satori_new(rows):
+    """Новый формат (с 08.2026) -> (month, year, acc) либо None, если формат не он."""
+    month = year = None
+    for ln in rows:
+        m = NEW_PERIOD.search(ln)
+        if m:
+            year, month = int(m.group(1)), int(m.group(2)); break
+    if month is None or not any('Доплата до гарантированного' in ln for ln in rows):
+        return None
+    acc = {}; order = []; cur = None; declared = None
+    for ln in rows:
+        mt = NEW_TOTAL.search(ln)
+        if mt:
+            declared = _num(mt.group(1)); continue
+        ma = NEW_AMT.search(ln)
+        if not ma: continue
+        amt = _num(ma.group(1))
+        mc = NEW_CODE.search(ln)
+        if mc:
+            cur = mc.group(1).upper()
+            if cur not in acc:
+                acc[cur] = {'income': 0.0, 'startDay': 1}; order.append(cur)
+            acc[cur]['income'] += amt
+        elif cur and re.search(r'п\.\s*1\.8|п\.\s*5\.2\.1', ln):
+            acc[cur]['income'] += amt   # строка без кода — относится к последнему упомянутому ПВЗ
+    if not acc: return None
+    total = round(sum(v['income'] for v in acc.values()), 2)
+    if declared is not None and abs(total - declared) > 0.5:
+        raise SystemExit(f'Сумма разобранных строк {total:,.2f} ≠ ИТОГО отчёта {declared:,.2f} — разбор неверный, проверь формат.')
+    print(f'  формат: новый (оборот + возвраты + доплата до гарантии + п.1.8); ИТОГО отчёта сходится: {total:,.2f} сум')
+    return month, year, {c: acc[c] for c in order}
+
 def parse_satori(path):
-    """docx -> (month_int, year_int, {code: {'income':сум, 'startDay':int, 'days':int}})."""
+    """docx/pdf -> (month_int, year_int, dim, {code: {'income':сум, 'startDay':int, 'days':int}})."""
     rows = read_pdf_rows(path) if path.lower().endswith('.pdf') else read_docx_rows(path)
     if not rows:
         raise SystemExit('В отчёте не найдено таблиц.')
+    got = parse_satori_new(rows)
+    if got:
+        month, year, acc = got
+        dim = calendar.monthrange(year, month)[1]
+        for c in acc:
+            acc[c]['days'] = dim - acc[c]['startDay'] + 1
+            acc[c]['income'] = round(acc[c]['income'], 2)
+        return month, year, dim, acc
     month = year = None
     acc = {}; order = []; cur = None
     fix_re = re.compile(r'(Fr\S+?-\d+)\s+за\s+с\s+[«"]?(\d{1,2})[»"]?\s+([А-Яа-яЁё]+)\s+(\d{4})', re.I)
