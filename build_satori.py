@@ -75,7 +75,7 @@ def read_pdf_rows(path):
 #   Доплата до гарантированного вознаграждения для ПВЗ № FrXXX    (добивка до гарантии п.1.1)
 #   Вознаграждение по выдаче Заказов ... п.1.8                    (без кода — относится к предыдущему ПВЗ)
 # Сумма всех строк ПВЗ = его доход за месяц; сумма по сети = ИТОГО отчёта (сверяем).
-NEW_AMT    = re.compile(r'(-?\d{1,3}(?:[^\S\n]\d{3})*\.\d{2})[^\S\n]*$')
+NEW_AMT    = re.compile(r'(?<![\d.])(-?\d{1,3}(?:[^\S\n]\d{3})*\.\d{2})[^\S\n]*$')   # (?<![\d.]) — иначе «п. 1.10 444 000.00» читается как «10 444 000.00»
 NEW_TOTAL  = re.compile(r'ИТОГО:\s*(-?\d{1,3}(?:[^\S\n]\d{3})*\.\d{2})')
 NEW_CODE   = re.compile(r'(Fr\S+?-\d+)', re.I)
 NEW_PERIOD = re.compile(r'в\s+период\s+с\s+(\d{4})-(\d{2})-\d{2}\s+по\s+(\d{4})-(\d{2})-\d{2}')
@@ -104,15 +104,19 @@ def parse_satori_new(rows):
         if mc:
             cur = mc.group(1).upper()
             if cur not in acc:
-                acc[cur] = {'income': 0.0, 'startDay': 1}; order.append(cur)
+                acc[cur] = {'income': 0.0, 'cards': 0.0, 'startDay': 1}; order.append(cur)
             acc[cur]['income'] += amt
+        elif cur and re.search(r'п\.\s*1\.10', ln):
+            acc[cur]['cards'] += amt    # выдача карт Uzum Bank (п.1.10) — с 09.2026 внутри акта; это НЕ комиссия ПВЗ, уходит в EXTRA
         elif cur and re.search(r'п\.\s*1\.8|п\.\s*5\.2\.1', ln):
             acc[cur]['income'] += amt   # строка без кода — относится к последнему упомянутому ПВЗ
     if not acc: return None
-    total = round(sum(v['income'] for v in acc.values()), 2)
+    total = round(sum(v['income'] + v['cards'] for v in acc.values()), 2)
     if declared is not None and abs(total - declared) > 0.5:
         raise SystemExit(f'Сумма разобранных строк {total:,.2f} ≠ ИТОГО отчёта {declared:,.2f} — разбор неверный, проверь формат.')
-    print(f'  формат: новый (оборот + возвраты + доплата до гарантии + п.1.8); ИТОГО отчёта сходится: {total:,.2f} сум')
+    cards = round(sum(v['cards'] for v in acc.values()), 2)
+    print(f'  формат: новый (оборот + возвраты + доплата до гарантии + п.1.8' + (' + карты п.1.10' if cards else '') + f'); ИТОГО отчёта сходится: {total:,.2f} сум'
+          + (f'  (из них карты п.1.10: {cards:,.2f})' if cards else ''))
     return month, year, {c: acc[c] for c in order}
 
 def parse_satori(path):
@@ -250,10 +254,11 @@ def main():
     if iso not in months: months.append(iso)
     months = sorted(set(months))
     inc.setdefault(iso, {}); days[iso] = dim
-    days_per_pvz = {}
+    days_per_pvz = {}; cards_total = 0.0
     for code, d in parsed.items():
         if code not in ref: continue
-        inc[iso][code] = d['income']; days_per_pvz[code] = d['days']
+        inc[iso][code] = d['income']; days_per_pvz[code] = d['days']   # доход ПВЗ — БЕЗ карт п.1.10
+        cards_total += d.get('cards', 0.0)
     codes = [c for c in ref]  # порядок Справочника
     write_fact_sheet(wb, months, inc, days, codes, ref)
     tmp_ref = REF + '.tmp'; wb.save(tmp_ref); os.replace(tmp_ref, REF)   # атомарная запись (без частичной порчи)
@@ -272,6 +277,14 @@ def main():
     except (OSError, ValueError): bundle = {}
     if not isinstance(bundle, dict): bundle = {}
     bundle['FACT'] = FACT
+    # карты п.1.10 (с 09.2026 внутри акта) — в EXTRA как отдельный поток, 100% наши; другие позиции месяца (напр. договор №002) не трогаем
+    if cards_total > 0:
+        ex = bundle.setdefault('EXTRA', {'months': {}})
+        mo = ex.setdefault('months', {}).setdefault(iso, {'gross': 0, 'net': 0, 'items': []})
+        mo['items'] = [it for it in mo.get('items', []) if not str(it.get('label', '')).startswith('Выдача карт — Uzum')]
+        mo['items'].append({'label': f'Выдача карт — Uzum, акт за {_mlabel(iso)} (п.1.10)', 'sum': round(cards_total), 'share': 1.0, 'net': round(cards_total)})
+        mo['gross'] = round(sum(it['sum'] for it in mo['items'])); mo['net'] = round(sum(it['net'] for it in mo['items']))
+        print(f'{DJSON}: EXTRA[{iso}] карты п.1.10 = {cards_total:,.0f} сум (наша доля 100%); итого доп. за месяц net={mo["net"]:,}')
     bundle['updatedAt'] = dt.datetime.now().isoformat(timespec='seconds')   # метка свежести данных
     open(DJSON, 'w', encoding='utf-8').write(json.dumps(bundle, ensure_ascii=False))
     print(f'{DJSON}: FACT записан — месяцев {len(FACT["months"])} (последний {_mlabel(FACT["latest"])}).')
