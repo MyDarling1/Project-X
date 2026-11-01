@@ -22,3 +22,9 @@ description: Внести ФАКТ из месячного отчёта «Сат
 5. **Деплой:** `git add -A && git commit -m "satori: факт <месяц>" && git push origin main`. Отчёт (`.pdf`/`.docx`) в коммит не попадёт (gitignore). Эталон коммитится. **Через ~60 с проверь `railway deployment list | head -3`** — верхняя строка должна быть новее пуша (2026-10-20 автодеплой молча встал на четыре пуша). Если нет — `railway up --detach` и проверить снова.
 
 Логика факта (не менять без просьбы): доход ПВЗ — из Сатори; затраты — из Справочника, прорейчены по активным дням; факт-P&L = доход − затраты; факт замещает модель в P&L по умолчанию, модель остаётся для симулятора/прогноза.
+
+## Альтернатива без docx/pdf: API выплат бота (с 2026-11-01)
+
+Официальная выплата за месяц лежит в API мини-аппа: `GET /franchise-accounts/api/v1/payouts/active?franchise_id=<fid>` (текущая, статус APPROVED + документы AVR/SF со статусом CHECKED), `…/payouts/history?franchise_id=` (прошлые), `…/payouts/{id}?franchise_id=` (сводка: `income_amount`, `bank_cards_income_amount`, `partner_income_amount`, `guaranteed_income_amount`, `compensation_amount`, `returned_amount`, `claims_amount`, `total_amount`, `payout_amount`), `…/payouts/{id}/delivery_points?franchise_id=` (по точкам `total_income_amount` — ВКЛЮЧАЯ карты п.1.10, за вычетом претензий). Параметр именно `franchise_id` (не franchisee_id). Доступ — из браузера как в `/sync` (auth через init_data → `window.__uz`).
+
+Внесение без акта: `python __satori_api.py` (gitignored; per-point суммы из API вшиты в скрипт, карты по точкам — оценка по весам последнего акта, итог сходится с `total_amount` до сума). Когда придёт АВР pdf — обычный `build_satori.py` перепишет месяц точно. Сверка: сентябрь из API = акту (297 086 960 = FACT 287 654 960 + карты 9 432 000; `payout_amount` на 204 860 меньше — претензии).
