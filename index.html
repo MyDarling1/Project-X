@@ -1100,13 +1100,14 @@ function renderCosts(){
     {k:'rent',t:'Аренда',v:d=>d.rentSum},
     {k:'sal',t:'ЗП',v:d=>salOf(d)},
     {k:'opex',t:'OPEX',v:d=>d.rentSum+salOf(d)},
-    {k:'ukm',t:'УК + налоги',v:d=>S.uk*S.fx+(d.miscSum||0)},
+    {k:'uk',t:'УК',v:d=>S.uk*S.fx},
+    {k:'tax',t:'Налоги',tt:'план: налог на ЗП 33,4% + налог с оборота 4% (Справочник, «Разное»)',v:d=>d.miscSum||0},
     {k:'tot',t:'Итого/мес',v:d=>d.rentSum+salOf(d)+S.uk*S.fx+(d.miscSum||0)},
   ];
   let arr=DATA.slice();
   if(S.costSortKey){const c=ccols.find(x=>x.k===S.costSortKey);
     if(c)arr.sort((a,b)=>{const x=c.v(a),y=c.v(b);return typeof x==='string'?S.costSortDir*x.localeCompare(y):S.costSortDir*(x-y);});}
-  let h='<thead><tr>'+ccols.map(c=>`<th class="${c.lft?'lft':''} ${S.costSortKey===c.k?'sorted':''}" data-csk="${c.k}">${c.t}${S.costSortKey===c.k?(S.costSortDir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr></thead><tbody>';
+  let h='<thead><tr>'+ccols.map(c=>`<th class="${c.lft?'lft':''} ${S.costSortKey===c.k?'sorted':''}" data-csk="${c.k}"${c.tt?` title="${c.tt}"`:''}>${c.t}${S.costSortKey===c.k?(S.costSortDir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr></thead><tbody>';
   let sr=0,ss=0,su=0,sm=0,se=0;
   arr.forEach(d=>{const sal=salOf(d), opex=d.rentSum+sal, ukm=S.uk*S.fx, misc=d.miscSum||0, tot=opex+ukm+misc;
     sr+=d.rentSum;ss+=sal;su+=ukm;sm+=misc;se+=d.salarySum;
@@ -1119,9 +1120,10 @@ function renderCosts(){
        `<td><span class="mono">${money(d.rentSum)}</span></td>`+
        `<td>${salTd}</td>`+
        `<td><span class="mono">${money(opex)}</span></td>`+
-       `<td><span class="mono">${money(ukm+misc)}</span></td>`+
+       `<td><span class="mono">${money(ukm)}</span></td>`+
+       `<td><span class="mono">${money(misc)}</span></td>`+
        `<td><span class="mono pos" style="color:var(--txt)">${money(tot)}</span></td></tr>`;});
-  const n=DATA.length||1, rows=[sr,ss,sr+ss,su+sm,sr+ss+su+sm];
+  const n=DATA.length||1, rows=[sr,ss,sr+ss,su,sm,sr+ss+su+sm];
   const dSal=ss-se, ok=dSal<=0, dCol=ok?'var(--mint)':'var(--coral)';   // сетевая дельта ЗП: факт − план
   const dTot=anyFact?` <span class="mono" style="font-size:10px;color:${dCol}">(${ok?'−':'+'}${money(Math.abs(dSal))} к плану)</span>`:'';
   const dAvg=anyFact?` <span class="mono" style="font-size:10px;color:${dCol}">(${ok?'−':'+'}${money(Math.abs(dSal/n))})</span>`:'';
