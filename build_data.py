@@ -264,7 +264,7 @@ def main():
         r=ref[code]
         DATA.append(dict(code=code,aka=r['aka'],city=r['city'],seg=r['seg'],comm=r['comm'],
             rentSum=r['rentSum'],salarySum=r['salarySum'],miscSum=r['miscSum'],uk=r['uk'],
-            opex_usd=round((r['rentSum']+r['salarySum'])/12000,2),
+            opex_usd=round((r['rentSum']+r['salarySum']+r['miscSum'])/12000,2),   # OPEX в $ = аренда+ЗП+разное(налоги); УК отдельно
             w1=at(ordd,0),w2=at(ordd,1),w3=at(ordd,2),w4=at(ordd,3),
             runRate=runRate,periodAvg=round(tot_o/tot_d,2) if tot_d else 0,
             fcMonth1=r['fcMonth1'],yandex=r['yandex'],revW3=revRun,

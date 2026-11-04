@@ -372,7 +372,7 @@ tr.prow:hover{background:rgba(139,109,255,.06)}
 
   <div class="card">
     <h3>Структура расходов (в месяц)</h3>
-    <div class="hint" id="costHint">OPEX = аренда + ЗП. Плюс затраты на УК и «разное». В выбранной валюте.</div>
+    <div class="hint" id="costHint">OPEX = аренда + ЗП. Плюс затраты на УК и налоги (на ЗП и с оборота). В выбранной валюте.</div>
     <div class="tbl-scroll"><table id="costTbl"></table></div>
   </div>
 </div><!-- /viewMain -->
@@ -755,7 +755,7 @@ function renderUnit(){   // только суть: доход − затраты
   const src = P.mode==='model'?'модель':'факт · Uzum';
   const k=[
     {l:'Доход '+P.perLabel,v:money(ainc),d:src},
-    {l:'Затраты '+P.perLabel,v:money(acost),d:'аренда+ЗП+УК+разное'},
+    {l:'Затраты '+P.perLabel,v:money(acost),d:'аренда+ЗП+УК+налоги'},
     {l:'P&L '+P.perLabel,v:money(apnl),cls:apnl>=0?'pos':'neg',d:src},
   ];
   document.getElementById('unitEcon').innerHTML=k.map(x=>`<div class="kpi"><div class="lab">${x.l}</div><div class="val ${x.cls||''}">${x.v}</div><div class="delta">${x.d||''}</div></div>`).join('');
@@ -1100,7 +1100,7 @@ function renderCosts(){
     {k:'rent',t:'Аренда',v:d=>d.rentSum},
     {k:'sal',t:'ЗП',v:d=>salOf(d)},
     {k:'opex',t:'OPEX',v:d=>d.rentSum+salOf(d)},
-    {k:'ukm',t:'УК + разное',v:d=>S.uk*S.fx+(d.miscSum||0)},
+    {k:'ukm',t:'УК + налоги',v:d=>S.uk*S.fx+(d.miscSum||0)},
     {k:'tot',t:'Итого/мес',v:d=>d.rentSum+salOf(d)+S.uk*S.fx+(d.miscSum||0)},
   ];
   let arr=DATA.slice();
@@ -1131,8 +1131,8 @@ function renderCosts(){
   t.querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.csk;if(S.costSortKey===k)S.costSortDir*=-1;else{S.costSortKey=k;S.costSortDir=-1;}renderCosts();});
   const ch=document.getElementById('costHint');
   if(ch) ch.innerHTML = anyFact
-    ? `OPEX = аренда + ЗП. <b style="color:var(--mint)">ЗП — факт выплат (${(monthList.find(m=>m.key===mkey)||{}).label||mkey})</b>; аренда/УК/разное — план. В выбранной валюте.`
-    : 'OPEX = аренда + ЗП (оценка Справочника). Плюс УК и «разное». В выбранной валюте.';
+    ? `OPEX = аренда + ЗП. <b style="color:var(--mint)">ЗП — факт выплат (${(monthList.find(m=>m.key===mkey)||{}).label||mkey})</b>; аренда/УК/налоги — план. В выбранной валюте.`
+    : 'OPEX = аренда + ЗП (оценка Справочника). Плюс УК и налоги (на ЗП и с оборота). В выбранной валюте.';
 }
 
 /* ---------- карта сети ---------- */
