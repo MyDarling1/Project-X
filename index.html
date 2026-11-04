@@ -722,7 +722,7 @@ function renderKPIs(){
     {l:'Оборот (GMV) '+perLabel,v:money(s.gmv),d:(S.cur==='usd'?`≈ ${mln(s.gmv)} сум`:`≈ $${fmt(s.gmv/S.fx)}`)+dGmv},
   ];
   if(s.extra>0) cards.splice(2,0,{l:'Доп. комиссия · услуги',v:money(s.extra),cls:'pos',
-    d:`карты, займы · начислено ${money(s.extraG)}`});
+    d:`карты, займы, субаренда · начислено ${money(s.extraG)}`});
   html+=cards.map(x=>`<div class="kpi"><div class="lab">${x.l}</div><div class="val ${x.cls||''}">${x.v}</div><div class="delta">${x.d||''}</div></div>`).join('');
   document.getElementById('kpis').innerHTML=html;
 }
